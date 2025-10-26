@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { UserRole } from "../types/users.interface";
 
 interface TokenPayload {
   id: string;
@@ -8,8 +9,8 @@ interface TokenPayload {
 
 const SECRET_KEY = process.env.JWT_SECRET || "fallback_secret_key";
 
-const generateAuthToken = (user: { _id: any; isAdmin: boolean }): string => {
-  return jwt.sign({ id: user._id, isAdmin: user.isAdmin }, SECRET_KEY, {
+const generateAuthToken = (user: { _id: any; role: UserRole }): string => {
+  return jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, {
     expiresIn: "1h",
   });
 };

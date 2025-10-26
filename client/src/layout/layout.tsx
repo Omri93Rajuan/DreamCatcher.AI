@@ -1,9 +1,38 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/lib/utils/createPageUrl";
 import { Sparkles } from "lucide-react";
+import { useAuthStore } from "@/stores/useAuthStore";
+import { AuthApi } from "@/lib/api/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const setUser = useAuthStore((s) => s.setUser);
+  const clearUser = useAuthStore((s) => s.logout);
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      try {
+        if (user && !user.name) {
+          const res = await AuthApi.getMe(user._id);
+          if (res?.user) setUser(res.user);
+        }
+      } catch (e) {
+        console.error("Failed to fetch user details:", e);
+      }
+    };
+    fetchUserDetails();
+  }, [user, setUser]);
+
+  const handleLogout = async () => {
+    try {
+      await AuthApi.logout();
+    } catch {}
+    clearUser();
+    navigate("/");
+  };
+
   return (
     <div
       className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 text-white"
@@ -26,19 +55,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <p className="text-xs text-purple-300">גלה את המשמעות הסמויה</p>
               </div>
             </Link>
+
             <nav className="flex items-center gap-6">
+              {user && (
+                <span className="text-purple-200">
+                  שלום
+                  {user.name
+                    ? `, ${user.name}`
+                    : user.email
+                    ? `, ${user.email}`
+                    : ""}{" "}
+                  👋
+                </span>
+              )}
+
               <Link
                 to="/"
                 className="text-purple-200 hover:text-white transition-colors font-medium"
               >
                 דף הבית
               </Link>
-              <Link
-                to="/login"
-                className="text-purple-200 hover:text-white transition-colors font-medium"
-              >
-                התחברות
-              </Link>
+
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 rounded-lg border border-purple-500/30 hover:bg-white/10 transition-colors"
+                >
+                  התנתק
+                </button>
+              ) : (
+                <Link
+                  to="/login"
+                  className="text-purple-200 hover:text-white transition-colors font-medium"
+                >
+                  התחברות
+                </Link>
+              )}
             </nav>
           </div>
         </div>

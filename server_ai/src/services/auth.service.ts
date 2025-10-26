@@ -1,74 +1,109 @@
+// src/services/auth.service.ts
 import { CookieOptions, Response } from "express";
 import { comparePassword } from "../helpers/bcrypt";
 import { generateAuthToken } from "../middlewares/jwt";
 import Users from "../models/user";
-import { handleBadRequest } from "../utils/ErrorHandle";
+import type { IUser } from "../types/users.interface";
+
+const isProd = process.env.NODE_ENV === "production";
 
 const cookieConfig: CookieOptions = {
   httpOnly: true,
-  secure: true,
-  sameSite: "strict",
+  secure: isProd,
+  sameSite: isProd ? "strict" : "lax",
+  path: "/",
 };
-interface userDTO {
+
+interface LoginDTO {
   email: string;
   password: string;
 }
 
-const login = async (user: userDTO, res: Response) => {
-  try {
-    if (!user?.email || !user?.password) {
-      throw new Error("Missing required fields");
-    }
-
-    const foundUser = await Users.findOne({ email: user.email });
-    if (!foundUser) {
-      throw new Error("Could not find this user in the database");
-    }
-
-    const isPasswordCorrect = await comparePassword(
-      user.password,
-      foundUser.password
-    );
-    if (!isPasswordCorrect) {
-      throw new Error("Incorrect password or Email");
-    }
-
-    const { _id, role } = foundUser;
-    let token = generateAuthToken({ _id, isAdmin: role === "admin" });
-
-    if (!cookieConfig) {
-      throw new Error("Cookie configuration is missing");
-    }
-
-    res.cookie("auth_token", token, cookieConfig);
-    return { foundUser, token };
-  } catch (error: any) {
-    error.status = 404;
-    return handleBadRequest("MongoDB", error);
+export const login = async (user: LoginDTO, res: Response) => {
+  if (!user?.email || !user?.password) {
+    const err: any = new Error("Missing required fields");
+    err.status = 400;
+    throw err;
   }
+
+  // ⚠️ חשוב: password הוא select:false בסכמה → חייבים +password
+  const found = await Users.findOne({ email: user.email })
+    .select("+password")
+    .lean<IUser & { password: string; name?: string }>()
+    .exec();
+
+  if (!found) {
+    const err: any = new Error("Could not find this user in the database");
+    err.status = 401;
+    throw err;
+  }
+
+  // אם הסידינג שמר סיסמאות לא מוצפנות, ההשוואה תיכשל.
+  // ניתן לזהות hash אמיתי לפי התחלה ב-$2
+  const isHash =
+    typeof found.password === "string" && found.password.startsWith("$2");
+  if (!isHash) {
+    const err: any = new Error("User password is not hashed in DB");
+    err.status = 500;
+    throw err;
+  }
+
+  const ok = await comparePassword(user.password, found.password);
+  if (!ok) {
+    const err: any = new Error("Incorrect password or Email");
+    err.status = 401;
+    throw err;
+  }
+
+  const name =
+    (found as any).name ?? `${found.firstName} ${found.lastName}`.trim();
+
+  const token = generateAuthToken({
+    _id: found._id,
+    role: found.role,
+  });
+
+  res.cookie("auth_token", token, cookieConfig);
+
+  const publicUser: Omit<IUser, "password"> & { _id: string; name?: string } = {
+    _id: String(found._id),
+    email: found.email,
+    role: found.role,
+    subscription: found.subscription,
+    firstName: found.firstName,
+    lastName: found.lastName,
+    image: found.image,
+    lastLogin: found.lastLogin,
+    isActive: found.isActive,
+    subscriptionExpiresAt: found.subscriptionExpiresAt,
+    createdAt: found.createdAt,
+    updatedAt: found.updatedAt,
+    name,
+  };
+
+  return { foundUser: publicUser, token };
 };
 
-const logout = (res: Response) => {
-  try {
-    res.clearCookie("auth_token", cookieConfig);
-    console.log("User logged out and cookie cleared");
-  } catch (error: any) {
-    error.status = 500;
-    return handleBadRequest("Logout Error", error);
-  }
+export const logout = (res: Response) => {
+  res.clearCookie("auth_token", { ...cookieConfig });
 };
 
-const getMe = async (userId: string) => {
-  try {
-    return await Users.findById(userId)
-      .populate({
-        path: "orders",
-        populate: { path: "products.product" }, // מוצרים בתוך ההזמנות
-      })
-      .lean();
-  } catch (error: any) {
-    return handleBadRequest("MongoDB", error);
+export const getMe = async (userId: string) => {
+  if (!userId) {
+    const err: any = new Error("Missing userId");
+    err.status = 400;
+    throw err;
   }
+  const u = await Users.findById(userId)
+    .lean<IUser & { name?: string }>()
+    .exec();
+  if (!u) {
+    const err: any = new Error("User not found");
+    err.status = 404;
+    throw err;
+  }
+  delete (u as any).password;
+  if (!u.name)
+    (u as any).name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
+  return u;
 };
-
-export { login, logout, getMe };

@@ -9,4 +9,9 @@ export const AuthApi = {
     api
       .get("/auth/verify-token")
       .then((r) => r.data as { valid: boolean; user?: User }),
+  getMe: (id: string) =>
+    api
+      .get(`/auth/me/${id}`)
+      .then((r) => r.data as { user?: User })
+      .catch(() => null),
 };

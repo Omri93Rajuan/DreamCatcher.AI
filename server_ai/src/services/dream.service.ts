@@ -56,12 +56,6 @@ export const updateDream = async (
   return await Dream.findByIdAndUpdate(id, patch, { new: true });
 };
 
-/**
- * שליפה עם אכיפת פרטיות:
- * - אם אין viewerId ⇒ מחזירים רק isShared: true
- * - אם יש viewerId ⇒ מחזירים (isShared: true) או (userId === viewerId)
- * בנוסף תומך בחיפוש חופשי בכותרת/טקסט/מענה, מיון ודפדוף.
- */
 export const getDreams = async (query: GetDreamsQuery) => {
   const {
     viewerId,
@@ -74,16 +68,13 @@ export const getDreams = async (query: GetDreamsQuery) => {
     limit = 10,
   } = query;
 
-  // 🔒 פילטר נראות לפי זהות הצופה
   const visibilityFilter = viewerId
     ? { $or: [{ isShared: true }, { userId: viewerId }] }
     : { isShared: true };
 
-  // 🎯 סינון לפי יוצר אם התבקש (ownerId הוא alias)
   const creatorId = userId || ownerId;
   const creatorFilter = creatorId ? { userId: creatorId } : {};
 
-  // 🔎 חיפוש (לא רק בכותרת, גם בתוכן והתגובה של ה-AI)
   const searchFilter = search?.trim()
     ? {
         $or: [

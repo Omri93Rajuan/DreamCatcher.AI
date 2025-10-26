@@ -11,7 +11,7 @@ export enum SubscriptionType {
 }
 
 export interface IUser {
-  _id?: ObjectId;
+  _id?: ObjectId | string;
   firstName: string;
   lastName: string;
   email: string;

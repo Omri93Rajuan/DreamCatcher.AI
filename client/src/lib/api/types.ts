@@ -1,5 +1,5 @@
 export type Dream = {
-  id: string;
+  _id: string;
   userId: string;
   title: string;
   userInput: string;
@@ -11,7 +11,7 @@ export type Dream = {
 };
 
 export type LoginDto = { email: string; password: string };
-export type User = { id: string; name: string; email: string; role?: string };
+export type User = { _id: string; name: string; email: string; role?: string };
 
 export type CreateDreamDto = Pick<
   Dream,
@@ -19,3 +19,16 @@ export type CreateDreamDto = Pick<
 >;
 export type InterpretDto = { userInput: string };
 export type InterpretResponse = { title?: string | null; aiResponse: string };
+
+export type DreamsPage = {
+  dreams: Dream[];
+  total: number;
+  page: number;
+  pages: number;
+};
+export type PopularRow = {
+  dreamId: string;
+  title: string;
+  isShared: boolean;
+  views7d: number;
+};

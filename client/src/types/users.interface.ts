@@ -1,11 +1,23 @@
+export enum UserRole {
+  Admin = "admin",
+  User = "user",
+}
+export enum SubscriptionType {
+  Free = "free",
+  Premium = "premium",
+}
 export interface IUser {
-  _id: string;
-  email: string;
+  _id?: string;
   firstName: string;
   lastName: string;
-  balance: number;
-  orders: any[];
-  role: string;
-  subscription: string;
+  email: string;
+  password: string;
+  role: UserRole;
+  subscription: SubscriptionType;
   image?: string;
+  lastLogin?: Date;
+  isActive?: boolean;
+  subscriptionExpiresAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
