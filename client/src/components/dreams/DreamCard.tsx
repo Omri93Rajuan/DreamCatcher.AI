@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Eye, ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
+import { Calendar, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import type { Dream } from "@/lib/api/types";
-import { useDreamReactions } from "@/hooks/useDreamReactions";
+import ReactionsBar from "@/components/dreams/ReactionsBar"; // ⬅️ זה הקומפוננטה שלך
 
 type Props = {
   dream: Dream;
@@ -30,10 +30,6 @@ export default function DreamCard({
 }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isOwner = !!currentUserId && dream.userId === currentUserId;
-
-  // נתוני Activity אמיתיים
-  const { likes, dislikes, viewsTotal, myReaction, react, isPending } =
-    useDreamReactions(dream._id);
 
   const title = safe(dream.title) || "חלום ללא כותרת";
   const dreamText = safe(dream.userInput);
@@ -70,47 +66,8 @@ export default function DreamCard({
               )}
             </div>
 
-            <div className="flex items-center gap-5 text-sm">
-              <span className="inline-flex items-center gap-1 text-purple-300">
-                <Eye className="w-4 h-4" /> {viewsTotal}
-              </span>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  react("like");
-                }}
-                disabled={isPending}
-                className={`inline-flex items-center gap-1 transition ${
-                  myReaction === "like"
-                    ? "text-emerald-300"
-                    : "text-purple-300 hover:text-emerald-200"
-                }`}
-                title="אהבתי"
-              >
-                <ThumbsUp className="w-4 h-4" />
-                {likes}
-              </button>
-
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  react("dislike");
-                }}
-                disabled={isPending}
-                className={`inline-flex items-center gap-1 transition ${
-                  myReaction === "dislike"
-                    ? "text-rose-300"
-                    : "text-purple-300 hover:text-rose-200"
-                }`}
-                title="לא אהבתי"
-              >
-                <ThumbsDown className="w-4 h-4" />
-                {dislikes}
-              </button>
-            </div>
+            {/* במקום כפתורי לייק/דיסלייק מקומיים → שימוש ב-ReactionsBar */}
+            <ReactionsBar dreamId={dream._id} />
           </div>
 
           {/* Dream text */}
