@@ -1,3 +1,4 @@
+// src/services/dreamActivity.service.ts
 import crypto from "crypto";
 import { Types } from "mongoose";
 import { Dream } from "../models/dream";
@@ -17,12 +18,7 @@ type RecordActivityArgs = {
 };
 
 /**
- * רישום פעילות על חלום:
- * - view: נספר פעם ביום פר משתמש (או ipHash לאנונימי).
- * - like/dislike: Toggle מלא למשתמש מחובר (required userId).
- *
- * הערה: אם במסמך Dream קיימים קאונטרים (viewsTotal / likesCount / dislikesCount)
- * השירות יעדכן אותם. אם לא — השאילתות האגרגטיביות יחזירו ספירה נכונה בכל מקרה.
+ * רישום פעילות (view/like/dislike)
  */
 export async function recordActivity({
   dreamId,
@@ -42,14 +38,13 @@ export async function recordActivity({
   const viewerId = userId || null;
   const isOwner = viewerId && String(dream.userId) === String(viewerId);
 
-  // אם החלום פרטי – רק הבעלים רשאי לראות/לפעול
+  // אם החלום פרטי – רק הבעלים רשאי
   if (!dream.isShared && !isOwner) {
     return { ok: false as const, reason: "forbidden" as const };
   }
 
   const today = dayBucket();
 
-  // צפייה יומית
   if (type === "view") {
     const ipHash = viewerId ? null : hashIp(ip);
 
@@ -67,19 +62,17 @@ export async function recordActivity({
 
     const isNew = (res as any).upsertedCount === 1;
 
-    // עדכון קאונטר על Dream אם קיים (אופציונלי)
     if (isNew) {
       try {
         await Dream.updateOne({ _id: dreamId }, { $inc: { viewsTotal: 1 } });
       } catch {
-        /* אם אין שדה כזה בסכימה — מתעלמים בשקט */
+        /* שדה לא קיים בסכימה – להתעלם */
       }
     }
 
     return { ok: true as const, activity: "view" as const, new: isNew };
   }
 
-  // לייק/דיסלייק — נדרש userId (לא אנונימי)
   if (!viewerId) {
     return { ok: false as const, reason: "auth_required" as const };
   }
@@ -93,7 +86,6 @@ export async function recordActivity({
     type: { $in: ["like", "dislike"] },
   }).lean();
 
-  // אין תגובה קודמת → יצירה + inc
   if (!existing) {
     await DreamActivity.create({
       dreamId: did,
@@ -112,16 +104,13 @@ export async function recordActivity({
           : { $inc: { dislikesCount: 1 } }
       );
     } catch {
-      /* שדה לא קיים — דלג */
+      /* דלג */
     }
-
     return { ok: true as const, activity: type, action: "created" as const };
   }
 
-  // קיימת זהה → ביטול (toggle off) + dec
   if (existing.type === type) {
     await DreamActivity.deleteOne({ _id: existing._id });
-
     try {
       await Dream.updateOne(
         { _id: dreamId },
@@ -132,16 +121,13 @@ export async function recordActivity({
     } catch {
       /* דלג */
     }
-
     return { ok: true as const, activity: type, action: "removed" as const };
   }
 
-  // קיימת הפוכה → החלפה (switch): עדכון + inc/dec
   await DreamActivity.updateOne(
     { _id: existing._id },
     { $set: { type, dayBucket: today, createdAt: new Date() } }
   );
-
   try {
     await Dream.updateOne(
       { _id: dreamId },
@@ -152,15 +138,16 @@ export async function recordActivity({
   } catch {
     /* דלג */
   }
-
   return { ok: true as const, activity: type, action: "switched" as const };
 }
 
-/** החזרת מונים + התגובה של המשתמש */
+/**
+ * החזרת מונים + התגובה של המשתמש + סה״כ צפיות
+ */
 export async function getReactions(dreamId: string, userId?: string | null) {
   const did = new Types.ObjectId(dreamId);
 
-  // קאונטרים ע״י אגרגציה (אמין גם אם אין קאונטרים על Dream)
+  // לייק/דיסלייק
   const agg = await DreamActivity.aggregate([
     { $match: { dreamId: did, type: { $in: ["like", "dislike"] } } },
     { $group: { _id: "$type", c: { $sum: 1 } } },
@@ -171,6 +158,13 @@ export async function getReactions(dreamId: string, userId?: string | null) {
     if (r._id === "like") counts.likes = r.c;
     if (r._id === "dislike") counts.dislikes = r.c;
   }
+
+  // צפיות סה״כ
+  const viewsAgg = await DreamActivity.aggregate([
+    { $match: { dreamId: did, type: "view" } },
+    { $count: "c" },
+  ]);
+  const viewsTotal = viewsAgg?.[0]?.c ?? 0;
 
   let myReaction: "like" | "dislike" | null = null;
   if (userId) {
@@ -184,42 +178,175 @@ export async function getReactions(dreamId: string, userId?: string | null) {
     myReaction = (r?.type as any) ?? null;
   }
 
-  return { likes: counts.likes, dislikes: counts.dislikes, myReaction };
+  return {
+    likes: counts.likes,
+    dislikes: counts.dislikes,
+    viewsTotal,
+    myReaction,
+  };
 }
 
-/** פופולרי השבוע לפי צפיות (אפשר להרחיב משקל עם לייקים) */
-export async function getPopularThisWeek(limit = 5) {
-  const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+/**
+ * פופולרי: חלון זמן (7/30), החזרה עם rank/score/percentChange ו־series אופציונלי.
+ * נכללים רק חלומות isShared=true.
+ */
+export type PopularRow = {
+  rank: number;
+  dreamId: string;
+  title: string;
+  isShared: boolean;
+  views: number;
+  likes: number;
+  score: number;
+  percentChange: number | null;
+  series?: Array<{ day: string; views: number; likes: number; score: number }>;
+};
 
-  const rows = await DreamActivity.aggregate([
-    { $match: { type: "view", createdAt: { $gte: since } } },
-    { $group: { _id: "$dreamId", views7d: { $sum: 1 } } },
-    { $sort: { views7d: -1 } },
+export async function getPopular(
+  windowDays = 7,
+  limit = 6,
+  withSeries = false
+): Promise<PopularRow[]> {
+  const DAY = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  const useAllTime = windowDays <= 0;
+
+  const since = new Date(now - windowDays * DAY);
+  const prevSince = new Date(since.getTime() - windowDays * DAY);
+
+  // אגרגציה לחלון הנוכחי או לכל הזמנים
+  const matchCurr: any = { type: { $in: ["view", "like"] } };
+  if (!useAllTime) matchCurr.createdAt = { $gte: since };
+
+  const curr = await DreamActivity.aggregate([
+    { $match: matchCurr },
+    {
+      $group: {
+        _id: "$dreamId",
+        views: { $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] } },
+        likes: { $sum: { $cond: [{ $eq: ["$type", "like"] }, 1, 0] } },
+      },
+    },
+    {
+      $addFields: { score: { $add: ["$views", { $multiply: ["$likes", 3] }] } },
+    },
+    { $sort: { score: -1 } },
     { $limit: limit },
   ]);
 
-  // הצמדת פרטי חלום בסיסיים
-  const ids = rows.map((r) => r._id);
+  const ids = curr.map((r) => r._id as Types.ObjectId);
+
+  // אגרגציה לחלון קודם (רק אם זה לא "כל הזמנים")
+  let prevMap = new Map<string, number>();
+  if (!useAllTime) {
+    const prevAgg = await DreamActivity.aggregate([
+      {
+        $match: {
+          type: { $in: ["view", "like"] },
+          dreamId: { $in: ids },
+          createdAt: { $gte: prevSince, $lt: since },
+        },
+      },
+      {
+        $group: {
+          _id: "$dreamId",
+          views: { $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] } },
+          likes: { $sum: { $cond: [{ $eq: ["$type", "like"] }, 1, 0] } },
+        },
+      },
+      {
+        $addFields: {
+          score: { $add: ["$views", { $multiply: ["$likes", 3] }] },
+        },
+      },
+    ]);
+    prevMap = new Map<string, number>(
+      prevAgg.map((r: any) => [String(r._id), Number(r.score || 0)])
+    );
+  }
+
+  // סדרות (יומי) רק לחלון מוגבל — לכל הזמנים זה יכול להיות כבד, לכן מבטלים
+  let seriesMap: Map<
+    string,
+    Array<{ day: string; views: number; likes: number; score: number }>
+  > | null = null;
+
+  if (withSeries && !useAllTime) {
+    const seriesAgg = await DreamActivity.aggregate([
+      {
+        $match: {
+          type: { $in: ["view", "like"] },
+          dreamId: { $in: ids },
+          createdAt: { $gte: since },
+        },
+      },
+      {
+        $group: {
+          _id: { dreamId: "$dreamId", day: "$dayBucket" },
+          views: { $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] } },
+          likes: { $sum: { $cond: [{ $eq: ["$type", "like"] }, 1, 0] } },
+        },
+      },
+      {
+        $project: {
+          dreamId: "$_id.dreamId",
+          day: "$_id.day",
+          views: 1,
+          likes: 1,
+          score: { $add: ["$views", { $multiply: ["$likes", 3] }] },
+          _id: 0,
+        },
+      },
+      { $sort: { day: 1 } },
+    ]);
+
+    seriesMap = new Map();
+    for (const p of seriesAgg as any[]) {
+      const k = String(p.dreamId);
+      if (!seriesMap.has(k)) seriesMap.set(k, []);
+      seriesMap.get(k)!.push({
+        day: p.day,
+        views: p.views,
+        likes: p.likes,
+        score: p.score,
+      });
+    }
+  }
+
+  // הבאת פרטי החלומות ושיוך
   const dreams = await Dream.find({ _id: { $in: ids } })
-    .select("_id title isShared userId createdAt")
+    .select("_id title isShared")
     .lean();
 
-  const map = new Map(dreams.map((d) => [String(d._id), d]));
-  return rows
-    .map((r) => {
-      const d = map.get(String(r._id));
-      if (!d) return null;
-      return {
-        dreamId: String(d._id),
-        title: d.title,
-        isShared: !!d.isShared,
-        views7d: r.views7d,
-      };
-    })
-    .filter(Boolean) as Array<{
-    dreamId: string;
-    title: string;
-    isShared: boolean;
-    views7d: number;
-  }>;
+  const dreamMap = new Map(dreams.map((d) => [String(d._id), d]));
+  let rank = 1;
+  const rows: PopularRow[] = [];
+
+  for (const r of curr as any[]) {
+    const id = String(r._id);
+    const d = dreamMap.get(id);
+    if (!d || !d.isShared) continue;
+
+    const scoreCurr = Number(r.score || 0);
+    const prevScore = useAllTime ? 0 : Number(prevMap.get(id) || 0);
+    const percentChange =
+      useAllTime || prevScore <= 0
+        ? null
+        : ((scoreCurr - prevScore) / prevScore) * 100;
+
+    rows.push({
+      rank: rank++,
+      dreamId: id,
+      title: d.title || "",
+      isShared: !!d.isShared,
+      views: Number(r.views || 0),
+      likes: Number(r.likes || 0),
+      score: scoreCurr,
+      percentChange,
+      series: withSeries && !useAllTime ? seriesMap?.get(id) ?? [] : undefined,
+    });
+  }
+
+  return rows;
 }

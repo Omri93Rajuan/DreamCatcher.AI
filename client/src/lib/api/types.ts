@@ -27,8 +27,21 @@ export type DreamsPage = {
   pages: number;
 };
 export type PopularRow = {
+  rank: number;
   dreamId: string;
   title: string;
+  coverImage?: string | null;
+  excerpt?: string | null;
   isShared: boolean;
-  views7d: number;
+  views: number;
+  likes: number;
+  score: number;
+  percentChange: number | null;
+  series?: SeriesPoint[];
+};
+export type SeriesPoint = {
+  day: string;
+  views: number;
+  likes: number;
+  score: number;
 };

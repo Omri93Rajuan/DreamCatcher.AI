@@ -1,36 +1,40 @@
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Eye, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Calendar, Eye, ThumbsUp, ThumbsDown, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import type { Dream } from "@/lib/api/types";
+import { useDreamReactions } from "@/hooks/useDreamReactions";
 
 type Props = {
-  dream: Dream & {
-    // אופציונלי מהשרת / with-metrics / popular-week
-    metrics?: {
-      viewsTotal?: number;
-      likes?: number;
-      dislikes?: number;
-    };
-  };
+  dream: Dream;
   showDate?: boolean;
+  currentUserId?: string | null;
+  onShare?: (dreamId: string) => void;
 };
 
 const safe = (v: unknown) => (typeof v === "string" ? v : "");
 const truncate = (txt: unknown, max = 140) => {
   const s = safe(txt);
   if (!s) return "";
-  const arr = [...s]; // כדי לא לשבור אימוג'י/RTL
+  const arr = [...s];
   return arr.length > max ? arr.slice(0, max).join("") + "…" : s;
 };
 
-export default function DreamCard({ dream, showDate = false }: Props) {
+export default function DreamCard({
+  dream,
+  showDate = false,
+  currentUserId,
+  onShare,
+}: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isOwner = !!currentUserId && dream.userId === currentUserId;
 
-  // שדות בטוחים
+  // נתוני Activity אמיתיים
+  const { likes, dislikes, viewsTotal, myReaction, react, isPending } =
+    useDreamReactions(dream._id);
+
   const title = safe(dream.title) || "חלום ללא כותרת";
   const dreamText = safe(dream.userInput);
   const interpretation = safe(
@@ -38,43 +42,80 @@ export default function DreamCard({ dream, showDate = false }: Props) {
   );
   const created = dream.createdAt ? new Date(dream.createdAt) : null;
 
-  const views = dream.metrics?.viewsTotal ?? (dream as any).search_count ?? 0;
-  const likes = dream.metrics?.likes ?? 0;
-  const dislikes = dream.metrics?.dislikes ?? 0;
-
   return (
     <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
       <Card
-        className="glass-card border-purple-500/30 hover:border-purple-400/50 transition-all cursor-pointer h-full overflow-hidden"
+        className="glass-card border-purple-500/30 hover:border-purple-400/50 transition-all h-full overflow-hidden"
         onClick={() => setIsExpanded((v) => !v)}
       >
-        <CardContent className="p-6">
-          {/* Header: כותרת + מונים */}
-          <div className="mb-4">
-            <h3 className="font-bold text-lg mb-2 text-white">{title}</h3>
+        <CardContent className="p-6 flex flex-col h-full justify-between">
+          {/* Header */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-lg text-white truncate max-w-[80%]">
+                {title}
+              </h3>
 
-            {(views > 0 || likes > 0 || dislikes > 0) && (
-              <div className="flex items-center gap-4 text-sm text-purple-300">
-                <span className="inline-flex items-center gap-1">
-                  <Eye className="w-4 h-4" /> {views}
-                </span>
-                {likes > 0 && (
-                  <span className="inline-flex items-center gap-1">
-                    <ThumbsUp className="w-4 h-4" /> {likes}
-                  </span>
-                )}
-                {dislikes > 0 && (
-                  <span className="inline-flex items-center gap-1">
-                    <ThumbsDown className="w-4 h-4" /> {dislikes}
-                  </span>
-                )}
-              </div>
-            )}
+              {isOwner && onShare && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onShare(dream._id);
+                  }}
+                  className="text-amber-300 hover:text-amber-400 transition"
+                  title="שתף חלום"
+                >
+                  <Share2 className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-5 text-sm">
+              <span className="inline-flex items-center gap-1 text-purple-300">
+                <Eye className="w-4 h-4" /> {viewsTotal}
+              </span>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  react("like");
+                }}
+                disabled={isPending}
+                className={`inline-flex items-center gap-1 transition ${
+                  myReaction === "like"
+                    ? "text-emerald-300"
+                    : "text-purple-300 hover:text-emerald-200"
+                }`}
+                title="אהבתי"
+              >
+                <ThumbsUp className="w-4 h-4" />
+                {likes}
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  react("dislike");
+                }}
+                disabled={isPending}
+                className={`inline-flex items-center gap-1 transition ${
+                  myReaction === "dislike"
+                    ? "text-rose-300"
+                    : "text-purple-300 hover:text-rose-200"
+                }`}
+                title="לא אהבתי"
+              >
+                <ThumbsDown className="w-4 h-4" />
+                {dislikes}
+              </button>
+            </div>
           </div>
 
           {/* Dream text */}
           {dreamText && (
-            <div className="mb-4">
+            <div className="mt-4">
               <h4 className="font-bold text-base mb-1 text-white/90">החלום:</h4>
               <p className="text-purple-100 leading-relaxed">
                 {isExpanded ? dreamText : truncate(dreamText, 180)}
@@ -84,7 +125,7 @@ export default function DreamCard({ dream, showDate = false }: Props) {
 
           {/* Interpretation */}
           {interpretation && (
-            <div className="mb-3">
+            <div className="mt-4">
               <h4 className="font-bold text-lg mb-2 text-amber-300">
                 הפרשנות:
               </h4>
@@ -95,27 +136,16 @@ export default function DreamCard({ dream, showDate = false }: Props) {
           )}
 
           {/* Footer */}
-          <div className="flex items-center justify-between text-sm text-purple-400 pt-4 border-t border-purple-500/20">
+          <div className="flex items-center justify-between text-sm text-purple-400 pt-4 mt-4 border-t border-purple-500/20">
             {showDate && created && (
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 <span>{format(created, "d MMMM yyyy", { locale: he })}</span>
               </div>
             )}
-
-            <span className="mr-auto text-purple-300">
+            <span className="ml-auto text-purple-300">
               {isExpanded ? "לחץ להקטנה" : "לחץ להרחבה"}
             </span>
-
-            <Badge
-              className={
-                dream.isShared
-                  ? "bg-green-500/20 text-green-300 border-green-500/30"
-                  : "bg-purple-500/20 text-purple-300 border-purple-500/30"
-              }
-            >
-              {dream.isShared ? "שותף" : "פרטי"}
-            </Badge>
           </div>
         </CardContent>
       </Card>
