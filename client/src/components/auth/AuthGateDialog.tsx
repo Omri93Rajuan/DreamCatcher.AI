@@ -90,17 +90,36 @@ export default function AuthGateDialog({
     setSubmitting(true);
     setError(null);
     try {
-      const res = await AuthApi.login({
+      const loginRes = await AuthApi.login({
         email: loginEmail,
         password: loginPassword,
       });
-      const user = res?.user ?? (await AuthApi.verify())?.user ?? null;
-      if (!user) throw new Error("login_failed");
-      setUser(user);
-      onOpenChange(false);
-      onSuccess?.();
+
+      if (loginRes?.user) {
+        setUser(loginRes.user);
+        onOpenChange(false);
+        onSuccess?.();
+        return;
+      }
+
+      // זמן קצר כדי לוודא שהדפדפן כתב את ה־HttpOnly cookie
+      await new Promise((r) => setTimeout(r, 50));
+
+      const verify = await AuthApi.verify();
+      if (verify?.user) {
+        setUser(verify.user);
+        onOpenChange(false);
+        onSuccess?.();
+      } else {
+        setError("לא הצלחנו לאמת את ההתחברות. נסו שוב.");
+      }
     } catch (e: any) {
-      setError(e?.response?.data?.error || "אימייל או סיסמה שגויים.");
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "אימייל או סיסמה שגויים.";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -114,24 +133,34 @@ export default function AuthGateDialog({
     setSubmitting(true);
     setError(null);
     try {
-      const hasRegister = typeof (AuthApi as any).register === "function";
-      if (hasRegister) {
-        await (AuthApi as any).register({
-          firstName,
-          lastName,
-          email,
-          password /*, image*/,
-        });
-        await AuthApi.login({ email, password });
-        const v = await AuthApi.verify();
-        setUser(v?.user ?? null);
+      await AuthApi.register({
+        firstName,
+        lastName,
+        email,
+        password,
+        // image: avatarFile? ... : undefined // אם תבחר לממש העלאת תמונה
+      });
+
+      // הלוגין יכול להיות מיותר אם השרת מחזיר user+cookie ישר ב־register;
+      // כאן נשמור תאימות: נבצע login ואז verify כמו ב־LoginPage.
+      await AuthApi.login({ email, password });
+      await new Promise((r) => setTimeout(r, 50));
+      const verify = await AuthApi.verify();
+
+      if (verify?.user) {
+        setUser(verify.user);
         onOpenChange(false);
         onSuccess?.();
       } else {
-        window.location.href = "/register";
+        setError("החשבון נוצר, אבל לא הצלחנו לאמת את ההתחברות.");
       }
     } catch (e: any) {
-      setError(e?.response?.data?.error || "שגיאה בהרשמה.");
+      const msg =
+        e?.response?.data?.message ||
+        e?.response?.data?.error ||
+        e?.message ||
+        "שגיאה בהרשמה.";
+      setError(msg);
     } finally {
       setSubmitting(false);
     }

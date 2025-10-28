@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { getMe, login, logout } from "../services/auth.service";
+import {
+  getMe,
+  login as loginSvc,
+  logout as logoutSvc,
+  register as registerSvc,
+} from "../services/auth.service";
 import { handleError } from "../utils/ErrorHandle";
 
 const ACCESS_SECRET =
@@ -17,7 +22,7 @@ function setAccessCookie(res: Response, token: string) {
     sameSite: "lax",
     secure: isProd,
     path: "/",
-    maxAge: 15 * 60 * 1000,
+    maxAge: 15 * 60 * 1000, // 15m
   });
 }
 function setRefreshCookie(res: Response, token: string) {
@@ -26,34 +31,52 @@ function setRefreshCookie(res: Response, token: string) {
     sameSite: "lax",
     secure: isProd,
     path: "/",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
   });
 }
 
-// עוזר קטן להפוך Document ל-POJO אם צריך
-function toPlain<T>(doc: any): T {
-  return doc?.toObject ? doc.toObject() : doc;
-}
-
-export const loginUser = async (req: Request, res: Response): Promise<void> => {
+export const registerUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-    const creds = req.body;
-    const RealUser = await login(creds, res);
+    const user = await registerSvc(req.body);
 
-    const u = toPlain<{
-      _id: string;
-      email: string;
-      role?: string;
-      name?: string;
-    }>(RealUser.foundUser);
-
+    // יצירת JWT + קוקיות כמו בלוגין
     const accessToken = jwt.sign(
-      { _id: u._id, role: u.role, email: u.email },
+      { _id: user._id, role: user.role, email: user.email },
       ACCESS_SECRET,
       { expiresIn: "15m" }
     );
     const refreshToken = jwt.sign(
-      { _id: u._id, role: u.role },
+      { _id: user._id, role: user.role },
+      REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
+
+    res.status(201).json({ user });
+  } catch (error: any) {
+    handleError(
+      res,
+      error.status || 400,
+      error.message || "Registration failed"
+    );
+  }
+};
+
+export const loginUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = await loginSvc(req.body);
+
+    const accessToken = jwt.sign(
+      { _id: user._id, role: user.role, email: user.email },
+      ACCESS_SECRET,
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { _id: user._id, role: user.role },
       REFRESH_SECRET,
       { expiresIn: "7d" }
     );
@@ -61,35 +84,26 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     setAccessCookie(res, accessToken);
     setRefreshCookie(res, refreshToken);
 
-    res.status(200).json({
-      user: { _id: u._id, email: u.email, name: u.name, role: u.role },
-    });
-    return;
+    res.status(200).json({ user });
   } catch (error: any) {
-    handleError(res, error.status || 401, error.message);
-    return;
+    handleError(res, error.status || 401, error.message || "Login failed");
   }
 };
 
-export const logoutUser = (
-  req: Request,
-  res: Response
-): Promise<void> | void => {
+export const logoutUser = (req: Request, res: Response): void => {
   try {
-    logout(res);
+    logoutSvc();
     res.clearCookie("auth_token", { path: "/" });
     res.clearCookie("refresh_token", { path: "/" });
     res.status(200).json({ message: "Logged out successfully" });
-    return;
   } catch (error: any) {
     handleError(res, 500, error.message);
-    return;
   }
 };
 
 export const refreshToken = (req: Request, res: Response): void => {
   try {
-    const rt = req.cookies.refresh_token as string | undefined;
+    const rt = req.cookies?.refresh_token as string | undefined;
     if (!rt) {
       handleError(res, 401, "No refresh token provided");
       return;
@@ -97,12 +111,12 @@ export const refreshToken = (req: Request, res: Response): void => {
 
     jwt.verify(rt, REFRESH_SECRET, (err: any, decoded: any) => {
       if (err || !decoded) {
-        handleError(res, 401, "Invalid refresh token"); // 401 כדי לאפשר ללקוח לנקות סשן
+        handleError(res, 401, "Invalid refresh token");
         return;
       }
 
       const newAccess = jwt.sign(
-        { _id: (decoded as any)._id, role: (decoded as any).role },
+        { _id: decoded._id, role: decoded.role },
         ACCESS_SECRET,
         { expiresIn: "15m" }
       );
@@ -117,7 +131,7 @@ export const refreshToken = (req: Request, res: Response): void => {
 
 export const verifyToken = (req: Request, res: Response): void => {
   try {
-    const fromCookie = req.cookies.auth_token as string | undefined;
+    const fromCookie = req.cookies?.auth_token as string | undefined;
     const auth = req.headers.authorization;
     const fromHeader = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
     const token = fromCookie || fromHeader;
@@ -150,12 +164,10 @@ export const getUserById = async (
   try {
     const { id } = req.params;
     const foundUser = await getMe(id);
-
     if (!foundUser) {
       res.status(404).json({ message: "User not found" });
       return;
     }
-
     res.status(200).json({ user: foundUser });
   } catch (error: any) {
     handleError(res, 500, error.message);

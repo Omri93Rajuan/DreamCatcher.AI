@@ -1,33 +1,33 @@
-// src/services/auth.service.ts
-import { CookieOptions, Response } from "express";
-import { comparePassword } from "../helpers/bcrypt";
-import { generateAuthToken } from "../middlewares/jwt";
 import Users from "../models/user";
 import type { IUser } from "../types/users.interface";
+import { comparePassword, hashPassword } from "../helpers/bcrypt";
 
-const isProd = process.env.NODE_ENV === "production";
-
-const cookieConfig: CookieOptions = {
-  httpOnly: true,
-  secure: isProd,
-  sameSite: isProd ? "strict" : "lax",
-  path: "/",
-};
-
-interface LoginDTO {
+export interface LoginDTO {
   email: string;
   password: string;
 }
 
-export const login = async (user: LoginDTO, res: Response) => {
-  if (!user?.email || !user?.password) {
+export interface RegisterDTO {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  image?: string;
+}
+
+/**
+ * מחזיר את המשתמש הציבורי (ללא סיסמה) אם האישורים תקינים.
+ * אין כאן יצירת טוקנים/קוקיות – זה בטיפול הקונטרולר.
+ */
+export const login = async (creds: LoginDTO) => {
+  if (!creds?.email || !creds?.password) {
     const err: any = new Error("Missing required fields");
     err.status = 400;
     throw err;
   }
 
-  // ⚠️ חשוב: password הוא select:false בסכמה → חייבים +password
-  const found = await Users.findOne({ email: user.email })
+  // שים לב: password בסכמה כנראה select:false
+  const found = await Users.findOne({ email: creds.email })
     .select("+password")
     .lean<IUser & { password: string; name?: string }>()
     .exec();
@@ -38,8 +38,7 @@ export const login = async (user: LoginDTO, res: Response) => {
     throw err;
   }
 
-  // אם הסידינג שמר סיסמאות לא מוצפנות, ההשוואה תיכשל.
-  // ניתן לזהות hash אמיתי לפי התחלה ב-$2
+  // וידוא שהסיסמה מסו-האש בדאטהבייס
   const isHash =
     typeof found.password === "string" && found.password.startsWith("$2");
   if (!isHash) {
@@ -48,7 +47,7 @@ export const login = async (user: LoginDTO, res: Response) => {
     throw err;
   }
 
-  const ok = await comparePassword(user.password, found.password);
+  const ok = await comparePassword(creds.password, found.password);
   if (!ok) {
     const err: any = new Error("Incorrect password or Email");
     err.status = 401;
@@ -56,14 +55,8 @@ export const login = async (user: LoginDTO, res: Response) => {
   }
 
   const name =
-    (found as any).name ?? `${found.firstName} ${found.lastName}`.trim();
-
-  const token = generateAuthToken({
-    _id: found._id,
-    role: found.role,
-  });
-
-  res.cookie("auth_token", token, cookieConfig);
+    (found as any).name ??
+    `${found.firstName ?? ""} ${found.lastName ?? ""}`.trim();
 
   const publicUser: Omit<IUser, "password"> & { _id: string; name?: string } = {
     _id: String(found._id),
@@ -81,11 +74,57 @@ export const login = async (user: LoginDTO, res: Response) => {
     name,
   };
 
-  return { foundUser: publicUser, token };
+  return publicUser;
 };
 
-export const logout = (res: Response) => {
-  res.clearCookie("auth_token", { ...cookieConfig });
+/**
+ * יצירת משתמש חדש (כולל hashing לסיסמה) והחזרת המשתמש הציבורי.
+ */
+export const register = async (data: RegisterDTO) => {
+  const { firstName, lastName, email, password, image } = data || {};
+  if (!firstName || !lastName || !email || !password) {
+    const err: any = new Error("Missing required fields");
+    err.status = 400;
+    throw err;
+  }
+
+  const exists = await Users.findOne({ email }).lean().exec();
+  if (exists) {
+    const err: any = new Error("Email already registered");
+    err.status = 409;
+    throw err;
+  }
+
+  // אם יש לך pre('save') שמבצע hashing – אפשר לדלג על השורה הבאה ולהשאיר password רגיל
+  const hashed = await hashPassword(password);
+
+  const created = await Users.create({
+    firstName,
+    lastName,
+    email,
+    password: hashed,
+    image,
+    isActive: true,
+    lastLogin: new Date(),
+  });
+
+  const publicUser: Omit<IUser, "password"> & { _id: string; name?: string } = {
+    _id: String(created._id),
+    email: created.email,
+    role: created.role,
+    subscription: created.subscription,
+    firstName: created.firstName,
+    lastName: created.lastName,
+    image: created.image,
+    lastLogin: created.lastLogin,
+    isActive: created.isActive,
+    subscriptionExpiresAt: created.subscriptionExpiresAt,
+    createdAt: created.createdAt,
+    updatedAt: created.updatedAt,
+    name: `${created.firstName ?? ""} ${created.lastName ?? ""}`.trim(),
+  };
+
+  return publicUser;
 };
 
 export const getMe = async (userId: string) => {
@@ -106,4 +145,9 @@ export const getMe = async (userId: string) => {
   if (!u.name)
     (u as any).name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
   return u;
+};
+
+export const logout = () => {
+  // אין לוגיקה בשרת מלבד ניקוי קוקיות בקונטרולר
+  return true;
 };
