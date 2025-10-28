@@ -20,20 +20,24 @@ import FlipDreamCard, {
 export default function MyDreams() {
   const qc = useQueryClient();
   const { user } = useAuthStore();
+
+  // קח מזהה בטוח משני השדות הנפוצים
+  const userId = React.useMemo(() => user?.id ?? user?._id ?? null, [user]);
+
   const [page, setPage] = React.useState(1);
   const [limit] = React.useState(12);
   const [q, setQ] = React.useState("");
 
-  const queryKey = ["my-dreams", user?._id, page, limit, q] as const;
+  const queryKey = ["my-dreams", userId, page, limit, q] as const;
 
   const { data, isLoading, isFetching } = useQuery<DreamsListResult>({
     queryKey,
-    enabled: !!user?._id,
+    enabled: !!userId, // <- היה !!user?._id
     staleTime: 60_000,
     placeholderData: keepPreviousData,
-    // ⚠️ לא שולחים isShared — רוצים *הכל* של היוזר, השרת יאשר בעלות
     queryFn: () =>
-      DreamsApi.listByUser(user!._id, {
+      DreamsApi.listByUser(userId!, {
+        // <- היה user!._id
         page,
         limit,
         search: q.trim() || undefined,

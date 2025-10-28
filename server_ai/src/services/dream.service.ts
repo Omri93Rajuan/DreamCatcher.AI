@@ -6,12 +6,17 @@ import { getLLMProvider } from "../llm";
 type SortOrder = "asc" | "desc";
 
 export interface GetDreamsQuery {
+  /** מזהה המשתמש שמחובר (מה־auth) */
   viewerId?: string;
+  /** מזהה היוצר שאת חלומותיו רוצים לראות (אם ריק → פיד כללי) */
   ownerId?: string;
   userId?: string;
+  /** חיפוש טקסטואלי */
   search?: string;
+  /** מיון */
   sortBy?: string;
   order?: SortOrder;
+  /** עמוד/כמות */
   page?: number;
   limit?: number;
 }
@@ -34,7 +39,7 @@ export const saveDream = async (
   return dream.save();
 };
 
-/** 🔹 שמירה ישירה כשכבר יש לנו פירוש (ללא LLM נוסף) */
+/** 🔹 שמירה ישירה כשכבר יש פירוש */
 export const createDreamFromInterpretation = async (
   userId: string,
   userInput: string,
@@ -52,7 +57,7 @@ export const createDreamFromInterpretation = async (
   return saveDream(userId, title, userInput, interpretation, isShared);
 };
 
-/** שמירה הכוללת קריאת LLM (כאשר אין פירוש מוכן) */
+/** 🔹 שמירה עם LLM */
 export const createDreamWithAI = async (
   userId: string,
   userInput: string,
@@ -95,6 +100,14 @@ export const updateDream = async (
   return Dream.findByIdAndUpdate(id, patch, { new: true });
 };
 
+/**
+ * 🔎 שליפה עם ויזיביליות נכונה:
+ * - אם יש creatorId (userId/ownerId):
+ *   - viewerId === creatorId ⇒ כל החלומות של עצמי.
+ *   - אחרת ⇒ רק isShared: true של היוצר המבוקש.
+ * - אם אין creatorId (פיד כללי):
+ *   ⇒ תמיד רק isShared: true (ציבורי), גם אם מחובר.
+ */
 export const getDreams = async (query: GetDreamsQuery) => {
   const {
     viewerId,
@@ -107,29 +120,47 @@ export const getDreams = async (query: GetDreamsQuery) => {
     limit = 10,
   } = query;
 
-  const visibilityFilter = viewerId
-    ? { $or: [{ isShared: true }, { userId: viewerId }] }
-    : { isShared: true };
-
   const creatorId = userId || ownerId;
-  const creatorFilter = creatorId ? { userId: creatorId } : {};
 
-  const searchFilter = search?.trim()
-    ? {
-        $or: [
-          { title: { $regex: search, $options: "i" } },
-          { userInput: { $regex: search, $options: "i" } },
-          { aiResponse: { $regex: search, $options: "i" } },
-        ],
-      }
-    : {};
+  // בסיס הוויזיביליות
+  let baseFilter: any;
+  if (creatorId) {
+    if (viewerId && String(creatorId) === String(viewerId)) {
+      // “החלומות שלי” → הכל
+      baseFilter = { userId: creatorId };
+    } else {
+      // משתמש אחר → רק משותפים שלו
+      baseFilter = { userId: creatorId, isShared: true };
+    }
+  } else {
+    // פיד כללי → תמיד רק ציבורי, בלי קשר להתחברות
+    baseFilter = { isShared: true };
+  }
 
-  const filter = { $and: [visibilityFilter, creatorFilter, searchFilter] };
+  // חיפוש טקסטואלי (אופציונלי)
+  const trimmed = (search ?? "").trim();
+  const searchFilter =
+    trimmed.length > 0
+      ? {
+          $or: [
+            { title: { $regex: trimmed, $options: "i" } },
+            { userInput: { $regex: trimmed, $options: "i" } },
+            { aiResponse: { $regex: trimmed, $options: "i" } },
+          ],
+        }
+      : null;
+
+  const filter = searchFilter
+    ? { $and: [baseFilter, searchFilter] }
+    : baseFilter;
+
+  // מיון/פג'ינציה
   const sort: Record<string, 1 | -1> = sortBy
     ? { [sortBy]: order === "asc" ? 1 : -1 }
     : { createdAt: -1 };
-  const safePage = page > 0 ? page : 1;
-  const safeLimit = limit > 0 ? limit : 10;
+
+  const safePage = Number.isFinite(page) && page && page > 0 ? page : 1;
+  const safeLimit = Number.isFinite(limit) && limit && limit > 0 ? limit : 10;
 
   const [dreams, total] = await Promise.all([
     Dream.find(filter)
@@ -139,7 +170,12 @@ export const getDreams = async (query: GetDreamsQuery) => {
     Dream.countDocuments(filter),
   ]);
 
-  return { dreams, total, page: safePage, pages: Math.ceil(total / safeLimit) };
+  return {
+    dreams,
+    total,
+    page: safePage,
+    pages: Math.ceil(total / safeLimit) || 1,
+  };
 };
 
 export const getDreamById = async (id: string) => Dream.findById(id);

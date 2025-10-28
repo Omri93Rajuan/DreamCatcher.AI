@@ -40,19 +40,16 @@ function parseListResponse(data: any): DreamsPage {
     };
   }
 
-  // 2) לעיתים { data: [...] }
   if (data && Array.isArray(data.data)) {
     const arr = data.data.map(adapt);
     return { dreams: arr, total: arr.length, page: 1, pages: 1 };
   }
 
-  // 3) מערך גולמי
   if (Array.isArray(data)) {
     const arr = data.map(adapt);
     return { dreams: arr, total: arr.length, page: 1, pages: 1 };
   }
 
-  // ברירת מחדל בטוחה
   return { dreams: [], total: 0, page: 1, pages: 1 };
 }
 
