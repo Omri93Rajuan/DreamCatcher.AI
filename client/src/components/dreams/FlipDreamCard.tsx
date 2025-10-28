@@ -1,3 +1,4 @@
+// src/components/dreams/FlipDreamCard.tsx  ← קובץ מלא
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
@@ -26,10 +27,9 @@ export type SeriesPoint = {
   likes: number;
   score: number;
 };
-
 export type PopularRowForFlip = {
   rank: number;
-  dreamId?: string; // עשוי להגיע כשדה אחר – לכן אופציונלי כאן
+  dreamId?: string;
   id?: string;
   _id?: string;
   title: string;
@@ -43,7 +43,6 @@ export type PopularRowForFlip = {
 
 const nf = new Intl.NumberFormat("he-IL");
 const fmtLabel = (iso: string) => {
-  // אם זו נקודה יומית נקבל YYYY-MM-DD; אם חודשית – YYYY-MM
   const y = Number(iso.slice(0, 4));
   const m = Number(iso.slice(5, 7) || "1") - 1;
   const d = Number((iso[7] && iso.slice(8, 10)) || "1");
@@ -59,18 +58,20 @@ const fmtLabel = (iso: string) => {
 export default function FlipDreamCard({
   row,
   windowDaysLabel,
+  hideRank = false,
+  hideChartIfEmpty = true,
 }: {
   row: PopularRowForFlip;
   windowDaysLabel: string;
+  hideRank?: boolean;
+  hideChartIfEmpty?: boolean;
 }) {
-  // ← מזהה בטוח מהשורה
   const dreamId = (row?.dreamId ?? row?.id ?? row?._id) as string | undefined;
-  if (!dreamId) return null; // בלי מזהה אין מה לרנדר
+  if (!dreamId) return null;
 
   const [flipped, setFlipped] = React.useState(false);
   const loadedRef = React.useRef(false);
 
-  // נטען את החלום רק לאחר היפוך ראשון
   const { data: dream } = useQuery<Dream>({
     queryKey: ["dream", dreamId],
     queryFn: () => DreamsApi.getById(dreamId),
@@ -80,7 +81,6 @@ export default function FlipDreamCard({
   React.useEffect(() => {
     if (flipped && !loadedRef.current) {
       loadedRef.current = true;
-      // רישום צפייה, לא קריטי אם נכשל
       DreamsApi.recordActivity?.(dreamId, "view").catch(() => {});
     }
   }, [flipped, dreamId]);
@@ -91,7 +91,6 @@ export default function FlipDreamCard({
     (dream as any)?.interpretation ??
     ""
   ).trim();
-
   const series = Array.isArray(row.series) ? row.series : [];
 
   return (
@@ -112,14 +111,16 @@ export default function FlipDreamCard({
         transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
         style={{ transformStyle: "preserve-3d" }}
       >
-        {/* קדמי: מדדים + גרף */}
+        {/* קדמי */}
         <div
           className="absolute inset-0 p-4"
           style={{ backfaceVisibility: "hidden" }}
         >
-          <div className="absolute top-3 right-3 z-10 text-xs font-bold bg-amber-400 text-black rounded-full px-2 py-1">
-            #{row.rank}
-          </div>
+          {!hideRank && (
+            <div className="absolute top-3 right-3 z-10 text-xs font-bold bg-amber-400 text-black rounded-full px-2 py-1">
+              #{row.rank}
+            </div>
+          )}
 
           <h3 className="text-lg font-semibold line-clamp-2 pr-8">
             {row.title}
@@ -161,6 +162,7 @@ export default function FlipDreamCard({
             )}
           </div>
 
+          {/* גרף — לא מציגים כלום אם אין נתונים */}
           <div className="h-28 mt-3 rounded-md">
             {series.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
@@ -207,7 +209,7 @@ export default function FlipDreamCard({
                   />
                 </AreaChart>
               </ResponsiveContainer>
-            ) : (
+            ) : hideChartIfEmpty ? null : (
               <div className="h-full w-full rounded-md bg-white/5" />
             )}
           </div>
@@ -217,13 +219,12 @@ export default function FlipDreamCard({
           </div>
         </div>
 
-        {/* אחורי: טקסט חלום + פרשנות */}
+        {/* אחורי */}
         <div
           className="absolute inset-0 p-4 bg-white/5"
           style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
         >
           <h3 className="text-lg font-semibold mb-2">תצוגת חלום</h3>
-
           <div className="grid grid-rows-[1fr_auto] h-[calc(100%-2rem)]">
             <div className="overflow-y-auto pr-1 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
               {userInput ? (
@@ -241,7 +242,6 @@ export default function FlipDreamCard({
                 </div>
               ) : null}
             </div>
-
             <div className="pt-2 text-right text-sm text-amber-300">
               הפוך חזרה
             </div>

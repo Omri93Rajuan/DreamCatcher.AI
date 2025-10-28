@@ -1,60 +1,118 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sparkles, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Send, Loader2, Search } from "lucide-react";
+import { DreamsApi } from "@/lib/api/dreams";
+import type { Dream } from "@/lib/api/types";
+import AuthGateDialog from "@/components/auth/AuthGateDialog";
+import SharePromptDialog from "@/components/dreams/SharePromptDialog";
+import { useAuthStore } from "@/stores/useAuthStore";
 
-export default function DreamInterpretation({
-  interpretation,
-}: {
-  interpretation: { dream_text: string; interpretation: string };
-}) {
+type Props = {
+  onInterpreted?: (payload: {
+    dream_text: string;
+    interpretation: string;
+    dream?: Dream | null;
+  }) => void;
+};
+
+export default function InterpretForm({ onInterpreted }: Props) {
+  const [title, setTitle] = useState("");
+  const [newDream, setNewDream] = useState("");
+  const [isInterpreting, setIsInterpreting] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [lastDream, setLastDream] = useState<Dream | null>(null);
+
+  const { user } = useAuthStore(); // null אם לא מחובר
+
+  const requireAuth = () => {
+    if (!user) {
+      setAuthOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleInterpret = async () => {
+    if (!newDream.trim()) return;
+    if (!requireAuth()) return;
+
+    setIsInterpreting(true);
+    try {
+      const resp = await DreamsApi.interpret({
+        text: newDream,
+        save: true, // שמירה אוטומטית
+        titleOverride: title || undefined,
+        isShared: false, // נשמר כפרטי כברירת מחדל
+      });
+
+      const dream = resp.dream!;
+      setLastDream(dream);
+
+      onInterpreted?.({
+        dream_text: dream.userInput,
+        interpretation: dream.aiResponse,
+        dream,
+      });
+
+      setTitle("");
+      setNewDream("");
+      setShareOpen(true);
+    } finally {
+      setIsInterpreting(false);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.5 }}
-    >
-      <Card className="glass-card border-amber-500/30 glow-effect">
-        <CardContent className="p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-white">הפרשנות מוכנה!</h2>
-              <p className="text-purple-300 text-sm">
-                קרא/י בעיון את הפענוח שלך
-              </p>
-            </div>
-          </div>
+    <>
+      <div className="grid gap-3 max-w-3xl mx-auto mb-10">
+        <Input
+          placeholder="כותרת (לא חובה)"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+        <div className="relative">
+          <Search className="absolute right-4 top-3 w-5 h-5 text-purple-400" />
+          <Textarea
+            value={newDream}
+            onChange={(e) => setNewDream(e.target.value)}
+            placeholder="תאר/י את החלום שלך..."
+            className="pr-10"
+            disabled={isInterpreting}
+          />
+        </div>
+        <Button
+          onClick={handleInterpret}
+          disabled={!newDream.trim() || isInterpreting}
+          className="w-full bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white font-bold py-3 rounded-xl glow-effect disabled:opacity-50"
+        >
+          {isInterpreting ? (
+            <>
+              <Loader2 className="w-5 h-5 ml-2 animate-spin" /> מפענח ושומר...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5 ml-2" /> פענח ושמור את החלום
+            </>
+          )}
+        </Button>
+      </div>
 
-          <div className="mb-6 p-6 glass-card rounded-xl border border-purple-500/20">
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-              <h3 className="font-bold text-lg text-white">החלום שלך:</h3>
-            </div>
-            <p className="text-purple-100 leading-relaxed text-lg">
-              {interpretation.dream_text}
-            </p>
-          </div>
+      <AuthGateDialog
+        open={authOpen}
+        onOpenChange={setAuthOpen}
+        initialMode="signup"
+        onSuccess={() => setAuthOpen(false)}
+      />
 
-          <div className="p-6 bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-xl border border-amber-500/30">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-6 h-6 text-amber-400" />
-              <h3 className="font-bold text-2xl text-amber-300">הפרשנות:</h3>
-            </div>
-            <div className="text-white leading-relaxed text-lg whitespace-pre-line">
-              {interpretation.interpretation}
-            </div>
-          </div>
-
-          <div className="mt-6 p-4 glass-card rounded-lg border border-purple-500/20 text-center text-sm text-purple-300">
-            💫 זכור/זכרי: הפרשנות היא כלי לחקירה עצמית — האינטואיציה שלך חשובה
-            לא פחות.
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+      <SharePromptDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        dream={lastDream}
+        onShared={(updated: Dream) => setLastDream(updated)}
+      />
+    </>
   );
 }

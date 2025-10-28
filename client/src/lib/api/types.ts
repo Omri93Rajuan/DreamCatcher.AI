@@ -1,31 +1,6 @@
-export type Dream = {
-  _id: string;
-  userId: string;
-  title: string;
-  userInput: string;
-  aiResponse: string;
-  isShared: boolean;
-  sharedAt?: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 export type LoginDto = { email: string; password: string };
 export type User = { _id: string; name: string; email: string; role?: string };
 
-export type CreateDreamDto = Pick<
-  Dream,
-  "title" | "userInput" | "aiResponse" | "isShared" | "sharedAt"
->;
-export type InterpretDto = { userInput: string };
-export type InterpretResponse = { title?: string | null; aiResponse: string };
-
-export type DreamsPage = {
-  dreams: Dream[];
-  total: number;
-  page: number;
-  pages: number;
-};
 export type PopularRow = {
   rank: number;
   dreamId: string;
@@ -71,3 +46,50 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
 }
+export type Dream = {
+  _id: string;
+  userId: string;
+  title: string;
+  userInput: string;
+  aiResponse: string;
+  isShared: boolean;
+  sharedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CreateDreamDto = {
+  title: string;
+  userInput: string;
+  aiResponse: string;
+  isShared?: boolean;
+  sharedAt?: string | null;
+};
+
+export type DreamsPage = {
+  dreams: Dream[];
+  total: number;
+  page: number;
+  pages: number;
+};
+
+/**
+ * DTO גמיש ל-interpret:
+ * תומך בשמות שדה שונים לטקסט, ובדגל save (ברירת מחדל frontend: false)
+ */
+export type InterpretDto = {
+  text?: string;
+  userInput?: string;
+  prompt?: string;
+  dream_text?: string;
+  save?: boolean; // כאן נשלח true
+  isShared?: boolean; // נשמור כפרטי כברירת מחדל (false)
+  model?: string;
+  titleOverride?: string;
+};
+
+export type InterpretResponse = {
+  title: string | null;
+  aiResponse: string;
+  dream?: Dream | null; // יתקבל כשsave=true
+};

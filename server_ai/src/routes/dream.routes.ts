@@ -1,15 +1,26 @@
+// src/routes/dream.routes.ts
 import { Router } from "express";
 import * as dreamController from "../controllers/dream.controller";
+import authenticate from "../middlewares/authenticate";
 
 const router = Router();
 
-router.post("/interpret", dreamController.interpretDream);
+// פירוש → שמירה (תמיד)
+router.post("/interpret", authenticate, dreamController.interpretDream);
 
-router.post("/", dreamController.createDream);
+// יצירה ידנית (אם aiResponse קיים – נשמר ישירות)
+router.post("/", authenticate, dreamController.createDream);
+
+// פיד ציבורי ושליפות
 router.get("/", dreamController.getAllDreams);
-
 router.get("/:id([0-9a-fA-F]{24})", dreamController.getDreamById);
-router.put("/:id([0-9a-fA-F]{24})", dreamController.updateDream);
-router.delete("/:id([0-9a-fA-F]{24})", dreamController.deleteDream);
+
+// עדכון/מחיקה (מוגן)
+router.put("/:id([0-9a-fA-F]{24})", authenticate, dreamController.updateDream);
+router.delete(
+  "/:id([0-9a-fA-F]{24})",
+  authenticate,
+  dreamController.deleteDream
+);
 
 export default router;

@@ -2,9 +2,9 @@ import { api } from "./apiClient";
 import type {
   Dream,
   CreateDreamDto,
+  DreamsPage,
   InterpretDto,
   InterpretResponse,
-  DreamsPage,
 } from "./types";
 
 /** מאפס רשומת שרת ל-DTO בצד לקוח */
@@ -20,9 +20,17 @@ const adapt = (raw: any): Dream => ({
   updatedAt: raw.updatedAt,
 });
 
+export type DreamsListResult = {
+  success: boolean;
+  total: number;
+  page: number;
+  limit: number;
+  dreams: Dream[];
+};
+
 /** תומך בכל הצורות הנפוצות של המענה מהשרת */
 function parseListResponse(data: any): DreamsPage {
-  // 1) מבנה מומלץ אצלך: { dreams, total, page, pages }
+  // 1) מבנה מומלץ: { dreams, total, page, pages }
   if (data && Array.isArray(data.dreams)) {
     return {
       dreams: data.dreams.map(adapt),
@@ -68,20 +76,42 @@ function asAuthError(err: any) {
 }
 
 export const DreamsApi = {
-  /** בקשת פירוש חלום (LLM) */
+  /**
+   * 🔹 פירוש + שמירה מיידית (ללא מצב "פרש בלבד")
+   * מבצע POST /dreams/interpret ומחזיר את ה־dream שנשמר בפועל.
+   */
   interpret: async (payload: InterpretDto): Promise<InterpretResponse> => {
-    const r = await api.post("/dreams/interpret", payload);
-    const d = r.data || {};
-    return {
-      title: d.title ?? null,
-      aiResponse: d.aiResponse ?? d.interpretation,
+    const body = {
+      // תמיכה בשמות שדה חלופיים מהקומפוננטות הישנות:
+      text:
+        payload.text ??
+        (payload as any).userInput ??
+        (payload as any).prompt ??
+        (payload as any).dream_text,
+      titleOverride: payload.titleOverride,
+      isShared: payload.isShared ?? false,
+      model: payload.model,
     };
+
+    const r = await api.post("/dreams/interpret", body);
+    const d = r.data || {};
+    // השרת מחזיר { success, dream }
+    const dreamRaw = d.dream ?? d.data?.dream ?? d;
+    const dream = adapt(dreamRaw);
+
+    // Provide title and aiResponse fields required by InterpretResponse,
+    // preferring explicit fields from the response, then falling back to the adapted dream or payload.
+    const title = d.title ?? dream.title ?? body.titleOverride ?? "";
+    const aiResponse =
+      d.aiResponse ?? d.interpretation ?? dream.aiResponse ?? null;
+
+    return { dream, title, aiResponse };
   },
 
-  /** יצירת חלום חדש */
+  /** יצירת חלום חדש (אם תשלח aiResponse – השרת ישמור אותו כפי שהוא) */
   create: async (payload: CreateDreamDto): Promise<Dream> => {
     const r = await api.post("/dreams", payload);
-    return adapt(r.data);
+    return adapt(r.data?.dream ?? r.data);
   },
 
   /** פג'ינציה בצד שרת */
@@ -90,7 +120,7 @@ export const DreamsApi = {
     return parseListResponse(r.data);
   },
 
-  /** תאימות לאחור: מחזיר רק מערך חלומות (מתוך listPaged) */
+  /** תאימות לאחור: מחזיר רק מערך חלומות */
   list: async (params: ListParams = {}): Promise<Dream[]> => {
     const page = await DreamsApi.listPaged(params);
     return page.dreams;
@@ -99,7 +129,7 @@ export const DreamsApi = {
   /** שליפה לפי מזהה */
   getById: async (id: string): Promise<Dream> => {
     const r = await api.get(`/dreams/${id}`);
-    const raw = r.data?.dream ?? r.data; // ← תומך בשתי צורות תגובה
+    const raw = r.data?.dream ?? r.data;
     return adapt(raw);
   },
 
@@ -109,7 +139,7 @@ export const DreamsApi = {
     payload: Partial<CreateDreamDto>
   ): Promise<Dream> => {
     const r = await api.put(`/dreams/${id}`, payload);
-    return adapt(r.data);
+    return adapt(r.data?.dream ?? r.data);
   },
 
   /** מחיקה */
@@ -161,5 +191,27 @@ export const DreamsApi = {
     } catch (err: any) {
       throw asAuthError(err);
     }
+  },
+  listByUser(
+    userId: string,
+    params?: { page?: number; limit?: number; search?: string }
+  ) {
+    return api
+      .get<DreamsListResult>("/dreams", {
+        params: {
+          userId,
+          page: params?.page ?? 1,
+          limit: params?.limit ?? 20,
+          search: params?.search || undefined,
+        },
+      })
+      .then((r) => r.data);
+  },
+
+  /** עדכון דגל שיתוף */
+  setShare(id: string, isShared: boolean) {
+    return api
+      .put<{ success: true; dream: Dream }>(`/dreams/${id}`, { isShared })
+      .then((r) => r.data.dream);
   },
 };

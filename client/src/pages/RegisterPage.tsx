@@ -1,12 +1,12 @@
-import LoginForm from "@/components/auth/LoginForm";
+import SignupForm from "@/components/auth/SignupForm";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <div className="flex justify-center items-center min-h-[70vh] p-4">
       <div className="glass-card w-full max-w-md p-8 rounded-2xl border border-white/20">
-        <h2 className="text-center text-2xl font-bold mb-6">התחברות</h2>
+        <h2 className="text-center text-2xl font-bold mb-6">הרשמה</h2>
 
-        <LoginForm
+        <SignupForm
           onSuccess={() => {
             window.location.href = "/";
           }}

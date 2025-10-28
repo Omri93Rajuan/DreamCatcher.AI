@@ -4,6 +4,8 @@ import HomePage from "@/pages/HomePage";
 import LoginPage from "@/pages/LoginPage";
 import DreamDetailsPage from "@/pages/DreamDetailsPage";
 import { ProtectedRoute } from "./protected";
+import RegisterPage from "@/pages/RegisterPage";
+import MyDreamsPage from "@/pages/MyDreamsPage";
 
 export const router = createBrowserRouter([
   {
@@ -23,11 +25,29 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/register",
+    element: (
+      <Layout>
+        <RegisterPage />
+      </Layout>
+    ),
+  },
+  {
     path: "/dreams/:id",
     element: (
       <Layout>
         <ProtectedRoute>
           <DreamDetailsPage />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: "/me/dreams",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <MyDreamsPage />
         </ProtectedRoute>
       </Layout>
     ),

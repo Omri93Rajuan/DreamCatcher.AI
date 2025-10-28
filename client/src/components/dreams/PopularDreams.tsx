@@ -28,7 +28,6 @@ export default function PopularDreams() {
     queryKey: ["popular", windowKind],
     queryFn: () => DreamsApi.getPopular(windowKind),
     staleTime: 60_000,
-    keepPreviousData: true,
   });
 
   // נרמול מינימלי לפני רנדר – מבטיחים dreamId ו-series + ערכי ברירת מחדל למונים
