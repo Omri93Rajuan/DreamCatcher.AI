@@ -28,6 +28,13 @@ const userSchema = new Schema<IUser>(
     lastLogin: { type: Date },
     isActive: { type: Boolean, default: true },
     subscriptionExpiresAt: { type: Date },
+
+    termsAccepted: { type: Boolean, default: false },
+    termsAcceptedAt: { type: Date },
+    termsVersion: { type: String },
+    termsIp: { type: String, default: null },
+    termsUserAgent: { type: String, default: null },
+    termsLocale: { type: String, default: null },
   },
   {
     timestamps: true,
@@ -45,4 +52,4 @@ userSchema.virtual("name").get(function (this: HydratedDocument<IUser>) {
   return `${this.firstName} ${this.lastName}`.trim();
 });
 
-export default models.User || model<IUser>("User", userSchema);
+export default (models.User as any) || model<IUser>("User", userSchema);

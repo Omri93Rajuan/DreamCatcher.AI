@@ -1,11 +1,20 @@
 import { api } from "./apiClient";
-import type { LoginDto, User } from "./types";
+import type { User } from "./types";
+
+export type LoginDto = { email: string; password: string };
 
 export type RegisterDto = {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+  image?: string;
+
+  // ⬇️ שדות הסכמה לתנאי שימוש
+  termsAgreed: true; // חייב true
+  termsVersion: string; // מגיע מהקונפיג
+  termsUserAgent?: string; // מהקליינט
+  termsLocale?: string; // מהקליינט
 };
 
 export const AuthApi = {
@@ -14,9 +23,7 @@ export const AuthApi = {
       .post("/auth/login", data, { withCredentials: true })
       .then((r) => r.data),
   logout: () =>
-    api
-      .post("/auth/logout", null, { withCredentials: true })
-      .then((r) => r.data),
+    api.post("/auth/logout", { withCredentials: true }).then((r) => r.data),
   refresh: () =>
     api
       .post("/auth/refresh-token", null, { withCredentials: true })

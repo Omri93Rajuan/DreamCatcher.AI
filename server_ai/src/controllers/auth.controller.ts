@@ -40,9 +40,26 @@ export const registerUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const user = await registerSvc(req.body);
+    // אוכפים קבלה של תנאי שימוש כבר בקונטרולר
+    const termsAgreed = !!req.body?.termsAgreed;
+    const termsVersion = req.body?.termsVersion as string | undefined;
+    if (!termsAgreed || !termsVersion) {
+      handleError(res, 400, "Terms must be accepted");
+      return;
+    }
 
-    // יצירת JWT + קוקיות כמו בלוגין
+    const user = await registerSvc({
+      ...req.body,
+      termsAgreed,
+      termsVersion,
+      termsIp:
+        (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+        req.ip ||
+        null,
+      termsUserAgent: req.headers["user-agent"] || null,
+      termsLocale: (req.headers["accept-language"] as string) || null,
+    });
+
     const accessToken = jwt.sign(
       { _id: user._id, role: user.role, email: user.email },
       ACCESS_SECRET,
@@ -120,7 +137,6 @@ export const refreshToken = (req: Request, res: Response): void => {
         ACCESS_SECRET,
         { expiresIn: "15m" }
       );
-
       setAccessCookie(res, newAccess);
       res.json({ ok: true });
     });

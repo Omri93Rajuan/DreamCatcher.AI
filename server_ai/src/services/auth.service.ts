@@ -13,11 +13,17 @@ export interface RegisterDTO {
   email: string;
   password: string;
   image?: string;
+
+  // ⬇️ מתקבל מהקליינט ברישום
+  termsAgreed: boolean;
+  termsVersion: string;
+  termsIp?: string | null;
+  termsUserAgent?: string | null;
+  termsLocale?: string | null;
 }
 
 /**
- * מחזיר את המשתמש הציבורי (ללא סיסמה) אם האישורים תקינים.
- * אין כאן יצירת טוקנים/קוקיות – זה בטיפול הקונטרולר.
+ * Login – בודק סיסמה ומחזיר משתמש ציבורי (ללא טוקנים/קוקיות).
  */
 export const login = async (creds: LoginDTO) => {
   if (!creds?.email || !creds?.password) {
@@ -26,10 +32,9 @@ export const login = async (creds: LoginDTO) => {
     throw err;
   }
 
-  // שים לב: password בסכמה כנראה select:false
   const found = await Users.findOne({ email: creds.email })
     .select("+password")
-    .lean<IUser & { password: string; name?: string }>()
+    .lean()
     .exec();
 
   if (!found) {
@@ -38,7 +43,6 @@ export const login = async (creds: LoginDTO) => {
     throw err;
   }
 
-  // וידוא שהסיסמה מסו-האש בדאטהבייס
   const isHash =
     typeof found.password === "string" && found.password.startsWith("$2");
   if (!isHash) {
@@ -71,6 +75,12 @@ export const login = async (creds: LoginDTO) => {
     subscriptionExpiresAt: found.subscriptionExpiresAt,
     createdAt: found.createdAt,
     updatedAt: found.updatedAt,
+    termsAccepted: found.termsAccepted,
+    termsAcceptedAt: found.termsAcceptedAt,
+    termsVersion: found.termsVersion,
+    termsIp: found.termsIp ?? null,
+    termsUserAgent: found.termsUserAgent ?? null,
+    termsLocale: found.termsLocale ?? null,
     name,
   };
 
@@ -78,12 +88,30 @@ export const login = async (creds: LoginDTO) => {
 };
 
 /**
- * יצירת משתמש חדש (כולל hashing לסיסמה) והחזרת המשתמש הציבורי.
+ * Register – יוצר משתמש (hash לסיסמה) ושומר פרטי הסכמה.
  */
 export const register = async (data: RegisterDTO) => {
-  const { firstName, lastName, email, password, image } = data || {};
+  const {
+    firstName,
+    lastName,
+    email,
+    password,
+    image,
+    termsAgreed,
+    termsVersion,
+    termsIp,
+    termsUserAgent,
+    termsLocale,
+  } = data || ({} as RegisterDTO);
+
   if (!firstName || !lastName || !email || !password) {
     const err: any = new Error("Missing required fields");
+    err.status = 400;
+    throw err;
+  }
+
+  if (!termsAgreed || !termsVersion) {
+    const err: any = new Error("Terms must be accepted");
     err.status = 400;
     throw err;
   }
@@ -95,7 +123,6 @@ export const register = async (data: RegisterDTO) => {
     throw err;
   }
 
-  // אם יש לך pre('save') שמבצע hashing – אפשר לדלג על השורה הבאה ולהשאיר password רגיל
   const hashed = await hashPassword(password);
 
   const created = await Users.create({
@@ -106,6 +133,13 @@ export const register = async (data: RegisterDTO) => {
     image,
     isActive: true,
     lastLogin: new Date(),
+
+    termsAccepted: true,
+    termsAcceptedAt: new Date(),
+    termsVersion,
+    termsIp: termsIp ?? null,
+    termsUserAgent: termsUserAgent ?? null,
+    termsLocale: termsLocale ?? null,
   });
 
   const publicUser: Omit<IUser, "password"> & { _id: string; name?: string } = {
@@ -121,6 +155,12 @@ export const register = async (data: RegisterDTO) => {
     subscriptionExpiresAt: created.subscriptionExpiresAt,
     createdAt: created.createdAt,
     updatedAt: created.updatedAt,
+    termsAccepted: created.termsAccepted,
+    termsAcceptedAt: created.termsAcceptedAt,
+    termsVersion: created.termsVersion,
+    termsIp: created.termsIp ?? null,
+    termsUserAgent: created.termsUserAgent ?? null,
+    termsLocale: created.termsLocale ?? null,
     name: `${created.firstName ?? ""} ${created.lastName ?? ""}`.trim(),
   };
 
@@ -133,21 +173,18 @@ export const getMe = async (userId: string) => {
     err.status = 400;
     throw err;
   }
-  const u = await Users.findById(userId)
-    .lean<IUser & { name?: string }>()
-    .exec();
+  const u = (await Users.findById(userId).lean().exec()) as
+    | (IUser & { name?: string })
+    | null;
   if (!u) {
     const err: any = new Error("User not found");
     err.status = 404;
     throw err;
   }
   delete (u as any).password;
-  if (!u.name)
+  if (!(u as any).name)
     (u as any).name = `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim();
   return u;
 };
 
-export const logout = () => {
-  // אין לוגיקה בשרת מלבד ניקוי קוקיות בקונטרולר
-  return true;
-};
+export const logout = () => true;
