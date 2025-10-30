@@ -1,32 +1,61 @@
 // src/components/InterpretForm.tsx
-import React, { useMemo, useRef, useState, useEffect } from "react";
-import { Input } from "@/components/ui/input";
+import React, {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Search, CheckCircle2 } from "lucide-react";
+import { Send, Search, CheckCircle2, Loader2 } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
+import Logo from "@/assets/logo.png";
 
 /**
- * סטרימינג מילה-אחרי-מילה עם שימור רווחים ושורות
- * שומר על צריכת משאבים נמוכה ומנקה טיימרים בזמן אנמאונט.
+ * Smooth, natural word-by-word streamer with punctuation-aware pacing,
+ * auto-scroll, and a stable final render after completion.
  */
-function useWordStreamer(fullText: string, speedMs = 45) {
+function useWordStreamer({
+  fullText,
+  baseMs = 40,
+  wordsPerTick = 1,
+  containerRef,
+}: {
+  fullText: string;
+  baseMs?: number;
+  wordsPerTick?: number;
+  containerRef?: React.RefObject<HTMLElement | null>;
+}) {
   const [out, setOut] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const timerRef = useRef<number | null>(null);
 
-  const tokens = useMemo(
-    () =>
-      String(fullText ?? "")
-        .split(/(\s+)/)
-        .filter((t) => t !== undefined && t !== null),
-    [fullText]
-  );
+  // Tokenize into [word|punct|space] preserving spaces so RTL looks correct
+  const tokens = useMemo(() => {
+    const t = String(fullText ?? "");
+    if (!t) return [] as string[];
+    // words (including diacritics), punctuation, or whitespace
+    return t.match(/\p{L}+[\p{L}\p{M}'’\-]*|[\p{P}]+|\s+/gu) ?? [t];
+  }, [fullText]);
+
+  const clearTimer = () => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  };
+
+  const schedule = useCallback((delay: number, fn: () => void) => {
+    clearTimer();
+    timerRef.current = window.setTimeout(fn, delay) as unknown as number;
+  }, []);
 
   useEffect(() => {
+    clearTimer();
     if (!fullText) {
       setOut("");
       setIsStreaming(false);
@@ -36,43 +65,68 @@ function useWordStreamer(fullText: string, speedMs = 45) {
     setIsStreaming(true);
 
     let i = 0;
-    const tick = () => {
+
+    const step = () => {
       if (i >= tokens.length) {
         setIsStreaming(false);
-        if (timerRef.current) window.clearInterval(timerRef.current);
-        timerRef.current = null;
+        clearTimer();
         return;
       }
-      const next = tokens[i++];
-      if (typeof next === "string") setOut((prev) => prev + next);
+
+      // append N tokens per tick for smoother flow
+      let appended = "";
+      for (let k = 0; k < Math.max(1, wordsPerTick) && i < tokens.length; k++) {
+        appended += tokens[i++];
+      }
+      setOut((prev) => prev + appended);
+
+      // Auto-scroll the container (if provided)
+      const node = containerRef?.current as HTMLElement | null;
+      if (node) {
+        // use requestAnimationFrame to avoid layout jank
+        requestAnimationFrame(() => {
+          node.scrollTop = node.scrollHeight;
+        });
+      }
+
+      // Pacing: add tiny pauses after punctuation to feel natural
+      const lastChar = appended[appended.length - 1] ?? "";
+      const isPunct = /[\.!?…,:;\)]/.test(lastChar);
+      const isSentenceEnd = /[\.!?…]/.test(lastChar);
+      const delay = baseMs * (isSentenceEnd ? 8 : isPunct ? 3 : 1);
+
+      schedule(delay, step);
     };
 
-    timerRef.current = window.setInterval(tick, speedMs) as unknown as number;
-    return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current);
-      timerRef.current = null;
-    };
-  }, [fullText, tokens, speedMs]);
+    schedule(baseMs, step);
 
-  return { streamedText: out, isStreaming };
+    return () => clearTimer();
+  }, [fullText, baseMs, wordsPerTick, schedule, containerRef, tokens]);
+
+  return { streamedText: out, isStreaming } as const;
 }
 
 const MY_DREAMS_PATH = "/me/dreams";
 
 export default function InterpretForm() {
-  const [title, setTitle] = useState("");
+  // Title is now owned by the AI; we keep it only to display after response
+
   const [text, setText] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
 
   const [dream, setDream] = useState<Dream | null>(null);
   const [justShared, setJustShared] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const { isAuthenticated } = useAuthStore();
-  const { streamedText, isStreaming } = useWordStreamer(
-    dream?.aiResponse ?? "",
-    45
-  );
+
+  const { streamedText, isStreaming } = useWordStreamer({
+    fullText: dream?.aiResponse ?? "",
+    baseMs: 40,
+    wordsPerTick: 2, // slightly smoother than strict word-by-word
+    containerRef,
+  });
 
   const isThinking = isInterpreting || isStreaming;
 
@@ -90,11 +144,12 @@ export default function InterpretForm() {
     try {
       const { dream: saved } = await DreamsApi.interpret({
         text,
-        titleOverride: title || undefined,
-        isShared: false, // נשמר פרטי כברירת מחדל
+        // Let the AI own the title entirely
+        titleOverride: undefined,
+        isShared: false,
       });
       setDream(saved);
-      if (!title && saved.title) setTitle(saved.title);
+      // adopt AI title if provided
     } catch (e: any) {
       if (e?.response?.status === 401) setAuthOpen(true);
       console.error(e);
@@ -121,38 +176,16 @@ export default function InterpretForm() {
 
   return (
     <>
-      {/* פס סטטוס עליון עם לוגו מהבהב בזמן מחשבה */}
-      {isThinking && (
-        <div className="sticky top-2 z-20 mx-auto mb-4 flex w-fit items-center gap-3 rounded-2xl border border-white/15 bg-white/10 px-4 py-2 backdrop-blur">
-          <img
-            // אם הקובץ שלך נקרא "logo.png/svg", שמור את הנתיב הזה.
-            src="../assets/logo.png"
-            alt="טוען פירוש"
-            className="h-6 w-6 animate-pulse"
-          />
-          <span className="text-xs text-white/80 font-he">
-            מפענח... אנא המתן/י
-          </span>
-        </div>
-      )}
-
-      {/* טופס קלט */}
+      {/* Input card */}
       <div className="grid gap-3 max-w-3xl mx-auto mb-8">
-        <Input
-          dir="rtl"
-          placeholder="כותרת (לא חובה)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="font-he"
-        />
         <div className="relative">
           <Search className="absolute right-4 top-3 w-5 h-5 text-purple-400" />
           <Textarea
             dir="rtl"
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="תאר/י את החלום שלך..."
-            className="pr-10 font-he"
+            placeholder="תאר/י את החלום שלך... (אפשר גם להדביק)"
+            className="pr-10 font-he min-h-[140px]"
             disabled={isInterpreting}
           />
         </div>
@@ -163,53 +196,69 @@ export default function InterpretForm() {
         >
           {isInterpreting ? (
             <>
-              {/* לוגו מהבהב בזמן פירוש */}
-              <img
-                src="../assets/logo.png"
-                alt="טוען"
-                className="w-5 h-5 ml-2 animate-pulse"
-              />
-              מפענח...
+              <Loader2 className="w-5 h-5 ml-2 animate-spin" />
+              חושב על זה...
             </>
           ) : (
             <>
-              <Send className="w-5 h-5 ml-2" /> פענח את החלום
+              <Send className="w-5 h-5 ml-2" /> פענח/י את החלום
             </>
           )}
         </Button>
       </div>
 
-      {/* פתרון החלום – עכשיו גדול ומרשים יותר */}
+      {/* Results card */}
       {(dream || isInterpreting) && (
         <div className="max-w-3xl mx-auto mb-10">
-          <div className="rounded-3xl border border-white/15 bg-white/5 p-6 text-white shadow-xl backdrop-blur">
+          <div
+            className="relative rounded-3xl border border-white/15 bg-white/5 p-6 text-white shadow-xl backdrop-blur"
+            aria-live="polite"
+            aria-busy={isThinking}
+          >
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-amber-200 font-he">
                 פתרון החלום
               </h4>
-              {isThinking && (
-                <span className="text-[11px] text-white/70">מפענח...</span>
-              )}
             </div>
 
-            <div
-              className="whitespace-pre-wrap text-right font-he select-text"
-              dir="rtl"
-              lang="he"
-              style={{
-                unicodeBidi: "plaintext" as any,
-                // מרשים יותר: גודל גדול, משקל בינוני, וגובה שורה נוח
-                fontSize: "1.125rem", // ~ text-lg
-                lineHeight: "1.9",
-                fontWeight: 500,
-                letterSpacing: "0.2px",
-              }}
-            >
-              <bdi>{streamedText}</bdi>
-              {isThinking && <span className="animate-pulse"> ▁</span>}
-            </div>
+            {/* while waiting and BEFORE we have any text, show only logo */}
+            {!dream && isInterpreting && (
+              <div className="grid place-items-center py-14">
+                <img
+                  src={Logo}
+                  alt=""
+                  className="w-16 h-16 animate-pulse opacity-95 select-none"
+                  draggable={false}
+                />
+              </div>
+            )}
 
-            {/* פעולות אחרי שנשמר */}
+            {/* streaming OR final text (always visible after it ends) */}
+            {(isStreaming || dream) && (
+              <div
+                ref={containerRef as any}
+                className="whitespace-pre-wrap text-right font-he select-text max-h-[50vh] overflow-y-auto pr-1"
+                dir="rtl"
+                lang="he"
+                style={{
+                  unicodeBidi: "plaintext" as any,
+                  fontSize: "1.125rem",
+                  lineHeight: 1.9,
+                  fontWeight: 500,
+                  letterSpacing: "0.2px",
+                }}
+              >
+                {/* show streamed while streaming; afterwards keep the full text */}
+                <bdi>{isStreaming ? streamedText : dream?.aiResponse}</bdi>
+                {isStreaming && (
+                  <span className="inline-block w-2 h-5 align-text-bottom animate-pulse">
+                    ‎
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Actions */}
             {dream && !isStreaming && (
               <div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 {!dream.isShared ? (
@@ -217,10 +266,10 @@ export default function InterpretForm() {
                     onClick={shareWithEveryone}
                     className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl"
                   >
-                    שתף עם כולם
+                    שתף/י עם כולם
                   </Button>
                 ) : (
-                  <div className="inline-flex items-center gap-2 text-emerלד-300 text-sm">
+                  <div className="inline-flex items-center gap-2 text-emerald-300 text-sm">
                     <CheckCircle2 className="w-5 h-5" />
                     שותף בהצלחה!
                   </div>
@@ -230,7 +279,7 @@ export default function InterpretForm() {
                   onClick={openMyDreams}
                   className="text-sm underline underline-offset-4 text-white/90 hover:text-white"
                 >
-                  פתח את החלומות שלי
+                  פתח/י את החלומות שלי
                 </button>
 
                 {justShared && (
@@ -244,7 +293,7 @@ export default function InterpretForm() {
         </div>
       )}
 
-      {/* דיאלוג התחברות/הרשמה */}
+      {/* Auth dialog */}
       <AuthGateDialog
         open={authOpen}
         onOpenChange={setAuthOpen}

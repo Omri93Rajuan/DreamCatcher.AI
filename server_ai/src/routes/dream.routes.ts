@@ -2,6 +2,7 @@
 import { Router } from "express";
 import * as dreamController from "../controllers/dream.controller";
 import authenticate from "../middlewares/authenticate";
+import authenticateLite from "../middlewares/authenticateLite";
 
 const router = Router();
 
@@ -12,7 +13,7 @@ router.post("/interpret", authenticate, dreamController.interpretDream);
 router.post("/", authenticate, dreamController.createDream);
 
 // פיד ציבורי ושליפות
-router.get("/", authenticate, dreamController.getAllDreams);
+router.get("/", authenticateLite, dreamController.getAllDreams);
 router.get("/:id([0-9a-fA-F]{24})", authenticate, dreamController.getDreamById);
 
 // עדכון/מחיקה (מוגן)
