@@ -1,66 +1,55 @@
-import mongoose, { Document, Schema } from "mongoose";
+import { Schema, model, models, HydratedDocument } from "mongoose";
 import { IUser, UserRole, SubscriptionType } from "../types/users.interface";
 
-const userSchema: Schema = new mongoose.Schema(
+const userSchema = new Schema<IUser>(
   {
-    firstName: {
-      type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 50,
-    },
-    lastName: {
-      type: String,
-      required: true,
-      minlength: 2,
-      maxlength: 50,
-    },
+    firstName: { type: String, required: true, minlength: 2, maxlength: 50 },
+    lastName: { type: String, required: true, minlength: 2, maxlength: 50 },
     email: {
       type: String,
       required: true,
       unique: true,
-      match: [/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/, "Please enter a valid email"],
+      match: [/^[\w-.]+@([\w-]+\.)+[\w-]{2,}$/, "Invalid email"],
       lowercase: true,
       trim: true,
     },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-    },
+    password: { type: String, required: true, minlength: 6, select: false },
     role: {
       type: String,
-      enum: Object.values(UserRole), // ["admin", "user"]
+      enum: Object.values(UserRole),
       default: UserRole.User,
     },
     subscription: {
       type: String,
-      enum: Object.values(SubscriptionType), // ["free", "premium"]
+      enum: Object.values(SubscriptionType),
       default: SubscriptionType.Free,
     },
-    image: {
-      type: String,
-      default: "default-avatar.jpg",
-    },
-    orders: [{ type: Schema.Types.ObjectId, ref: "Order" }],
-    balance: {
-      type: Number,
-      default: 0,
-      min: [0, "Balance cannot be negative"],
-    },
-    lastLogin: {
-      type: Date,
-    },
+    image: { type: String, default: "default-avatar.jpg" },
+    lastLogin: { type: Date },
+    isActive: { type: Boolean, default: true },
+    subscriptionExpiresAt: { type: Date },
+
+    termsAccepted: { type: Boolean, default: false },
+    termsAcceptedAt: { type: Date },
+    termsVersion: { type: String },
+    termsIp: { type: String, default: null },
+    termsUserAgent: { type: String, default: null },
+    termsLocale: { type: String, default: null },
   },
   {
     timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: (_doc, ret) => {
+        delete ret.password;
+        return ret;
+      },
+    },
   }
 );
 
-userSchema.methods.toJSON = function () {
-  const userObject = this.toObject();
-  delete userObject.password;
-  return userObject;
-};
+userSchema.virtual("name").get(function (this: HydratedDocument<IUser>) {
+  return `${this.firstName} ${this.lastName}`.trim();
+});
 
-export default mongoose.model<IUser & Document>("User", userSchema);
+export default (models.User as any) || model<IUser>("User", userSchema);

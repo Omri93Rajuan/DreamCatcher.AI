@@ -1,103 +1,36 @@
-import { RequestHandler } from "express";
+// src/controllers/dream.controller.ts
+import type { RequestHandler } from "express";
+import type { AuthRequest } from "../types/auth.interface";
 import * as DreamService from "../services/dream.service";
 
-function getAuth(req: any) {
-  const userObj = req.user || {};
-  const userId = req.userId || userObj.id || userObj._id || null;
-  const isAdmin =
-    req.isAdmin === true ||
-    userObj.isAdmin === true ||
-    userObj.role === "admin";
-  return { userId, isAdmin };
-}
-
-export const createDream: RequestHandler = async (req, res) => {
-  try {
-    const { userId, userInput, title, model, isShared } = req.body;
-    if (!userId || !userInput) {
-      res
-        .status(400)
-        .json({ success: false, error: "Missing userId or userInput" });
-      return;
-    }
-
-    const dream = await DreamService.createDreamWithAI(
-      userId,
-      userInput,
-      title,
-      {
-        ...(model ? { modelOverride: model } : {}),
-        isShared: typeof isShared === "boolean" ? isShared : false,
-      }
-    );
-
-    res.status(201).json({ success: true, dream });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
+const getAuth = (req: AuthRequest) => {
+  const raw = req.user?._id;
+  const clean =
+    typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : null;
+  return { userId: clean, isAdmin: !!req.user?.isAdmin };
 };
 
-export const interpretDream: RequestHandler = async (req, res) => {
+export const getAllDreams: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const { userId, text, isShared, model } = req.body;
-    if (!userId || !text) {
-      res.status(400).json({ success: false, error: "Missing userId or text" });
-      return;
-    }
-
-    const saved = await DreamService.createDreamWithAI(
-      userId,
-      text,
-      undefined,
-      {
-        ...(model ? { modelOverride: model } : {}),
-        isShared: typeof isShared === "boolean" ? isShared : false,
-      }
-    );
-
-    res.status(201).json({
-      success: true,
-      dream: {
-        id: saved._id,
-        title: saved.title,
-        userInput: saved.userInput,
-        aiResponse: saved.aiResponse,
-        isShared: saved.isShared,
-        createdAt: saved.createdAt,
-      },
-    });
-  } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
-
-export const getAllDreams: RequestHandler = async (req, res) => {
-  try {
-    const { userId, search, sortBy, order, page, limit, viewerId } =
-      req.query as Record<string, string | undefined>;
-
-    const auth = getAuth(req);
-    const currentViewerId = auth.userId || viewerId;
-
+    const { userId } = getAuth(req as AuthRequest);
     const result = await DreamService.getDreams({
-      userId: userId,
-      search: search,
-      sortBy: sortBy,
-      order: (order === "asc" || order === "desc" ? order : "desc") as
-        | "asc"
-        | "desc",
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 10,
-      viewerId: currentViewerId,
+      userId: req.query.userId as string | undefined,
+      search: req.query.search as string | undefined,
+      sortBy: req.query.sortBy as string | undefined,
+      order: (req.query.order as "asc" | "desc") ?? "desc",
+      page: req.query.page ? parseInt(req.query.page as string, 10) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string, 10) : 10,
+      viewerId: userId ?? (req.query.viewerId as string | undefined),
     });
-
     res.json({ success: true, ...result });
+    return;
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
+    return;
   }
 };
 
-export const getDreamById: RequestHandler = async (req, res) => {
+export const getDreamById: RequestHandler = async (req, res): Promise<void> => {
   try {
     const dream = await DreamService.getDreamById(req.params.id);
     if (!dream) {
@@ -105,34 +38,31 @@ export const getDreamById: RequestHandler = async (req, res) => {
       return;
     }
 
-    const auth = getAuth(req);
-    const viewerId = auth.userId || (req.query.viewerId as string | undefined);
-    const isOwner = viewerId && String(dream.userId) === String(viewerId);
-
-    if (!dream.isShared && !isOwner && !auth.isAdmin) {
+    const { userId, isAdmin } = getAuth(req as AuthRequest);
+    const isOwner = userId && String(dream.userId) === String(userId);
+    if (!dream.isShared && !isOwner && !isAdmin) {
       res.status(403).json({ success: false, error: "This dream is private" });
       return;
     }
-
     res.json({ success: true, dream });
+    return;
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
+    return;
   }
 };
 
-export const updateDream: RequestHandler = async (req, res) => {
+export const updateDream: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const auth = getAuth(req);
-
+    const { userId, isAdmin } = getAuth(req as AuthRequest);
     const existing = await DreamService.getDreamById(req.params.id);
     if (!existing) {
       res.status(404).json({ success: false, error: "Dream not found" });
       return;
     }
 
-    const isOwner =
-      auth.userId && String(existing.userId) === String(auth.userId);
-    if (!isOwner && !auth.isAdmin) {
+    const isOwner = userId && String(existing.userId) === String(userId);
+    if (!isOwner && !isAdmin) {
       res
         .status(403)
         .json({ success: false, error: "Only owner or admin can update" });
@@ -148,24 +78,24 @@ export const updateDream: RequestHandler = async (req, res) => {
 
     const updated = await DreamService.updateDream(req.params.id, patch);
     res.json({ success: true, dream: updated });
+    return;
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
+    return;
   }
 };
 
-export const deleteDream: RequestHandler = async (req, res) => {
+export const deleteDream: RequestHandler = async (req, res): Promise<void> => {
   try {
-    const auth = getAuth(req);
-
+    const { userId, isAdmin } = getAuth(req as AuthRequest);
     const existing = await DreamService.getDreamById(req.params.id);
     if (!existing) {
       res.status(404).json({ success: false, error: "Dream not found" });
       return;
     }
 
-    const isOwner =
-      auth.userId && String(existing.userId) === String(auth.userId);
-    if (!isOwner && !auth.isAdmin) {
+    const isOwner = userId && String(existing.userId) === String(userId);
+    if (!isOwner && !isAdmin) {
       res
         .status(403)
         .json({ success: false, error: "Only owner or admin can delete" });
@@ -174,7 +104,101 @@ export const deleteDream: RequestHandler = async (req, res) => {
 
     await DreamService.deleteDream(req.params.id);
     res.json({ success: true, message: "Dream deleted successfully" });
+    return;
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message });
+    return;
+  }
+};
+
+/** 🔹 יצירה ישירה: אם נשלח aiResponse – נשמור אותו כפי שהוא, בלי LLM נוסף */
+export const createDream: RequestHandler = async (req, res): Promise<void> => {
+  try {
+    const { userId } = getAuth(req as AuthRequest);
+    const { userInput, aiResponse, title, isShared, model } = req.body ?? {};
+    if (!userId) {
+      res.status(401).json({ success: false, error: "auth_required" });
+      return;
+    }
+    if (!userInput?.trim()) {
+      res.status(400).json({ success: false, error: "Missing userInput" });
+      return;
+    }
+
+    const saved = aiResponse
+      ? await DreamService.createDreamFromInterpretation(
+          userId,
+          userInput,
+          String(aiResponse),
+          title,
+          { isShared: !!isShared }
+        )
+      : await DreamService.createDreamWithAI(userId, userInput, title, {
+          ...(model ? { modelOverride: model } : {}),
+          isShared: !!isShared,
+        });
+
+    res.status(201).json({ success: true, dream: saved });
+    return;
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+    return;
+  }
+};
+
+/** 🔹 פירוש ושמירה אוטומטית — LLM פעם אחת, שומרים את אותו הפלט בדיוק */
+export const interpretDream: RequestHandler = async (
+  req,
+  res
+): Promise<void> => {
+  try {
+    const { userId } = getAuth(req as AuthRequest);
+    if (!userId) {
+      res.status(401).json({ success: false, error: "auth_required" });
+      return;
+    }
+
+    const {
+      text,
+      userInput,
+      prompt,
+      dream_text,
+      isShared,
+      model,
+      titleOverride,
+    } = req.body ?? {};
+    const rawText: string = (
+      text ??
+      userInput ??
+      prompt ??
+      dream_text ??
+      ""
+    ).trim();
+    if (!rawText) {
+      res.status(400).json({ success: false, error: "Missing text" });
+      return;
+    }
+
+    // פירוש פעם אחת
+    const { getLLMProvider } = await import("../llm");
+    const llm = getLLMProvider();
+    const { title, interpretation } = await llm.interpretDream(rawText, {
+      ...(model ? { modelOverride: model } : {}),
+    });
+
+    // שמירה בדיוק של אותו פירוש
+    const saved = await DreamService.createDreamFromInterpretation(
+      userId,
+      rawText,
+      interpretation,
+      (titleOverride && String(titleOverride).trim()) || title,
+      { isShared: !!isShared } // ברירת מחדל: false
+    );
+
+    res.status(201).json({ success: true, dream: saved });
+    return;
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+    return;
   }
 };

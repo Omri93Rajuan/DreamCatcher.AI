@@ -1,38 +1,117 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import { getMe, login, logout } from "../services/auth.service";
+import {
+  getMe,
+  login as loginSvc,
+  logout as logoutSvc,
+  register as registerSvc,
+} from "../services/auth.service";
 import { handleError } from "../utils/ErrorHandle";
 
-const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-const REFRESH_SECRET = process.env.REFRESH_SECRET || "refreshsecret";
+const ACCESS_SECRET =
+  process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || "supersecret";
+const REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET ||
+  process.env.REFRESH_SECRET ||
+  "refreshsecret";
+const isProd = process.env.NODE_ENV === "production";
+
+function setAccessCookie(res: Response, token: string) {
+  res.cookie("auth_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    path: "/",
+    maxAge: 15 * 60 * 1000, // 15m
+  });
+}
+function setRefreshCookie(res: Response, token: string) {
+  res.cookie("refresh_token", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProd,
+    path: "/",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
+  });
+}
+
+export const registerUser = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    // אוכפים קבלה של תנאי שימוש כבר בקונטרולר
+    const termsAgreed = !!req.body?.termsAgreed;
+    const termsVersion = req.body?.termsVersion as string | undefined;
+    if (!termsAgreed || !termsVersion) {
+      handleError(res, 400, "Terms must be accepted");
+      return;
+    }
+
+    const user = await registerSvc({
+      ...req.body,
+      termsAgreed,
+      termsVersion,
+      termsIp:
+        (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
+        req.ip ||
+        null,
+      termsUserAgent: req.headers["user-agent"] || null,
+      termsLocale: (req.headers["accept-language"] as string) || null,
+    });
+
+    const accessToken = jwt.sign(
+      { _id: user._id, role: user.role, email: user.email },
+      ACCESS_SECRET,
+      { expiresIn: "15m" }
+    );
+    const refreshToken = jwt.sign(
+      { _id: user._id, role: user.role },
+      REFRESH_SECRET,
+      { expiresIn: "7d" }
+    );
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
+
+    res.status(201).json({ user });
+  } catch (error: any) {
+    handleError(
+      res,
+      error.status || 400,
+      error.message || "Registration failed"
+    );
+  }
+};
 
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const user = req.body;
-    const RealUser = await login(user, res);
+    const user = await loginSvc(req.body);
 
+    const accessToken = jwt.sign(
+      { _id: user._id, role: user.role, email: user.email },
+      ACCESS_SECRET,
+      { expiresIn: "15m" }
+    );
     const refreshToken = jwt.sign(
-      { _id: RealUser.foundUser._id, role: RealUser.foundUser.role },
+      { _id: user._id, role: user.role },
       REFRESH_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.cookie("refresh_token", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
 
-    res.json({ ...RealUser, refreshToken });
+    res.status(200).json({ user });
   } catch (error: any) {
-    handleError(res, error.status || 401, error.message);
+    handleError(res, error.status || 401, error.message || "Login failed");
   }
 };
 
 export const logoutUser = (req: Request, res: Response): void => {
   try {
-    logout(res);
-    res.clearCookie("refresh_token");
+    logoutSvc();
+    res.clearCookie("auth_token", { path: "/" });
+    res.clearCookie("refresh_token", { path: "/" });
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
     handleError(res, 500, error.message);
@@ -41,24 +120,25 @@ export const logoutUser = (req: Request, res: Response): void => {
 
 export const refreshToken = (req: Request, res: Response): void => {
   try {
-    const refreshToken = req.cookies.refresh_token;
-    if (!refreshToken) {
+    const rt = req.cookies?.refresh_token as string | undefined;
+    if (!rt) {
       handleError(res, 401, "No refresh token provided");
       return;
     }
 
-    jwt.verify(refreshToken, REFRESH_SECRET, (err: any, decoded: any) => {
+    jwt.verify(rt, REFRESH_SECRET, (err: any, decoded: any) => {
       if (err || !decoded) {
-        return handleError(res, 403, "Invalid refresh token");
+        handleError(res, 401, "Invalid refresh token");
+        return;
       }
 
-      const newAccessToken = jwt.sign(
-        { _id: (decoded as any)._id, role: (decoded as any).role },
-        JWT_SECRET,
+      const newAccess = jwt.sign(
+        { _id: decoded._id, role: decoded.role },
+        ACCESS_SECRET,
         { expiresIn: "15m" }
       );
-
-      res.json({ token: newAccessToken });
+      setAccessCookie(res, newAccess);
+      res.json({ ok: true });
     });
   } catch (error: any) {
     handleError(res, 500, error.message);
@@ -67,33 +147,44 @@ export const refreshToken = (req: Request, res: Response): void => {
 
 export const verifyToken = (req: Request, res: Response): void => {
   try {
-    const token = req.cookies.auth_token;
+    const fromCookie = req.cookies?.auth_token as string | undefined;
+    const auth = req.headers.authorization;
+    const fromHeader = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
+    const token = fromCookie || fromHeader;
+
     if (!token) {
       handleError(res, 401, "No token provided");
       return;
     }
 
-    jwt.verify(token, JWT_SECRET, (err: any, decoded: any) => {
+    jwt.verify(token, ACCESS_SECRET, (err: any, decoded: any) => {
       if (err || !decoded) {
-        return handleError(res, 403, "Invalid token");
+        handleError(res, 401, "Invalid token");
+        return;
       }
-      res.json({ valid: true, decoded });
+      const p = decoded as any;
+      res.json({
+        valid: true,
+        user: { id: p._id, role: p.role, email: p.email },
+      });
     });
   } catch (error: any) {
     handleError(res, 500, error.message);
   }
 };
-export const me = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const userId = (req as any).userId; // מ-JWT middleware
-    const foundUser = await getMe(userId);
 
+export const getUserById = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const foundUser = await getMe(id);
     if (!foundUser) {
-      handleError(res, 404, "User not found"); // ✅ בלי return
+      res.status(404).json({ message: "User not found" });
       return;
     }
-
-    res.json({ foundUser });
+    res.status(200).json({ user: foundUser });
   } catch (error: any) {
     handleError(res, 500, error.message);
   }

@@ -1,4 +1,4 @@
-import { generateUserPassword } from "../helpers/bcrypt";
+import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
 import { handleBadRequest } from "../utils/ErrorHandle";
 import { IUser, UserRole, SubscriptionType } from "../types/users.interface";
@@ -36,7 +36,7 @@ const addUser = async (userData: IUser) => {
       subscription: SubscriptionType.Free,
     });
 
-    newUser.password = generateUserPassword(newUser.password);
+    newUser.password = hashPassword(newUser.password);
     await newUser.save();
     return newUser.toJSON();
   } catch (error: any) {

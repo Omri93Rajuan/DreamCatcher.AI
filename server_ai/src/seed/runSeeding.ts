@@ -2,11 +2,13 @@ import chalk from "chalk";
 
 import seedDreams from "./seedDreams";
 import seedUsers from "./seedUsers";
+import seedDreamActivities from "./seedDreamActivities";
 
 export async function runSeeding() {
   try {
     await seedDreams();
     await seedUsers();
+    await seedDreamActivities();
 
     console.log(
       chalk.bgMagenta.white.bold(" Database seeding completed successfully ")

@@ -1,0 +1,14 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Gold rounded square background -->
+  <rect width="512" height="512" rx="112" ry="112" fill="#D9B56C"/>
+
+  <!-- Perfectly centered thin crescent -->
+  <!-- Center point: (256, 256) -->
+  <path d="
+    M 336 106
+    A 180 180 0 1 0 336 406
+    A 140 140 0 1 1 336 106
+  "
+  fill="none" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
