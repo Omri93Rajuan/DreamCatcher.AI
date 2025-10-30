@@ -66,12 +66,15 @@ export type CreateDreamDto = {
   sharedAt?: string | null;
 };
 
-export type DreamsPage = {
+export interface DreamsPage {
   dreams: Dream[];
   total: number;
   page: number;
   pages: number;
-};
+  limit?: number; // ✅ נוסיף תמיכה ב-limit מהשרת
+  hasNext?: boolean; // ✅ אופציונלי
+  hasPrev?: boolean; // ✅ אופציונלי
+}
 
 /**
  * DTO גמיש ל-interpret:

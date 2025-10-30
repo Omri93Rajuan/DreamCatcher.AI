@@ -1,3 +1,4 @@
+// lib/api/dreams.ts
 import { api } from "./apiClient";
 import type {
   Dream,
@@ -20,47 +21,25 @@ const adapt = (raw: any): Dream => ({
   updatedAt: raw.updatedAt,
 });
 
-export type DreamsListResult = {
-  success: boolean;
-  total: number;
-  page: number;
-  limit: number;
-  dreams: Dream[];
-};
-
-/** תומך בכל הצורות הנפוצות של המענה מהשרת */
-function parseListResponse(data: any): DreamsPage {
-  // 1) מבנה מומלץ: { dreams, total, page, pages }
-  if (data && Array.isArray(data.dreams)) {
-    return {
-      dreams: data.dreams.map(adapt),
-      total: Number(data.total ?? data.dreams.length),
-      page: Number(data.page ?? 1),
-      pages: Number(data.pages ?? 1),
-    };
-  }
-
-  if (data && Array.isArray(data.data)) {
-    const arr = data.data.map(adapt);
-    return { dreams: arr, total: arr.length, page: 1, pages: 1 };
-  }
-
-  if (Array.isArray(data)) {
-    const arr = data.map(adapt);
-    return { dreams: arr, total: arr.length, page: 1, pages: 1 };
-  }
-
-  return { dreams: [], total: 0, page: 1, pages: 1 };
-}
-
 type ListParams = {
   page?: number;
   limit?: number;
+  // תמיכה בשני הסגנונות:
+  sortBy?: string;
+  order?: "asc" | "desc";
   sort?: string; // למשל "-createdAt"
   search?: string;
-  userId?: string; // אופציונלי
+  userId?: string;
+  ownerId?: string;
+  viewerId?: string;
   isShared?: boolean;
 };
+
+function toPosInt(v: unknown, fallback: number) {
+  const n =
+    typeof v === "string" ? parseInt(v, 10) : typeof v === "number" ? v : NaN;
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
 
 /** עוזר להפוך 401/403 לשגיאה עם code=AUTH_REQUIRED */
 function asAuthError(err: any) {
@@ -72,14 +51,71 @@ function asAuthError(err: any) {
   return err;
 }
 
+/** נרמול פרמטרי המיון: תומך או ב-sortBy/order או ב-sort בסגנון -field */
+function normalizeSort(params: ListParams) {
+  const out: Record<string, string> = {};
+  if (params.sortBy) out.sortBy = params.sortBy;
+  if (params.order) out.order = params.order;
+
+  if (params.sort && !params.sortBy && !params.order) {
+    const s = String(params.sort).trim();
+    if (s.startsWith("-")) {
+      out.sortBy = s.slice(1);
+      out.order = "desc";
+    } else {
+      out.sortBy = s;
+      out.order = "asc";
+    }
+  }
+  return out;
+}
+
+/** תומך בכל הצורות הנפוצות של המענה מהשרת */
+function parseListResponse(data: any): DreamsPage {
+  // מבנה מומלץ/נפוץ: { success?, dreams, total, page, pages, limit?, hasNext?, hasPrev? }
+  const payload = data?.success === true ? data : data;
+
+  if (payload && Array.isArray(payload.dreams)) {
+    return {
+      dreams: payload.dreams.map(adapt),
+      total: toPosInt(payload.total, payload.dreams.length),
+      page: toPosInt(payload.page, 1),
+      pages: toPosInt(payload.pages, 1),
+      limit: toPosInt(payload.limit, undefined as any), // יישאר undefined אם אין
+      hasNext:
+        typeof payload.hasNext === "boolean" ? payload.hasNext : undefined,
+      hasPrev:
+        typeof payload.hasPrev === "boolean" ? payload.hasPrev : undefined,
+    };
+  }
+
+  // נפילות תאימות ישנות:
+  if (payload && Array.isArray(payload.data)) {
+    const arr = payload.data.map(adapt);
+    return { dreams: arr, total: arr.length, page: 1, pages: 1 };
+  }
+  if (Array.isArray(payload)) {
+    const arr = payload.map(adapt);
+    return { dreams: arr, total: arr.length, page: 1, pages: 1 };
+  }
+
+  return { dreams: [], total: 0, page: 1, pages: 1 };
+}
+
+export type DreamsListResult = {
+  success: boolean;
+  total: number;
+  page: number;
+  limit: number;
+  dreams: Dream[];
+};
+
 export const DreamsApi = {
   /**
-   * 🔹 פירוש + שמירה מיידית (ללא מצב "פרש בלבד")
-   * מבצע POST /dreams/interpret ומחזיר את ה־dream שנשמר בפועל.
+   * 🔹 פירוש + שמירה מיידית
    */
   interpret: async (payload: InterpretDto): Promise<InterpretResponse> => {
     const body = {
-      // תמיכה בשמות שדה חלופיים מהקומפוננטות הישנות:
       text:
         payload.text ??
         (payload as any).userInput ??
@@ -92,12 +128,9 @@ export const DreamsApi = {
 
     const r = await api.post("/dreams/interpret", body);
     const d = r.data || {};
-    // השרת מחזיר { success, dream }
     const dreamRaw = d.dream ?? d.data?.dream ?? d;
     const dream = adapt(dreamRaw);
 
-    // Provide title and aiResponse fields required by InterpretResponse,
-    // preferring explicit fields from the response, then falling back to the adapted dream or payload.
     const title = d.title ?? dream.title ?? body.titleOverride ?? "";
     const aiResponse =
       d.aiResponse ?? d.interpretation ?? dream.aiResponse ?? null;
@@ -111,9 +144,24 @@ export const DreamsApi = {
     return adapt(r.data?.dream ?? r.data);
   },
 
-  /** פג'ינציה בצד שרת */
+  /** פג'ינציה בצד שרת – מחזיר בדיוק את מה שהשרת חושב על pages/total */
   listPaged: async (params: ListParams = {}): Promise<DreamsPage> => {
-    const r = await api.get("/dreams", { params });
+    const { page, limit, search, userId, ownerId, viewerId } = params;
+    const { sortBy, order } = normalizeSort(params);
+
+    const r = await api.get("/dreams", {
+      params: {
+        page: toPosInt(page, 1),
+        limit: toPosInt(limit, 10),
+        search: search || undefined,
+        sortBy: sortBy || undefined,
+        order: order || undefined,
+        userId: userId || undefined,
+        ownerId: ownerId || undefined,
+        viewerId: viewerId || undefined,
+      },
+    });
+
     return parseListResponse(r.data);
   },
 
@@ -161,7 +209,7 @@ export const DreamsApi = {
     try {
       await api.post(`/activity/${dreamId}`, { type });
     } catch {
-      /* אין צורך לטפל – פעולה "נחמדה שיהיה" בלבד */
+      /* no-op */
     }
   },
 
@@ -189,26 +237,35 @@ export const DreamsApi = {
       throw asAuthError(err);
     }
   },
-  listByUser(
+
+  /** רשימת חלומות של משתמש (תאימות ישנה). משתמש בפועל ב-listPaged */
+  async listByUser(
     userId: string,
     params?: { page?: number; limit?: number; search?: string }
-  ) {
-    return api
-      .get<DreamsListResult>("/dreams", {
-        params: {
-          userId,
-          page: params?.page ?? 1,
-          limit: params?.limit ?? 20,
-          search: params?.search || undefined,
-        },
-      })
-      .then((r) => r.data);
+  ): Promise<DreamsListResult> {
+    const pageResp = await DreamsApi.listPaged({
+      userId,
+      page: params?.page ?? 1,
+      limit: params?.limit ?? 20,
+      search: params?.search || undefined,
+      sortBy: "createdAt",
+      order: "desc",
+    });
+
+    return {
+      success: true,
+      total: pageResp.total,
+      page: pageResp.page,
+      limit: pageResp.limit ?? toPosInt(params?.limit, 20),
+      dreams: pageResp.dreams,
+    };
   },
 
   /** עדכון דגל שיתוף */
-  setShare(id: string, isShared: boolean) {
-    return api
-      .put<{ success: true; dream: Dream }>(`/dreams/${id}`, { isShared })
-      .then((r) => r.data.dream);
+  setShare: async (id: string, isShared: boolean) => {
+    const r = await api.put<{ success: true; dream: Dream }>(`/dreams/${id}`, {
+      isShared,
+    });
+    return adapt(r.data.dream);
   },
 };

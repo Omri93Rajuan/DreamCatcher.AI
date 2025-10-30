@@ -12,7 +12,7 @@ export default function RecentDreams({ dreams, isLoading }: Props) {
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
-    .slice(0, 4);
+    .slice(0, 3);
 
   return (
     <section className="max-w-7xl mx-auto px-4 mb-14">
@@ -23,13 +23,13 @@ export default function RecentDreams({ dreams, isLoading }: Props) {
       {isLoading ? (
         <div className="text-center py-12">טוען...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {recent.map((dream, i) => (
             <motion.div
               key={dream._id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.08 }}
             >
               <DreamCard dream={dream as any} showDate />
             </motion.div>

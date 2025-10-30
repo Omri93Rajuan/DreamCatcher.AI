@@ -31,9 +31,10 @@ export default function DreamsPaginated({
           <DreamCard key={d._id} dream={d as any} />
         ))}
       </div>
+
       <Pagination
-        page={data!.page}
-        pages={data!.pages}
+        page={Number(data?.page ?? 1)}
+        pages={Number(data?.pages ?? 1)}
         onChange={onPageChange}
         disabled={isFetching}
       />

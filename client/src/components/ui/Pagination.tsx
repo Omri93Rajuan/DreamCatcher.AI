@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { log } from "console";
 
 type Props = {
   page: number;

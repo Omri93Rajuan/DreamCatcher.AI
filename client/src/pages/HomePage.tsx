@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import InterpretForm from "@/components/dreams/InterpretForm";
 import PopularDreams from "@/components/dreams/PopularDreams";
@@ -9,8 +9,9 @@ import DreamInterpretation from "@/components/dreams/DreamInterpretation";
 import type { Dream } from "@/lib/api/types";
 import { useDreamsPage } from "@/hooks/useDreamsPage";
 import SearchInput from "@/components/dreams/SearchInput";
+import { da } from "date-fns/locale";
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 9;
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -27,6 +28,9 @@ export default function HomePage() {
   );
   const dreamsForStats: Dream[] = data?.dreams ?? [];
 
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
   return (
     <div className="min-h-screen pb-20">
       {/* Hero */}
