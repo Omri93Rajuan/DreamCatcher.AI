@@ -1,0 +1,48 @@
+export const DREAM_CATEGORIES = [
+  "flying",
+  "falling",
+  "being_chased",
+  "teeth",
+  "exam",
+  "late",
+  "death",
+  "romance",
+  "work",
+  "school",
+  "family",
+  "animals",
+  "water",
+  "house",
+  "vehicle",
+  "travel",
+  "lost",
+  "monster",
+  "paralysis",
+  "lucid",
+] as const;
+
+export type DreamCategory = (typeof DREAM_CATEGORIES)[number];
+
+// אופציונלי: מיפוי לתוויות בשפות שונות ל־UI
+export const CATEGORY_LABELS_HE: Record<DreamCategory, string> = {
+  flying: "תעופה",
+  falling: "נפילה",
+  being_chased: "מרדף",
+  teeth: "שיניים",
+  exam: "בחינה",
+  late: "איחור",
+  death: "מוות",
+  romance: "רומנטיקה",
+  work: "עבודה",
+  school: "בית ספר",
+  family: "משפחה",
+  animals: "חיות",
+  water: "מים",
+  house: "בית/חדרים",
+  vehicle: "כלי רכב",
+  travel: "נסיעות",
+  lost: "ללכת לאיבוד",
+  monster: "מפלצות/איומים",
+  paralysis: "שיתוק שינה",
+  lucid: "חלום צלול",
+};

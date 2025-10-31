@@ -1,4 +1,4 @@
-// lib/api/dreams.ts
+// src/lib/api/dreams.ts
 import { api } from "./apiClient";
 import type {
   Dream,
@@ -6,33 +6,46 @@ import type {
   DreamsPage,
   InterpretDto,
   InterpretResponse,
+  GlobalDreamStats,
 } from "./types";
 
-/** מאפס רשומת שרת ל-DTO בצד לקוח */
+/** מאפס רשומת שרת ל-DTO בצד לקוח (שומר תאימות לאחור) */
 const adapt = (raw: any): Dream => ({
-  _id: raw._id ?? raw.id,
-  userId: String(raw.userId),
-  title: raw.title,
-  userInput: raw.userInput,
-  aiResponse: raw.aiResponse ?? raw.interpretation, // תאימות לאחור
-  isShared: Boolean(raw.isShared),
-  sharedAt: raw.sharedAt ?? null,
-  createdAt: raw.createdAt,
-  updatedAt: raw.updatedAt,
+  _id: raw?._id ?? raw?.id,
+  userId: String(raw?.userId ?? ""),
+  title: raw?.title ?? "",
+  userInput: raw?.userInput ?? raw?.text ?? "",
+  aiResponse: raw?.aiResponse ?? raw?.interpretation ?? "",
+  isShared: Boolean(raw?.isShared),
+  sharedAt: raw?.sharedAt ?? null,
+  categories: Array.isArray(raw?.categories) ? raw.categories : undefined,
+  categoryScores:
+    raw?.categoryScores && typeof raw.categoryScores === "object"
+      ? raw.categoryScores
+      : undefined,
+  createdAt: raw?.createdAt ?? "",
+  updatedAt: raw?.updatedAt ?? "",
 });
 
 type ListParams = {
   page?: number;
   limit?: number;
-  // תמיכה בשני הסגנונות:
+
+  // מיון
   sortBy?: string;
   order?: "asc" | "desc";
   sort?: string; // למשל "-createdAt"
+
+  // סינון
   search?: string;
   userId?: string;
   ownerId?: string;
   viewerId?: string;
   isShared?: boolean;
+
+  // 🔹 חדש: סינון לפי קטגוריות (slugs מהשרת, למשל "flying")
+  category?: string; // יחיד
+  categories?: string[]; // מרובים
 };
 
 function toPosInt(v: unknown, fallback: number) {
@@ -89,7 +102,7 @@ function parseListResponse(data: any): DreamsPage {
     };
   }
 
-  // נפילות תאימות ישנות:
+  // תאימויות ישנות:
   if (payload && Array.isArray(payload.data)) {
     const arr = payload.data.map(adapt);
     return { dreams: arr, total: arr.length, page: 1, pages: 1 };
@@ -100,6 +113,23 @@ function parseListResponse(data: any): DreamsPage {
   }
 
   return { dreams: [], total: 0, page: 1, pages: 1 };
+}
+
+/** paramsSerializer שמוודא שה-URL יוצא כמו שהשרת מצפה (ללא [] במפתחות) */
+function buildParamsSerializer(extraCats?: string[]) {
+  return (p: Record<string, any>) => {
+    const usp = new URLSearchParams();
+    Object.entries(p).forEach(([k, v]) => {
+      if (v === undefined || v === null) return;
+      usp.set(k, String(v));
+    });
+    if (Array.isArray(extraCats) && extraCats.length) {
+      for (const c of extraCats) {
+        if (c) usp.append("categories", c);
+      }
+    }
+    return usp.toString();
+  };
 }
 
 export type DreamsListResult = {
@@ -135,7 +165,9 @@ export const DreamsApi = {
     const aiResponse =
       d.aiResponse ?? d.interpretation ?? dream.aiResponse ?? null;
 
-    return { dream, title, aiResponse };
+    // שומרים תאימות ל-InterpretResponse הנוכחי שלך:
+    // אם תרצה להעשיר: החזר גם categories/categoryScores כ־optional מהמתודה הזו.
+    return { dream, title, aiResponse } as InterpretResponse;
   },
 
   /** יצירת חלום חדש (אם תשלח aiResponse – השרת ישמור אותו כפי שהוא) */
@@ -144,22 +176,46 @@ export const DreamsApi = {
     return adapt(r.data?.dream ?? r.data);
   },
 
-  /** פג'ינציה בצד שרת – מחזיר בדיוק את מה שהשרת חושב על pages/total */
+  /** פג'ינציה בצד שרת – כולל סינון לפי קטגוריות */
   listPaged: async (params: ListParams = {}): Promise<DreamsPage> => {
-    const { page, limit, search, userId, ownerId, viewerId } = params;
+    const {
+      page,
+      limit,
+      search,
+      userId,
+      ownerId,
+      viewerId,
+      category,
+      categories,
+      isShared,
+    } = params;
     const { sortBy, order } = normalizeSort(params);
 
+    // מכינים רשימת קטגוריות למשלוח (ללא כפילויות/ריקים)
+    const catSet = new Set<string>();
+    if (category) catSet.add(String(category).trim());
+    if (Array.isArray(categories)) {
+      for (const c of categories) {
+        if (c) catSet.add(String(c).trim());
+      }
+    }
+    const catList = Array.from(catSet);
+
+    const baseParams: Record<string, any> = {
+      page: toPosInt(page, 1),
+      limit: toPosInt(limit, 10),
+      search: search || undefined,
+      sortBy: sortBy || undefined,
+      order: order || undefined,
+      userId: userId || undefined,
+      ownerId: ownerId || undefined,
+      viewerId: viewerId || undefined,
+      isShared: typeof isShared === "boolean" ? isShared : undefined,
+    };
+
     const r = await api.get("/dreams", {
-      params: {
-        page: toPosInt(page, 1),
-        limit: toPosInt(limit, 10),
-        search: search || undefined,
-        sortBy: sortBy || undefined,
-        order: order || undefined,
-        userId: userId || undefined,
-        ownerId: ownerId || undefined,
-        viewerId: viewerId || undefined,
-      },
+      params: baseParams,
+      paramsSerializer: buildParamsSerializer(catList),
     });
 
     return parseListResponse(r.data);
@@ -267,5 +323,19 @@ export const DreamsApi = {
       isShared,
     });
     return adapt(r.data.dream);
+  },
+  getGlobalStats: async (windowDays: number = 7): Promise<GlobalDreamStats> => {
+    const { data } = await api.get("/dreams/stats", { params: { windowDays } });
+    // ננרמל/נחלץ מתוך data
+    const payload = data?.success ? data : data;
+    return {
+      totalAll: Number(payload.totalAll ?? 0),
+      totalPublic: Number(payload.totalPublic ?? 0),
+      newSince: Number(payload.newSince ?? 0),
+      publishedSince: Number(payload.publishedSince ?? 0),
+      uniqueUsers: Number(payload.uniqueUsers ?? 0),
+      windowDays: Number(payload.windowDays ?? 7),
+      sinceISO: payload.sinceISO,
+    };
   },
 };

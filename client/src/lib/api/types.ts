@@ -46,17 +46,6 @@ export interface IUser {
   createdAt?: Date;
   updatedAt?: Date;
 }
-export type Dream = {
-  _id: string;
-  userId: string;
-  title: string;
-  userInput: string;
-  aiResponse: string;
-  isShared: boolean;
-  sharedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
 
 export type CreateDreamDto = {
   title: string;
@@ -95,4 +84,47 @@ export type InterpretResponse = {
   title: string | null;
   aiResponse: string;
   dream?: Dream | null; // יתקבל כשsave=true
+};
+export type DreamCategory =
+  | "love"
+  | "adventure"
+  | "nightmare"
+  | "flying"
+  | "water"
+  | "prophetic"
+  | "lucid"
+  | "other";
+
+export interface CategoryScore {
+  category: DreamCategory;
+  confidence: number;
+}
+
+export interface Dream {
+  _id: string;
+  userId: string;
+  title: string;
+  userInput: string;
+  aiResponse: string;
+  isShared: boolean;
+  categories?: DreamCategory[];
+  categoryScores?: CategoryScore[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DreamsPage {
+  dreams: Dream[];
+  total: number;
+  page: number;
+  pages: number;
+}
+export type GlobalDreamStats = {
+  totalAll: number;
+  totalPublic: number;
+  newSince: number;
+  publishedSince: number;
+  uniqueUsers: number;
+  windowDays: number;
+  sinceISO?: string;
 };
