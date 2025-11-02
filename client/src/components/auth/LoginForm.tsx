@@ -39,7 +39,12 @@ export default function LoginForm({ onSuccess }: Props) {
           placeholder="••••••••"
         />
       </div>
-      {error && <div className="text-rose-300 text-sm">{error}</div>}
+      {error && (
+        <div className="text-rose-300 text-sm">
+          {" "}
+          {"אימייל או סיסמה שגויים."}
+        </div>
+      )}
       <button
         type="submit"
         disabled={submitting}

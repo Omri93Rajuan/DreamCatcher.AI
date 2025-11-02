@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Share2, Eye, Moon, X, Sparkles } from "lucide-react";
+import { Calendar, Share2, Moon, X, Sparkles, Plus } from "lucide-react";
 import type { Dream } from "@/lib/api/types";
 import ReactionsBar from "@/components/dreams/ReactionsBar";
+import { CATEGORY_META } from "@/lib/api/categoryIcons";
+
+type CategoryKey = keyof typeof CATEGORY_META;
 
 type Props = {
-  dream: Dream;
+  dream: Dream & { categories?: CategoryKey[] }; // ← התאמה מינימלית
   showDate?: boolean;
   currentUserId?: string | null;
   onShare?: (dreamId: string) => void;
@@ -32,6 +35,60 @@ const formatDate = (date: Date): string => {
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
 };
 
+/** תגית בודדת */
+function TagPill({ k }: { k: CategoryKey }) {
+  const meta = CATEGORY_META[k];
+  const Icon = meta.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[11px] font-medium text-white/95
+        bg-gradient-to-r ${meta.gradient} shadow-sm border border-white/10`}
+      title={meta.label}
+    >
+      <Icon className="w-3 h-3 opacity-90" />
+      {meta.label}
+    </span>
+  );
+}
+
+/** קבוצת תגיות עם “+N” בתצוגה קומפקטית */
+function TagsRow({
+  categories,
+  maxVisible,
+  align = "left",
+}: {
+  categories: CategoryKey[];
+  maxVisible: number;
+  align?: "left" | "right";
+}) {
+  if (!categories?.length) return null;
+  const visible = categories.slice(0, maxVisible);
+  const rest = categories.length - visible.length;
+
+  return (
+    <div
+      className={`flex flex-wrap items-center gap-1.5 ${
+        align === "left" ? "justify-start" : "justify-end"
+      }`}
+      dir="rtl"
+    >
+      {visible.map((c) => (
+        <TagPill key={c} k={c} />
+      ))}
+      {rest > 0 && (
+        <span
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium
+            bg-white/10 text-white/90 border border-white/15"
+          title={`ועוד ${rest} תגיות`}
+        >
+          <Plus className="w-3 h-3" />
+          {`+${rest}`}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function DreamCard({
   dream,
   showDate = false,
@@ -49,6 +106,15 @@ export default function DreamCard({
   );
   const created = dream.createdAt ? new Date(dream.createdAt) : null;
 
+  const categories = useMemo<CategoryKey[]>(
+    () =>
+      (Array.isArray((dream as any).categories)
+        ? (dream as any).categories
+        : []
+      ).filter((k: any): k is CategoryKey => k && CATEGORY_META[k]),
+    [dream]
+  );
+
   const dreamPreviewLength = compact ? 100 : 200;
   const interpretationPreviewLength = compact ? 120 : 180;
 
@@ -60,8 +126,24 @@ export default function DreamCard({
   return (
     <>
       {/* Compact Card */}
-      <Card className="bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-900/30 border border-purple-500/20 rounded-xl hover:border-purple-400/40 transition-all duration-300 overflow-hidden group">
+      <Card className="relative bg-gradient-to-br from-purple-900/30 via-purple-800/20 to-purple-900/30 border border-purple-500/20 rounded-xl hover:border-purple-400/40 transition-all duration-300 overflow-hidden group">
+        {/* תגיות — בצד שמאל למעלה (absolute מעל התוכן) */}
+        {categories.length > 0 && (
+          <div className="absolute left-3 top-3 z-10 pointer-events-none">
+            <div className="pointer-events-auto">
+              <TagsRow
+                categories={categories}
+                maxVisible={compact ? 3 : 6}
+                align="left"
+              />
+            </div>
+          </div>
+        )}
+
         <CardContent className="p-5">
+          {/* Spacer קטן שלא יכסה את הכותרת כשהתגיות קיימות */}
+          {categories.length > 0 && <div className="h-6" />}
+
           {/* Header */}
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -171,16 +253,27 @@ export default function DreamCard({
 
             {/* Modal Content */}
             <div className="overflow-y-auto max-h-[calc(85vh-120px)] p-6 space-y-6">
-              {/* Date and Reactions */}
+              {/* Date, Reactions and Tags */}
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                {showDate && created && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-400/30">
-                    <Calendar className="w-4 h-4 text-purple-300" />
-                    <span className="text-sm text-purple-200">
-                      {formatDate(created)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  {showDate && created && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/20 border border-purple-400/30">
+                      <Calendar className="w-4 h-4 text-purple-300" />
+                      <span className="text-sm text-purple-200">
+                        {formatDate(created)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* תגיות מלאות במודל */}
+                  {categories.length > 0 && (
+                    <TagsRow
+                      categories={categories}
+                      maxVisible={99}
+                      align="left"
+                    />
+                  )}
+                </div>
 
                 <div className="flex-1">
                   <ReactionsBar dreamId={dream._id} />

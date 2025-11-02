@@ -1,7 +1,9 @@
+// src/llm/openrouter.provider.ts
 import fetch from "node-fetch";
 
 import { LLMProvider, LLMResult, LLMOptions } from "./llm.types";
 import { stripFences, tryParseJsonLike, sleep } from "./llm.utils";
+import { DREAM_CATEGORIES } from "../types/categories.interface";
 
 export type OpenRouterProviderConfig = {
   apiKey: string;
@@ -10,6 +12,8 @@ export type OpenRouterProviderConfig = {
   baseDelayMs?: number;
   timeoutMs?: number;
 };
+
+type DreamCategory = (typeof DREAM_CATEGORIES)[number];
 
 const apiUrl =
   process.env.OPENROUTER_API_URL ||
@@ -124,6 +128,9 @@ export class OpenRouterProvider implements LLMProvider {
     userInput: string,
     signal: AbortSignal
   ): Promise<LLMResult> {
+    // בונים תיאור חד־משמעי של הקטגוריות המותרות
+    const categoryList = JSON.stringify(DREAM_CATEGORIES);
+
     const resp = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -135,15 +142,22 @@ export class OpenRouterProvider implements LLMProvider {
       },
       body: JSON.stringify({
         model,
+        // שווה להשאיר פשוט כדי שיעבוד בכל המודלים. אם תרצה JSON-mode, אפשר להוסיף response_format בהתאם לתמיכת המודל.
         messages: [
           {
             role: "system",
-            content:
-              "Return a strict JSON object with keys: title (string, up to 6 Hebrew words) and interpretation (string). No extra text.",
+            content: [
+              "Return STRICT JSON with keys:",
+              ' - "title": string (Hebrew, up to 6 words)',
+              ' - "interpretation": string',
+              ` - "categories": array of strings; each must be one of ${categoryList}`,
+              ' - "categoryScores": object mapping category->confidence float in [0,1] (optional)',
+              "Do not include any extra text or markdown. JSON only.",
+            ].join("\n"),
           },
           {
             role: "user",
-            content: `חלמתי: "${userInput}". החזר JSON בלבד עם השדות: title, interpretation.`,
+            content: `חלמתי: "${userInput}". החזר JSON בלבד עם השדות: title, interpretation, categories (אך ורק מתוך הרשימה), ו-categoryScores אופציונלי.`,
           },
         ],
       }),
@@ -165,9 +179,11 @@ export class OpenRouterProvider implements LLMProvider {
     const raw = data?.choices?.[0]?.message?.content ?? "";
     if (!raw) throw new Error("LLM response missing content");
 
+    // נסיון לפרסר JSON "נקי", עם גידור פנסס וכו'
     const cleaned = stripFences(raw);
     let parsed = tryParseJsonLike(cleaned);
 
+    // Fallbacks על בסיס Regex אם המודל מחזיר טקסט חופשי
     if (!parsed) {
       const titleMatch =
         cleaned.match(/"(?:title|כותרת)"\s*:\s*"([^"]+)"/i) ||
@@ -177,9 +193,32 @@ export class OpenRouterProvider implements LLMProvider {
         cleaned.match(/"(?:interpretation|פירוש)"\s*:\s*"([^"]+)"/i) ||
         cleaned.match(/(?:interpretation|פירוש)[:\-]?\s*([\s\S]+)/i);
 
+      // categories – מנסה לאסוף מערך בתוך סוגריים מרובעים או שורה מופרדת בפסיקים
+      let cats: string[] = [];
+      const catJsonMatch = cleaned.match(
+        /"(?:categories|קטגוריות)"\s*:\s*\[([\s\S]*?)\]/i
+      );
+      if (catJsonMatch?.[1]) {
+        cats = catJsonMatch[1]
+          .split(/[,]+/g)
+          .map((s) => s.replace(/["'\s]/g, "").trim())
+          .filter(Boolean);
+      } else {
+        const catLineMatch = cleaned.match(
+          /(?:categories|קטגוריות)[:\-]\s*([^\n]+)/i
+        );
+        if (catLineMatch?.[1]) {
+          cats = catLineMatch[1]
+            .split(/[,\u05BE;|]+/g) // מפריד על פסיקים/מקף עברי/נקודה־פסיק/pipe
+            .map((s) => s.replace(/["'\s]/g, "").trim())
+            .filter(Boolean);
+        }
+      }
+
       parsed = {
         title: titleMatch?.[1]?.trim(),
         interpretation: (interpMatch?.[1] ?? cleaned).trim(),
+        categories: cats,
       };
     }
 
@@ -188,8 +227,47 @@ export class OpenRouterProvider implements LLMProvider {
       parsed.interpretation as string | undefined
     )?.trim();
 
+    // נרמול וניקוי קטגוריות
+    const allowed = new Set<string>(DREAM_CATEGORIES);
+    const rawCats = Array.isArray(parsed.categories) ? parsed.categories : [];
+    const categories: DreamCategory[] = uniqueStrings(
+      rawCats.map((c) => String(c || "").trim()).filter((c) => allowed.has(c))
+    ).slice(0, 4) as DreamCategory[]; // מגבילים ל־4 לתיוג שימושי
+
+    // נרמול ציונים (0..1) וזריקת מפתחות לא חוקיים
+    const rawScores =
+      parsed.categoryScores && typeof parsed.categoryScores === "object"
+        ? (parsed.categoryScores as Record<string, unknown>)
+        : undefined;
+
+    const categoryScores = rawScores
+      ? Object.fromEntries(
+          Object.entries(rawScores)
+            .filter(([k]) => allowed.has(k))
+            .map(([k, v]) => [k, clamp01(Number(v))])
+        )
+      : undefined;
+
     if (!interpretation) throw new Error("Missing interpretation");
 
-    return { title, interpretation };
+    return { title, interpretation, categories, categoryScores } as LLMResult;
   }
+}
+
+/** כלים קטנים לנרמול */
+function clamp01(n: number) {
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(1, n));
+}
+
+function uniqueStrings(arr: string[]) {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const s of arr) {
+    if (!seen.has(s)) {
+      seen.add(s);
+      out.push(s);
+    }
+  }
+  return out;
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import InterpretForm from "@/components/dreams/InterpretForm";
 import PopularDreams from "@/components/dreams/PopularDreams";
@@ -6,31 +6,66 @@ import RecentDreams from "@/components/dreams/RecentDreams";
 import DreamsPaginated from "@/components/dreams/DreamsPaginated";
 import StatsPanel from "@/components/dreams/StatsPanel";
 import DreamInterpretation from "@/components/dreams/DreamInterpretation";
-import type { Dream } from "@/lib/api/types";
 import { useDreamsPage } from "@/hooks/useDreamsPage";
 import SearchInput from "@/components/dreams/SearchInput";
-import { da } from "date-fns/locale";
-
+import CategoryPills from "@/components/dreams/CategoryPills";
+import { DreamsApi } from "@/lib/api/dreams";
+import { GlobalDreamStats } from "@/lib/api/types";
 const PAGE_SIZE = 9;
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [currentInterpretation, setCurrentInterpretation] = useState<{
     dream_text: string;
     interpretation: string;
   } | null>(null);
 
+  // אם "all" → לא שולחים categories בכלל
+  const categoriesParam = useMemo(
+    () => (selectedCategory === "all" ? undefined : [selectedCategory]),
+    [selectedCategory]
+  );
+
+  // שליפת חלומות עם פאג'ינציה
   const { data, isLoading, isFetching } = useDreamsPage(
     page,
     PAGE_SIZE,
-    searchQuery
+    searchQuery,
+    "createdAt",
+    "desc",
+    categoriesParam
   );
-  const dreamsForStats: Dream[] = data?.dreams ?? [];
+
+  // >>> מערך חלומות לשאר ה־UI (פופולריים/רשימות)
+  const dreamsForCards = data?.dreams ?? [];
+
+  // סטטיסטיקות גלובליות מהשרת
+  const [stats, setStats] = useState<GlobalDreamStats | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log(data);
-  }, [data]);
+    let mounted = true;
+    (async () => {
+      try {
+        // 7 ימים ברירת מחדל (אפשר לשנות)
+        const s = await DreamsApi.getGlobalStats(7);
+        if (mounted) setStats(s);
+      } catch (e: any) {
+        if (mounted) setStatsError(e?.message ?? "Failed to load stats");
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // reset עמוד בכל שינוי סינון/חיפוש
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategory]);
+
   return (
     <div className="min-h-screen pb-20">
       {/* Hero */}
@@ -49,14 +84,7 @@ export default function HomePage() {
             </p>
           </motion.div>
 
-          <InterpretForm onInterpreted={setCurrentInterpretation} />
-          <SearchInput
-            value={searchQuery}
-            onChange={(v) => {
-              setSearchQuery(v);
-              setPage(1);
-            }}
-          />
+          <InterpretForm />
         </div>
       </section>
 
@@ -64,19 +92,49 @@ export default function HomePage() {
       <AnimatePresence>
         {currentInterpretation && (
           <section className="max-w-6xl mx-auto px-4 mb-20">
-            <DreamInterpretation interpretation={currentInterpretation} />
+            <DreamInterpretation />
           </section>
         )}
       </AnimatePresence>
 
-      {/* סטטיסטיקות */}
+      {/* סטטיסטיקות גלובליות */}
       <section className="max-w-7xl mx-auto px-4 mb-20">
-        <StatsPanel dreams={dreamsForStats} />
+        {statsError ? (
+          <div className="text-sm text-red-400">
+            שגיאה בטעינת סטטיסטיקות: {statsError}
+          </div>
+        ) : stats ? (
+          <StatsPanel stats={stats} showPublicTotal />
+        ) : (
+          // שימר קטן בזמן טעינה
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="h-36 rounded-2xl bg-white/5 animate-pulse border border-white/10"
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* פופולריים / אחרונים */}
-      <PopularDreams dreams={dreamsForStats} isLoading={isLoading} />
-      <RecentDreams dreams={dreamsForStats} isLoading={isLoading} />
+      <PopularDreams />
+      <SearchInput
+        value={searchQuery}
+        onChange={(v) => {
+          setSearchQuery(v);
+          setPage(1);
+        }}
+      />
+      {/* סינון לפי קטגוריות */}
+      <section className="max-w-6xl mx-auto px-4">
+        <CategoryPills
+          selected={selectedCategory}
+          onSelect={(c) => setSelectedCategory(c)}
+          showAll
+        />
+      </section>
 
       {/* כל החלומות + פג'ינציה */}
       <section className="max-w-7xl mx-auto px-4">
