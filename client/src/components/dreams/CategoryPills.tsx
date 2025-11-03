@@ -1,6 +1,7 @@
-import { CATEGORY_META } from "@/lib/api/categoryIcons";
-import { motion } from "framer-motion";
+import * as React from "react";
 import { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { CATEGORY_META } from "@/lib/api/categoryIcons";
 
 type Props = {
   selected: string; // "all" או מפתח כמו "flying"
@@ -19,7 +20,6 @@ export default function CategoryPills({
 }: Props) {
   const [expanded, setExpanded] = useState(false);
 
-  // מיון עם עדיפות ל-TOP ואז אלפביתי
   const entries = useMemo(() => {
     const all = Object.entries(CATEGORY_META) as Array<
       [
@@ -53,7 +53,6 @@ export default function CategoryPills({
   const top = entries.slice(0, initialVisible);
   const rest = entries.slice(initialVisible);
 
-  // אנימציות כניסה
   const listVariants = {
     hidden: { opacity: 0, y: 8 },
     show: (i: number) => ({
@@ -65,8 +64,13 @@ export default function CategoryPills({
 
   return (
     <div className="relative mb-6" dir="rtl">
-      {/* spotlight עדין בריחוף בכל אזור הצ’יפים */}
-      <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(1200px_400px_at_var(--mx,50%)_-10%,rgba(255,255,255,0.10),transparent_60%)] transition-[--mx] duration-300" />
+      {/* spotlight עדין: כהה בלייט, בהיר בדרק */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-[28px]
+                      bg-[radial-gradient(1200px_400px_at_var(--mx,50%)_-10%,rgba(0,0,0,0.06),transparent_60%)]
+                      dark:bg-[radial-gradient(1200px_400px_at_var(--mx,50%)_-10%,rgba(255,255,255,0.10),transparent_60%)]
+                      transition-[--mx] duration-300"
+      />
       <div
         className="flex flex-col gap-4"
         onMouseMove={(e) => {
@@ -108,7 +112,6 @@ export default function CategoryPills({
 
           {rest.length > 0 && (
             <motion.button
-              variants={listVariants}
               initial="hidden"
               animate="show"
               custom={top.length + 2}
@@ -116,8 +119,9 @@ export default function CategoryPills({
               whileTap={{ scale: 0.95, y: 1 }}
               onClick={() => setExpanded((s) => !s)}
               className="relative px-5 py-2 rounded-2xl flex items-center gap-2 transition-all border
-                         bg-white/[0.06] hover:bg-white/[0.10] text-purple-100 border-white/15
-                         shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                         bg-white/80 text-slate-900 hover:bg-black/5 border-black/10
+                         dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10 dark:border-white/15
+                         shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
               aria-expanded={expanded}
             >
               {expanded ? "פחות…" : "עוד…"}
@@ -131,9 +135,10 @@ export default function CategoryPills({
             initial={{ opacity: 0, y: -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="mx-auto w-full max-w-4xl rounded-3xl border border-white/10
-                       bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]
-                       p-4 backdrop-blur-md shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
+            className="mx-auto w-full max-w-4xl rounded-3xl border p-4 backdrop-blur-md
+                       bg-white/80 border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)]
+                       dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]
+                       dark:border-white/10 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
           >
             <div className="flex flex-wrap gap-3 justify-center">
               {rest.map(([id, meta], i) => {
@@ -160,7 +165,7 @@ export default function CategoryPills({
   );
 }
 
-/** ====== Pill עם “וואו”: זוהר, גבול גרדיאנט אנימטיבי, לחיצה 3D ====== */
+/** ====== Pill עם Light/Dark: זכוכית בלייט / כהה בדרק, Active עם גרדיאנט ====== */
 function AnimatedPill({
   children,
   gradient,
@@ -175,7 +180,7 @@ function AnimatedPill({
   i?: number;
 }) {
   const base =
-    "relative group px-5 py-2 rounded-2xl flex items-center gap-2 border backdrop-blur-md transition-all";
+    "relative group px-5 py-2 rounded-2xl flex items-center gap-2 border backdrop-blur-md transition-all focus:outline-none";
 
   return (
     <motion.button
@@ -186,28 +191,29 @@ function AnimatedPill({
       whileHover={{ scale: 1.06, y: -1 }}
       whileTap={{ scale: 0.96, y: 1 }}
       onClick={onClick}
+      aria-pressed={!!active}
       className={[
         base,
         active
-          ? // מצב פעיל: מילוי גרדיאנט + הילה + גבול בהיר
+          ? // Active: מילוי גרדיאנט + טקסט לבן בשני המצבים
             `text-white border-white/30 bg-gradient-to-r ${gradient}
-             shadow-[0_10px_30px_rgba(0,0,0,0.35)]
+             shadow-[0_10px_30px_rgba(0,0,0,0.18)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]
              before:absolute before:inset-[-2px] before:rounded-[22px]
              before:bg-[conic-gradient(from_180deg,rgba(255,255,255,0.35),rgba(255,255,255,0)_30%,rgba(255,255,255,0.35))]
              before:opacity-30 before:blur-[8px] before:animate-[spin_6s_linear_infinite] before:content-['']`
-          : // מצב רגיל: זכוכית עדינה + גבול + הילה קטנה ב-hover
-            `text-purple-100 border-white/15 bg-white/[0.06] hover:bg-white/[0.10]
-             shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
+          : // Inactive: זכוכית מותאמת ללייט/דרק
+            `text-slate-800 bg-white/80 border-black/10 hover:bg-black/5
+             dark:text-white/85 dark:bg-white/[0.06] dark:border-white/15 dark:hover:bg-white/10
+             shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
              after:pointer-events-none after:absolute after:inset-0 after:rounded-2xl
              after:opacity-0 group-hover:after:opacity-100 after:transition
-             after:bg-[radial-gradient(250px_60px_at_center,rgba(255,255,255,0.10),transparent_70%)]`,
+             after:bg-[radial-gradient(250px_60px_at_center,rgba(0,0,0,0.06),transparent_70%)]
+             dark:after:bg-[radial-gradient(250px_60px_at_center,rgba(255,255,255,0.10),transparent_70%)]`,
       ].join(" ")}
     >
-      {/* טבעת אור עדינה רק כש־active */}
       {active && (
         <span className="pointer-events-none absolute -inset-0.5 rounded-[22px] blur-md opacity-40 bg-gradient-to-r from-white/50 to-white/20" />
       )}
-      {/* תוכן */}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>
   );

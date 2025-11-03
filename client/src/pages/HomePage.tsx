@@ -70,16 +70,33 @@ export default function HomePage() {
     <div className="min-h-screen pb-20">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-20 text-center">
+        <div className="max-w-6xl mx-auto px-4 py-20 text-center" dir="rtl">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 gradient-text">
+            <h1
+              className="
+          font-extrabold leading-[1.1] tracking-tight
+          text-4xl sm:text-6xl md:text-7xl
+          bg-clip-text text-transparent
+          bg-gradient-to-r from-[#D4A100] via-[#C4903A] to-[#B87E40]   /* Light */
+          dark:from-purple-300 dark:via-purple-200 dark:to-amber-200 /* Dark */
+          mb-6
+        "
+            >
               גלה את המשמעות של החלומות שלך
             </h1>
-            <p className="text-xl text-purple-200 mb-8 max-w-2xl mx-auto">
+
+            <p
+              className="
+          max-w-2xl mx-auto mb-8
+          text-lg md:text-xl font-medium
+          text-[#B87E40]       /* Light */
+          dark:text-purple-200 /* Dark */
+        "
+            >
               פענח את החלומות שלך באמצעות בינה מלאכותית מתקדמת
             </p>
           </motion.div>
@@ -104,7 +121,7 @@ export default function HomePage() {
             שגיאה בטעינת סטטיסטיקות: {statsError}
           </div>
         ) : stats ? (
-          <StatsPanel stats={stats} showPublicTotal />
+          <StatsPanel stats={stats} />
         ) : (
           // שימר קטן בזמן טעינה
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

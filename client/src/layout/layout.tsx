@@ -4,6 +4,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/lib/utils/createPageUrl";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 // ⬅️ עדכן אם הנתיב שלך שונה
 import logoMark from "@/assets/logo.png";
@@ -72,7 +73,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       className={({ isActive }) =>
         [
           "relative group px-2 py-1 font-medium transition-colors",
-          isActive ? "text-white" : "text-purple-200 hover:text-white",
+          isActive
+            ? "text-slate-900 dark:text-white"
+            : "text-slate-700 hover:text-slate-900 dark:text-purple-200 dark:hover:text-white",
           // underline anim (RTL: מתחיל מימין)
           "after:absolute after:bottom-0 after:right-0 after:h-[2px] after:w-0",
           "after:bg-gradient-to-l after:from-amber-500 after:to-purple-500 after:transition-all after:duration-300",
@@ -87,7 +90,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-indigo-950 via-purple-950 to-slate-900 text-white"
+      className="
+        min-h-screen
+        bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 text-slate-900
+        dark:from-indigo-950 dark:via-purple-950 dark:to-slate-900 dark:text-white
+      "
       dir="rtl"
     >
       {/* HEADER */}
@@ -95,8 +102,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={[
           "sticky top-0 z-50 border-b transition-all duration-300",
           scrolled
-            ? "backdrop-blur-md bg-white/7 border-white/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.45)]"
-            : "backdrop-blur-[2px] bg-transparent border-white/10",
+            ? "backdrop-blur-md bg-white/70 dark:bg-white/7 border-black/10 dark:border-white/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.25)] dark:shadow-[0_6px_20px_-10px_rgba(0,0,0,.45)]"
+            : "backdrop-blur-[2px] bg-white/40 dark:bg-transparent border-black/10 dark:border-white/10",
         ].join(" ")}
       >
         <div className="max-w-7xl mx-auto px-4">
@@ -114,10 +121,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 loading="eager"
               />
               <div className="leading-tight select-none">
-                <span className="text-[25px] font-bold tracking-tight">
+                <span className="text-[25px] font-bold tracking-tight text-slate-900 dark:text-white">
                   פתרון חלומות
                 </span>
-                <span className="block text-[14px] text-white/70">
+                <span className="block text-[14px] text-slate-700 dark:text-white/70">
                   גלה את המשמעות הסמויה
                 </span>
               </div>
@@ -126,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* ניווט דסקטופ */}
             <nav className="hidden md:flex items-center gap-4">
               {user && (
-                <span className="text-white/70 text-sm">
+                <span className="text-slate-700 dark:text-white/70 text-sm">
                   שלום
                   {user.name
                     ? `, ${user.name}`
@@ -144,7 +151,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <NavItem to="/me/dreams">החלומות שלי</NavItem>
                   <button
                     onClick={handleLogout}
-                    className="px-3.5 py-1.5 rounded-lg border border-white/15 text-white/90 hover:bg-white/10 active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+                    className="px-3.5 py-1.5 rounded-lg border border-black/10 text-slate-900 hover:bg-black/5
+                               dark:border-white/15 dark:text-white/90 dark:hover:bg-white/10
+                               active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
                   >
                     התנתק
                   </button>
@@ -154,30 +163,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <NavItem to="/login">התחברות</NavItem>
                   <Link
                     to="/register"
-                    className="px-3.5 py-1.5 rounded-xl font-semibold text-white
+                    className="px-3.5 py-1.5 rounded-xl font-semibold
+                               text-slate-900 dark:text-white
                                bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
                                hover:opacity-95 active:scale-[0.98]
-                               shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]
+                               shadow-[0_6px_20px_-10px_rgba(139,92,246,.35)]
+                               dark:shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]
                                transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
                   >
                     הרשמה
                   </Link>
                 </>
               )}
+
+              {/* טוגל ערכת נושא */}
+              <ThemeToggle />
             </nav>
 
             {/* כפתור מובייל */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-white/15 hover:bg-white/10 transition"
+              className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border
+                         border-black/10 hover:bg-black/5
+                         dark:border-white/15 dark:hover:bg-white/10
+                         transition"
               aria-label="תפריט"
               aria-expanded={mobileOpen}
             >
               <div
                 className={[
                   "relative w-5 h-5",
-                  "before:absolute before:inset-x-0 before:top-1 before:h-[2px] before:bg-white before:transition",
-                  "after:absolute after:inset-x-0 after:bottom-1 before:content-[''] after:content-[''] after:h-[2px] after:bg-white after:transition",
+                  "before:absolute before:inset-x-0 before:top-1 before:h-[2px] before:bg-slate-900 dark:before:bg-white before:transition",
+                  "after:absolute after:inset-x-0 after:bottom-1 before:content-[''] after:content-[''] after:h-[2px] after:bg-slate-900 dark:after:bg-white after:transition",
                   mobileOpen
                     ? "before:translate-y-2 before:rotate-45 after:-translate-y-2 after:-rotate-45"
                     : "",
@@ -189,10 +206,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* תפריט מובייל */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-white/10 bg-black/30 backdrop-blur-md">
+          <div className="md:hidden border-t border-black/10 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md">
             <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
               {user && (
-                <div className="text-white/70 text-sm mb-1">
+                <div className="text-slate-700 dark:text-white/70 text-sm mb-1">
                   שלום
                   {user.name
                     ? `, ${user.name}`
@@ -212,30 +229,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <NavItem to="/me/dreams" onClick={() => setMobileOpen(false)}>
                     החלומות שלי
                   </NavItem>
-                  <button
-                    onClick={() => {
-                      setMobileOpen(false);
-                      handleLogout();
-                    }}
-                    className="mt-1 px-3.5 py-2 rounded-lg border border-white/15 text-white/90 hover:bg-white/10 transition"
-                  >
-                    התנתק
-                  </button>
+                  <div className="mt-1 flex items-center justify-between">
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        handleLogout();
+                      }}
+                      className="px-3.5 py-2 rounded-lg border
+                                 border-black/10 text-slate-900 hover:bg-black/5
+                                 dark:border-white/15 dark:text-white/90 dark:hover:bg-white/10
+                                 transition"
+                    >
+                      התנתק
+                    </button>
+                    <ThemeToggle />
+                  </div>
                 </>
               ) : (
                 <>
                   <NavItem to="/login" onClick={() => setMobileOpen(false)}>
                     התחברות
                   </NavItem>
-                  <Link
-                    to="/register"
-                    onClick={() => setMobileOpen(false)}
-                    className="mt-1 px-3.5 py-2 rounded-xl font-semibold text-white
-                               bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
-                               hover:opacity-95 shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]"
-                  >
-                    הרשמה
-                  </Link>
+                  <div className="mt-1 flex items-center justify-between">
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileOpen(false)}
+                      className="px-3.5 py-2 rounded-xl font-semibold
+                                 text-slate-900 dark:text-white
+                                 bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
+                                 hover:opacity-95
+                                 shadow-[0_6px_20px_-10px_rgba(139,92,246,.35)]
+                                 dark:shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]"
+                    >
+                      הרשמה
+                    </Link>
+                    <ThemeToggle />
+                  </div>
                 </>
               )}
             </div>
@@ -247,7 +276,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="relative">{children}</main>
 
       {/* FOOTER */}
-      <footer className="mt-20 border-t border-white/10">
+      <footer className="mt-20 border-t border-black/10 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-3">
             <img
@@ -257,12 +286,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               loading="lazy"
               decoding="async"
             />
-            <span className="text-xl font-bold">פתרון חלומות</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-white">
+              פתרון חלומות
+            </span>
           </div>
-          <p className="text-white/70 text-sm">
+          <p className="text-slate-700 dark:text-white/70 text-sm">
             פרשנות חלומות מתקדמת באמצעות בינה מלאכותית
           </p>
-          <p className="text-white/60 text-xs mt-2">
+          <p className="text-slate-600 dark:text-white/60 text-xs mt-2">
             © {new Date().getFullYear()} כל הזכויות שמורות — DreamCatcher.AI
           </p>
         </div>

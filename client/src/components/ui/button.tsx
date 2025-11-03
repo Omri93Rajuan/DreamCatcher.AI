@@ -1,58 +1,57 @@
 import * as React from "react";
 import { clsx } from "clsx";
 
-type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?:
-    | "primary" // גרדיאנט סגול→ורוד→כתום (+glow) — כמו "הרשמה"
-    | "share" // כתום→ורוד→פוקסיה — לשתף
-    | "danger" // אדום גרדיאנטי — לאישור מחיקה/ביטול שיתוף
-    | "outline" // זכוכית עדינה
-    | "outlineDanger"; // קו אדום מעודן למחיקה לפני אישור
+export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: "sm" | "md" | "lg";
+  variant?: "primary" | "outline" | "ghost";
 };
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   (
-    { className, variant = "primary", size = "md", type = "button", ...props },
+    { className, size = "md", variant = "primary", disabled, ...props },
     ref
   ) => {
     const base =
-      "inline-flex items-center justify-center rounded-xl font-semibold transition-all select-none focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:opacity-50 disabled:pointer-events-none gap-2";
+      "inline-flex items-center justify-center font-medium rounded-xl transition-all " +
+      "focus-visible:ring-2 focus-visible:ring-[var(--brand)]/40 " +
+      "select-none shrink-0 active:scale-[0.98]";
 
-    const sizes = {
-      sm: "text-[13px] px-3 py-1.5",
-      md: "text-sm px-4 py-2",
-      lg: "text-base px-5 py-2.5",
-    }[size];
+    const sizes: Record<"sm" | "md" | "lg", string> = {
+      sm: "h-9 px-3 text-sm",
+      md: "h-11 px-5 text-base",
+      lg: "h-14 px-7 text-lg",
+    };
 
-    const variants = {
+    const variants: Record<"primary" | "outline" | "ghost", string> = {
       primary:
-        "bg-gradient-to-r from-[#6D28D9] via-[#EA3A84] to-[#F59E0B] text-white " +
-        "hover:brightness-110 shadow-[0_0_32px_rgba(234,58,132,0.35)]",
-      share:
-        "bg-gradient-to-r from-[#F59E0B] via-[#EA3A84] to-[#A855F7] text-black " +
-        "hover:brightness-110 shadow-[0_0_28px_rgba(251,191,36,0.35)]",
-      danger:
-        "bg-gradient-to-r from-[#EF4444] via-[#DC2626] to-[#7C3AED] text-white " +
-        " shadow-[0_0_26px_rgba(239,68,68,0.35)] hover:bg-red-600 hover:text-white",
+        "bg-[var(--brand)] text-[var(--brand-fg)] " +
+        "hover:brightness-105 dark:hover:brightness-110",
       outline:
-        "bg-white/10 text-white border border-white/20 hover:bg-white/15",
-      outlineDanger:
-        "bg-transparent text-red-300 border border-red-400/40 hover:text-red-200 hover:border-red-400/60",
-    }[variant];
+        "border border-[var(--brand)]/40 text-[var(--brand)] " +
+        "hover:bg-[var(--brand)]/10 dark:hover:bg-[var(--brand)]/20 " +
+        "dark:text-[var(--brand)]",
+      ghost:
+        "text-[var(--brand)] hover:bg-[var(--brand)]/10 " +
+        "dark:hover:bg-[var(--brand)]/20",
+    };
 
-    // מרווחים נכונים לאייקונים (RTL/LTR לא משנה — מיישר לפי flex-gap)
-    const iconFix = "[&>svg]:w-4 [&>svg]:h-4";
+    const disabledStyles = "opacity-40 cursor-not-allowed pointer-events-none";
 
     return (
       <button
         ref={ref}
-        type={type}
-        className={clsx(base, sizes, variants, iconFix, className)}
+        disabled={disabled}
+        className={clsx(
+          base,
+          sizes[size],
+          variants[variant],
+          disabled && disabledStyles,
+          className
+        )}
         {...props}
       />
     );
   }
 );
+
 Button.displayName = "Button";
-export default Button;

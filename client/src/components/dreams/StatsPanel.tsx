@@ -42,7 +42,11 @@ function PeriodToggle({
   ];
   return (
     <div
-      className="inline-flex gap-2 rounded-full bg-white/5 p-1 border border-white/10"
+      className="
+        inline-flex gap-2 rounded-full p-1 border
+        bg-white/80 border-black/10
+        dark:bg-white/[0.06] dark:border-white/10
+      "
       dir="rtl"
     >
       {items.map((it) => {
@@ -52,10 +56,14 @@ function PeriodToggle({
             key={it.key}
             type="button"
             onClick={() => onChange?.(it.key)}
-            className={`px-3 py-1.5 text-sm rounded-full transition-all ${
-              active ? "text-black" : "text-white/80"
-            }`}
+            className={[
+              "px-3 py-1.5 text-sm rounded-full transition-all",
+              active
+                ? "text-slate-900 dark:text-slate-900"
+                : "text-slate-700 hover:bg-black/5 dark:text-white/80 hover:dark:bg-white/10",
+            ].join(" ")}
             style={{ background: active ? accent : "transparent" }}
+            aria-pressed={active}
           >
             {it.label}
           </button>
@@ -77,15 +85,17 @@ function AnimatedNumber({
   from?: number;
 }) {
   const [display, setDisplay] = React.useState<number>(() => Math.round(from));
+
   React.useEffect(() => {
     if (!enabled) {
       setDisplay(Math.round(value));
       return;
     }
+    let raf = 0 as unknown as number;
     const start = performance.now();
     const fromVal = from;
     const to = value;
-    let raf = 0 as number;
+
     const tick = (t: number) => {
       const p = Math.min(1, (t - start) / duration);
       const eased = 1 - Math.pow(1 - p, 3);
@@ -95,6 +105,7 @@ function AnimatedNumber({
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [value, enabled, duration, from]);
+
   return <>{display.toLocaleString()}</>;
 }
 
@@ -136,11 +147,9 @@ export default function StatsPanelUltraCompact({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {KPIs.map((k, idx) => (
-          <Card
-            key={idx}
-            className="relative rounded-3xl border border-white/15 bg-white/5 overflow-hidden"
-          >
-            <CardContent className=" relative h-32">
+          <Card key={idx} className="relative rounded-3xl overflow-hidden">
+            <CardContent className="relative h-32">
+              {/* המספר הגדול, ממורכז, עם גרדיאנט */}
               <div className="absolute inset-0 grid place-items-center pointer-events-none">
                 <span
                   className="font-extrabold leading-none tabular-nums select-none"
@@ -162,13 +171,21 @@ export default function StatsPanelUltraCompact({
                 </span>
               </div>
 
+              {/* הכיתוב הצדדי */}
               <div className="relative z-[1] h-0">
-                <div className="absolute right-8 top-1/2 -translate-y-1/2 text-base md:text-lg text-white/75 whitespace-nowrap">
+                <div
+                  className="absolute right-8 top-1/2 -translate-y-1/2 text-base md:text-lg whitespace-nowrap
+                                text-slate-700 dark:text-white/75"
+                >
                   {k.caption}
                 </div>
               </div>
 
-              <div className="pointer-events-none absolute inset-0 rounded-3xl border border-white/10" />
+              {/* מסגרת עדינה בהתאם לתמה */}
+              <div
+                className="pointer-events-none absolute inset-0 rounded-3xl border
+                              border-black/10 dark:border-white/10"
+              />
             </CardContent>
           </Card>
         ))}

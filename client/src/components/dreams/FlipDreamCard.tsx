@@ -1,4 +1,4 @@
-// src/components/dreams/FlipDreamCard.tsx  ← קובץ מלא
+// src/components/dreams/FlipDreamCard.tsx
 import * as React from "react";
 import { motion } from "framer-motion";
 import {
@@ -95,7 +95,12 @@ export default function FlipDreamCard({
 
   return (
     <div
-      className="relative h-64 rounded-2xl bg-white/5 border border-white/10 overflow-hidden cursor-pointer select-none"
+      className="
+        relative h-64 rounded-2xl overflow-hidden cursor-pointer select-none
+        border bg-white/80 border-black/10 backdrop-blur-sm
+        dark:bg-white/[0.06] dark:border-white/10 dark:backdrop-blur-md
+        shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)] dark:shadow-[0_8px_24px_-16px_rgba(0,0,0,.35)]
+      "
       onClick={() => setFlipped((v) => !v)}
       role="button"
       aria-label="הפוך כרטיס"
@@ -104,6 +109,7 @@ export default function FlipDreamCard({
         (e.key === "Enter" || e.key === " ") && setFlipped((v) => !v)
       }
       style={{ perspective: 1000 }}
+      dir="rtl"
     >
       <motion.div
         className="w-full h-full"
@@ -117,39 +123,40 @@ export default function FlipDreamCard({
           style={{ backfaceVisibility: "hidden" }}
         >
           {!hideRank && (
-            <div className="absolute top-3 right-3 z-10 text-xs font-bold bg-amber-400 text-black rounded-full px-2 py-1">
+            <div className="absolute top-3 right-3 z-10 text-xs font-bold bg-amber-400 text-slate-900 rounded-full px-2 py-1">
               #{row.rank}
             </div>
           )}
 
-          <h3 className="text-lg font-semibold line-clamp-2 pr-8">
+          <h3 className="text-lg font-semibold line-clamp-2 pr-8 text-slate-900 dark:text-white">
             {row.title}
           </h3>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
               <Gauge className="w-4 h-4" />
               {nf.format(row.score)}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
               <Clock className="w-4 h-4" />
               {windowDaysLabel}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
               <Heart className="w-4 h-4" />
               {nf.format(row.likes)}
             </span>
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
               <Eye className="w-4 h-4" />
               {nf.format(row.views)}
             </span>
             {row.percentChange !== null && (
               <span
-                className={`inline-flex items-center gap-1 ${
+                className={[
+                  "inline-flex items-center gap-1",
                   (row.percentChange ?? 0) >= 0
-                    ? "text-emerald-400"
-                    : "text-rose-400"
-                }`}
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600 dark:text-rose-400",
+                ].join(" ")}
                 title="שינוי מול התקופה הקודמת"
               >
                 {(row.percentChange ?? 0) >= 0 ? (
@@ -162,8 +169,8 @@ export default function FlipDreamCard({
             )}
           </div>
 
-          {/* גרף — לא מציגים כלום אם אין נתונים */}
-          <div className="h-28 mt-3 rounded-md">
+          {/* גרף — צבע דינמי לפי תמה ע"י currentColor */}
+          <div className="h-28 mt-3 rounded-md text-sky-600 dark:text-sky-300">
             {series.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
@@ -180,13 +187,13 @@ export default function FlipDreamCard({
                     >
                       <stop
                         offset="0%"
-                        stopColor="#60a5fa"
+                        stopColor="currentColor"
                         stopOpacity={0.35}
                       />
                       <stop
                         offset="100%"
-                        stopColor="#60a5fa"
-                        stopOpacity={0.04}
+                        stopColor="currentColor"
+                        stopOpacity={0.06}
                       />
                     </linearGradient>
                   </defs>
@@ -197,11 +204,12 @@ export default function FlipDreamCard({
                     labelFormatter={(label) =>
                       typeof label === "string" ? fmtLabel(label) : ""
                     }
+                    // ה־Tooltip של Recharts מצייר div משלו; נשאיר ברירת־מחדל
                   />
                   <Area
                     type="monotone"
                     dataKey="score"
-                    stroke="#7dd3fc"
+                    stroke="currentColor"
                     strokeWidth={2}
                     fill={`url(#grad-${dreamId})`}
                     dot={false}
@@ -210,39 +218,63 @@ export default function FlipDreamCard({
                 </AreaChart>
               </ResponsiveContainer>
             ) : hideChartIfEmpty ? null : (
-              <div className="h-full w-full rounded-md bg-white/5" />
+              <div className="h-full w-full rounded-md bg-black/5 dark:bg-white/5" />
             )}
           </div>
 
-          <div className="absolute bottom-3 left-4 text-amber-300">
+          <div className="absolute bottom-3 left-4 text-sm text-amber-600 dark:text-amber-300">
             הפוך להצגה
           </div>
         </div>
 
         {/* אחורי */}
         <div
-          className="absolute inset-0 p-4 bg-white/5"
+          className="
+            absolute inset-0 p-4
+            bg-white/80 border-t border-black/10
+            dark:bg-white/[0.06] dark:border-white/10
+          "
           style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
         >
-          <h3 className="text-lg font-semibold mb-2">תצוגת חלום</h3>
+          <h3 className="text-lg font-semibold mb-2 text-slate-900 dark:text-white">
+            תצוגת חלום
+          </h3>
+
           <div className="grid grid-rows-[1fr_auto] h-[calc(100%-2rem)]">
-            <div className="overflow-y-auto pr-1 space-y-3 scrollbar-thin scrollbar-thumb-white/20">
+            <div
+              className="
+                overflow-y-auto pr-1 space-y-3
+                scrollbar-thin scrollbar-thumb-black/20 dark:scrollbar-thumb-white/20
+              "
+            >
               {userInput ? (
                 <div>
-                  <div className="text-sm text-white/70 mb-1">החלום</div>
-                  <p className="leading-relaxed">{userInput}</p>
+                  <div className="text-sm text-slate-600 dark:text-white/70 mb-1">
+                    החלום
+                  </div>
+                  <p className="leading-relaxed text-slate-900 dark:text-white">
+                    {userInput}
+                  </p>
                 </div>
               ) : (
-                <div className="text-white/60">טוען חלום…</div>
+                <div className="text-slate-600 dark:text-white/60">
+                  טוען חלום…
+                </div>
               )}
+
               {interpretation ? (
                 <div>
-                  <div className="text-sm text-amber-300 mb-1">הפרשנות</div>
-                  <p className="leading-relaxed">{interpretation}</p>
+                  <div className="text-sm text-amber-700 dark:text-amber-300 mb-1">
+                    הפרשנות
+                  </div>
+                  <p className="leading-relaxed text-slate-900 dark:text-white">
+                    {interpretation}
+                  </p>
                 </div>
               ) : null}
             </div>
-            <div className="pt-2 text-right text-sm text-amber-300">
+
+            <div className="pt-2 text-right text-sm text-amber-700 dark:text-amber-300">
               הפוך חזרה
             </div>
           </div>

@@ -8,7 +8,11 @@ export const Card = React.forwardRef<
   <div
     ref={ref}
     className={clsx(
-      "rounded-2xl border border-purple-500/20 bg-white/5 text-white shadow-sm",
+      "rounded-2xl border shadow-sm transition",
+      // LIGHT (חדש)
+      "bg-white border-black/10 text-slate-900",
+      // DARK (כמו שהיה)
+      "dark:border-purple-500/20 dark:bg-white/5 dark:text-white",
       className
     )}
     {...props}
@@ -45,7 +49,7 @@ export const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={clsx("text-sm text-purple-300", className)}
+    className={clsx("text-sm text-slate-600 dark:text-purple-300", className)}
     {...props}
   />
 ));

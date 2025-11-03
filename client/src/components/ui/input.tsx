@@ -1,3 +1,4 @@
+// src/components/ui/Input.tsx
 import * as React from "react";
 import { clsx } from "clsx";
 
@@ -8,7 +9,13 @@ export const Input = React.forwardRef<
   <input
     ref={ref}
     className={clsx(
-      "w-full rounded-md bg-white/10 text-white placeholder:text-purple-300 border border-purple-500/30 px-3 py-2 focus:outline-none focus:border-purple-400",
+      "w-full rounded-lg border px-3 py-2 text-sm transition outline-none",
+      // Light
+      "bg-white border-black/15 text-slate-900 placeholder:text-slate-400",
+      // Dark
+      "dark:bg-white/[0.06] dark:border-white/15 dark:text-white dark:placeholder:text-white/40",
+      // Focus State
+      "focus:ring-2 ring-amber-400/50 dark:focus:ring-amber-400/40",
       className
     )}
     {...props}

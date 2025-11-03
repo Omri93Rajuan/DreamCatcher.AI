@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #8b5cf6;
+  --primary-light: #8b5cf6;
+  --primary-dark: #6d28d9;
+  --accent: #f59e0b;
+  --accent-light: #fcd34d;
+
+  /* LIGHT THEME */
+  --bg: #f8fafc; /* slate-50/100 */
+  --fg: #0f172a; /* slate-900 */
+  --glass-bg: rgba(255, 255, 255, 0.55);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+.dark {
+  /* DARK THEME */
+  --bg: #0b1020; /* custom dark */
+  --fg: #ffffff;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+* {
+  font-family: "Assistant", "Heebo", system-ui, -apple-system, "Segoe UI",
+    Roboto, "Noto Sans Hebrew", Arial, sans-serif;
+}
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+}
+
+.glow-effect {
+  box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+}
+
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    var(--primary-light),
+    var(--accent-light)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

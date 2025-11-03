@@ -7,5 +7,6 @@ export interface UiStore {
 
 export const useUiStore = create<UiStore>((set) => ({
   dark: false,
-  toggleDark: () => set((state) => ({ dark: !state.dark })),
+  toggleDark: () => set((s) => ({ dark: !s.dark })),
+  setDark: (v: boolean) => set({ dark: v }),
 }));
