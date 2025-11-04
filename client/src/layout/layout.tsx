@@ -5,10 +5,7 @@ import { createPageUrl } from "@/lib/utils/createPageUrl";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-
-// ⬅️ עדכן אם הנתיב שלך שונה
 import logoMark from "@/assets/logo.png";
-// אם אין SVG אז PNG שקוף: import logoMark from "@/assets/brand/logo-mark.png";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -57,7 +54,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     navigate("/");
   };
 
-  // לינק ניווט עם קו תחתון אנימטיבי RTL
   const NavItem = ({
     to,
     children,
@@ -102,8 +98,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={[
           "sticky top-0 z-50 border-b transition-all duration-300",
           scrolled
-            ? "backdrop-blur-md bg-white/70 dark:bg-white/7 border-black/10 dark:border-white/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.25)] dark:shadow-[0_6px_20px_-10px_rgba(0,0,0,.45)]"
-            : "backdrop-blur-[2px] bg-white/40 dark:bg-transparent border-black/10 dark:border-white/10",
+            ? // SCROLLED
+              [
+                // Light: לבן נקי עם צל רך
+                "backdrop-blur-md bg-white/80 border-black/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.25)]",
+                // Dark: זכוכית כהה, קונטרסט עדין
+                "dark:bg-[#0b0e1a]/60 dark:border-white/10 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,.6)]",
+              ].join(" ")
+            : // NOT SCROLLED
+              [
+                // Light: שקיפות עדינה
+                "backdrop-blur-sm bg-white/30 border-black/10 shadow-none",
+                // Dark: כמעט שקוף עם קצה לבן עדין
+                "dark:bg-white/5 dark:border-white/10 dark:shadow-none",
+              ].join(" "),
         ].join(" ")}
       >
         <div className="max-w-7xl mx-auto px-4">

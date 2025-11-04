@@ -138,7 +138,7 @@ export default function CategoryPills({
             className="mx-auto w-full max-w-4xl rounded-3xl border p-4 backdrop-blur-md
                        bg-white/80 border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)]
                        dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]
-                       dark:border-white/10 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)]"
+                       dark:border-white/10 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] dark:bg-purple-950"
           >
             <div className="flex flex-wrap gap-3 justify-center">
               {rest.map(([id, meta], i) => {
@@ -165,7 +165,6 @@ export default function CategoryPills({
   );
 }
 
-/** ====== Pill עם Light/Dark: זכוכית בלייט / כהה בדרק, Active עם גרדיאנט ====== */
 function AnimatedPill({
   children,
   gradient,

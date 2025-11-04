@@ -12,9 +12,9 @@ type Props = {
   dream: Dream;
   onToggleShare?: (next: boolean) => void;
   onDelete?: () => void;
-  bodyHeight?: number; // גובה אזור הפליפ (ברירת מחדל 220)
-  maxWordsFront?: number; // מקס’ מילים לצד הקדמי (החלום)
-  maxWordsBack?: number; // מקס’ מילים לצד האחורי (הפתרון)
+  bodyHeight?: number;
+  maxWordsFront?: number;
+  maxWordsBack?: number;
 };
 
 const truncateWords = (text: string, maxWords: number) => {
@@ -60,10 +60,19 @@ export default function DreamFlipCardMini({
       className="group relative rounded-2xl overflow-visible"
     >
       {/* הילה בהובר */}
-      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-amber-400 blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 pointer-events-none" />
+      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-amber-400 blur-lg opacity-0 group-hover:opacity-25 transition-all duration-500 pointer-events-none" />
 
-      <Card className="relative rounded-2xl border border-purple-500/30 bg-gradient-to-b from-[#2A0953]/80 via-[#23084A]/70 to-[#1A073C]/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(88,28,135,0.35)]">
-        {/* אזור הפליפ — גובה קבוע לאחידות */}
+      {/* מעטפת הכרטיס */}
+      <Card
+        className="
+          relative rounded-2xl overflow-hidden
+          border bg-white/85 border-black/10 backdrop-blur-sm
+          shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)]
+          dark:bg-white/[0.10] dark:border-white/15 dark:backdrop-blur-md
+          dark:shadow-[0_8px_24px_-16px_rgba(0,0,0,.45)]
+        "
+      >
+        {/* אזור הפליפ */}
         <div
           className="relative w-full [transform-style:preserve-3d] cursor-pointer"
           style={{
@@ -74,75 +83,111 @@ export default function DreamFlipCardMini({
           }}
           dir="rtl"
           onClick={() => setFlipped((f) => !f)}
+          aria-label="הפוך כרטיס"
         >
           {/* FRONT — החלום */}
-          <CardContent className="absolute inset-0 p-5 text-white [backface-visibility:hidden]">
+          <CardContent
+            className="
+              absolute inset-0 p-5
+              [backface-visibility:hidden]
+              bg-white/60 dark:bg-white/10
+              selection:bg-amber-200 selection:text-slate-900
+              dark:selection:bg-amber-300/30 dark:selection:text-white
+            "
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg truncate">{title}</h3>
+              <h3 className="font-bold text-lg truncate text-slate-900 dark:text-white">
+                {title}
+              </h3>
               <span
-                className={`px-2 py-1 rounded-md text-[11px] ${
+                className={[
+                  "px-2 py-1 rounded-md text-[11px]",
                   isShared
-                    ? "bg-emerald-600/30 text-emerald-100"
-                    : "bg-white/10 text-white/70"
-                }`}
+                    ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
+                    : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
+                ].join(" ")}
               >
                 {isShared ? "משותף" : "פרטי"}
               </span>
             </div>
 
             {createdAt && (
-              <div className="mt-1 text-sm text-purple-300 flex items-center gap-2">
+              <div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4" />
                 {format(createdAt, "d MMMM yyyy", { locale: he })}
               </div>
             )}
 
             <div className="mt-3 h-full">
-              <h4 className="text-amber-300 font-semibold mb-1">החלום:</h4>
-              <p className="text-purple-100 leading-relaxed whitespace-pre-line line-clamp-6">
+              <h4 className="font-semibold mb-1 text-amber-800 dark:text-amber-300">
+                החלום:
+              </h4>
+              <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white">
                 {frontTrunc}
               </p>
             </div>
 
-            {/* כפתור "עוד…" צף, לא משנה גובה */}
             {frontOver && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setFullOpen("dream");
                 }}
-                className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/15 text-purple-200 border border-white/20"
+                className="
+                  absolute bottom-2 left-1/2 -translate-x-1/2
+                  text-[11px] px-2 py-1 rounded-full
+                  bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
+                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
+                "
               >
                 עוד…
               </button>
             )}
+
+            {/* טקסט עזר */}
+            <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
+              הפוך להצגה
+            </div>
           </CardContent>
 
           {/* BACK — הפתרון */}
-          <CardContent className="absolute inset-0 p-5 text-white [backface-visibility:hidden] [transform:rotateY(180deg)]">
+          <CardContent
+            className="
+              absolute inset-0 p-5
+              [backface-visibility:hidden] [transform:rotateY(180deg)]
+              bg-white/60 dark:bg-white/10
+              selection:bg-amber-200 selection:text-slate-900
+              dark:selection:bg-amber-300/30 dark:selection:text-white
+            "
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg truncate">{title}</h3>
+              <h3 className="font-bold text-lg truncate text-slate-900 dark:text-white">
+                {title}
+              </h3>
               <span
-                className={`px-2 py-1 rounded-md text-[11px] ${
+                className={[
+                  "px-2 py-1 rounded-md text-[11px]",
                   isShared
-                    ? "bg-emerald-600/30 text-emerald-100"
-                    : "bg-white/10 text-white/70"
-                }`}
+                    ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
+                    : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
+                ].join(" ")}
               >
                 {isShared ? "משותף" : "פרטי"}
               </span>
             </div>
 
             {createdAt && (
-              <div className="mt-1 text-sm text-purple-300 flex items-center gap-2">
+              <div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4" />
                 {format(createdAt, "d MMMM yyyy", { locale: he })}
               </div>
             )}
 
             <div className="mt-3 h-full">
-              <h4 className="text-rose-300 font-semibold mb-1">הפתרון:</h4>
-              <p className="text-purple-200 leading-relaxed whitespace-pre-line line-clamp-6">
+              <h4 className="font-semibold mb-1 text-rose-800 dark:text-rose-300">
+                הפתרון:
+              </h4>
+              <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white/90">
                 {backTrunc || "—"}
               </p>
             </div>
@@ -153,23 +198,43 @@ export default function DreamFlipCardMini({
                   e.stopPropagation();
                   setFullOpen("solution");
                 }}
-                className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[11px] px-2 py-1 rounded-full bg-white/10 hover:bg-white/15 text-purple-200 border border-white/20"
+                className="
+                  absolute bottom-2 left-1/2 -translate-x-1/2
+                  text-[11px] px-2 py-1 rounded-full
+                  bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
+                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
+                "
               >
                 עוד…
               </button>
             )}
+
+            {/* טקסט עזר אחורי */}
+            <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
+              הפוך חזרה
+            </div>
           </CardContent>
         </div>
 
-        {/* Footer קבוע */}
-        <CardContent className="pt-4 pb-5 border-top border-t border-white/10 flex items-center justify-end gap-2">
+        {/* Footer */}
+        <CardContent
+          className="
+            pt-4 pb-5 flex items-center justify-end gap-2
+            border-t border-black/10 dark:border-white/15
+          "
+        >
           {onToggleShare && (
             <Button
-              variant={isShared ? "danger" : "share"}
               onClick={() => onToggleShare(!isShared)}
               title={isShared ? "בטל שיתוף" : "שתף"}
+              className="
+                inline-flex items-center gap-2
+                bg-black/10 hover:bg-black/15 text-slate-900
+                dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
+              "
+              variant="ghost"
             >
-              <Share2 />
+              <Share2 className="w-4 h-4" />
               {isShared ? "בטל שיתוף" : "שתף"}
             </Button>
           )}
@@ -177,37 +242,50 @@ export default function DreamFlipCardMini({
           {onDelete && (
             <>
               <Button
-                variant="outlineDanger"
                 size="sm"
                 onClick={() => setConfirmOpen(true)}
                 title="מחק חלום"
+                className="
+                  bg-black/10 hover:bg-black/15 text-slate-900
+                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
+                "
+                variant="ghost"
               >
-                <Trash2 />
+                <Trash2 className="w-4 h-4" />
               </Button>
 
-              {/* מודאל אישור מחיקה */}
               {confirmOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                  <div className="bg-[#1D062F] border border-red-500/30 rounded-2xl p-6 w-full max-w-sm text-white shadow-xl">
-                    <h2 className="text-xl font-bold mb-3 text-red-300">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+                  <div
+                    className="
+                      w-full max-w-sm rounded-2xl p-6
+                      bg-white/95 border border-rose-500/25 text-slate-900 shadow-xl
+                      dark:bg-white/[0.10] dark:text-white dark:border-rose-500/30
+                    "
+                  >
+                    <h2 className="text-xl font-bold mb-3 text-rose-700 dark:text-rose-300">
                       למחוק את החלום הזה?
                     </h2>
-                    <p className="text-white/60 mb-6 text-sm">
+                    <p className="text-slate-600 dark:text-white/70 mb-6 text-sm">
                       אין דרך לשחזר לאחר המחיקה.
                     </p>
                     <div className="flex justify-end gap-3">
                       <Button
                         variant="outline"
                         onClick={() => setConfirmOpen(false)}
+                        className="
+                          border-black/15 text-slate-800
+                          dark:border-white/20 dark:text-white
+                        "
                       >
                         ביטול
                       </Button>
                       <Button
-                        variant="danger"
                         onClick={() => {
                           setConfirmOpen(false);
                           setTimeout(() => onDelete?.(), 100);
                         }}
+                        className="bg-rose-600 hover:bg-rose-700 text-white"
                       >
                         מחק
                       </Button>
@@ -220,20 +298,30 @@ export default function DreamFlipCardMini({
         </CardContent>
       </Card>
 
-      {/* מודאל קריאה מלאה — לא שובר גובה כרטיס */}
+      {/* מודאל קריאה מלאה */}
       {fullOpen && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
           onClick={() => setFullOpen(null)}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[80vh] overflow-auto rounded-2xl bg-gradient-to-b from-[#2A0953]/85 to-[#1A073C]/85 border border-purple-500/30 p-6 text-white"
+            className="
+              relative w-full max-w-2xl max-h-[80vh] overflow-auto rounded-2xl p-6
+              bg-white/90 border border-black/10 text-slate-900
+              dark:bg-white/[0.10] dark:border-white/15 dark:text-white
+              selection:bg-amber-200 selection:text-slate-900
+              dark:selection:bg-amber-300/30 dark:selection:text-white
+            "
             onClick={(e) => e.stopPropagation()}
             dir="rtl"
           >
             <button
               onClick={() => setFullOpen(null)}
-              className="absolute left-3 top-3 p-1.5 rounded-md bg-white/10 hover:bg-white/20"
+              className="
+                absolute left-3 top-3 p-1.5 rounded-md
+                bg-black/10 hover:bg-black/15 text-slate-900
+                dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
+              "
               aria-label="סגור"
             >
               <X className="w-4 h-4" />
@@ -241,24 +329,27 @@ export default function DreamFlipCardMini({
 
             <h3 className="text-2xl font-extrabold mb-2">{title}</h3>
             {createdAt && (
-              <div className="text-sm text-purple-300 mb-4 flex items-center gap-2">
+              <div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4" />
                 {format(createdAt, "d MMMM yyyy", { locale: he })}
               </div>
             )}
 
-            {/* מציגים תמיד את שני הקטעים, מתחילים לגלול לעוגן רלוונטי אם תרצה */}
             <div className="space-y-6">
               <section id="dreamFull">
-                <h4 className="text-amber-300 font-semibold mb-2">החלום:</h4>
-                <p className="text-purple-100 leading-relaxed whitespace-pre-line">
+                <h4 className="font-semibold mb-2 text-amber-800 dark:text-amber-300">
+                  החלום:
+                </h4>
+                <p className="leading-relaxed whitespace-pre-line">
                   {dreamText || "—"}
                 </p>
               </section>
 
               <section id="solutionFull">
-                <h4 className="text-rose-300 font-semibold mb-2">הפתרון:</h4>
-                <p className="text-purple-200 leading-relaxed whitespace-pre-line">
+                <h4 className="font-semibold mb-2 text-rose-800 dark:text-rose-300">
+                  הפתרון:
+                </h4>
+                <p className="leading-relaxed whitespace-pre-line">
                   {solution || "—"}
                 </p>
               </section>
