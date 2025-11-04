@@ -15,7 +15,11 @@ router.post("/", authenticate, dreamController.createDream);
 // פיד ציבורי ושליפות
 router.get("/", authenticateLite, dreamController.getAllDreams);
 router.get("/stats", authenticateLite, dreamController.getDreamStats);
-router.get("/:id([0-9a-fA-F]{24})", authenticate, dreamController.getDreamById);
+router.get(
+  "/:id([0-9a-fA-F]{24})",
+  authenticateLite,
+  dreamController.getDreamById
+);
 
 // עדכון/מחיקה (מוגן)
 router.put("/:id([0-9a-fA-F]{24})", authenticate, dreamController.updateDream);

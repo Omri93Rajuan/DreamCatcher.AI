@@ -19,7 +19,10 @@ export default function AuthGateDialog({
   const [mounted, setMounted] = React.useState(false);
   const [mode, setMode] = React.useState<"signup" | "login">(initialMode);
 
+  // mount/SSR safe
   React.useEffect(() => setMounted(true), []);
+
+  // lock scroll while open
   React.useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -28,9 +31,20 @@ export default function AuthGateDialog({
       document.body.style.overflow = prev;
     };
   }, [open]);
+
+  // reset mode when reopened
   React.useEffect(() => {
     if (open) setMode(initialMode);
   }, [open, initialMode]);
+
+  // close on ESC
+  React.useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) =>
+      e.key === "Escape" && onOpenChange(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onOpenChange]);
 
   if (!open || !mounted) return null;
 
@@ -40,51 +54,72 @@ export default function AuthGateDialog({
       onClick={() => onOpenChange(false)}
       role="dialog"
       aria-modal="true"
+      dir="rtl"
     >
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      {/* Overlay – פחות כהה בלייט, מעט כהה בדארק; blur עדין */}
+      <div className="absolute inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-[2px]" />
+
       <div className="relative min-h-full w-full flex items-center justify-center p-4">
+        {/* Card */}
         <div
           onClick={(e) => e.stopPropagation()}
           role="document"
-          className="glass-card w-full max-w-md rounded-2xl overflow-hidden border border-white/25 bg-white/15 shadow-2xl text-white"
+          className="
+            w-full max-w-md rounded-2xl overflow-hidden
+            bg-white/90 text-slate-900 border border-black/10
+            shadow-[0_20px_60px_-30px_rgba(0,0,0,.45)]
+            dark:bg-white/[0.08] dark:text-white dark:border-white/12
+          "
         >
-          <div className="px-6 pt-5 pb-3 border-b border-white/15">
+          {/* Header */}
+          <div className="px-6 pt-5 pb-3 border-b border-black/10 dark:border-white/10">
             <div className="flex items-center justify-between">
-              <h3 className="text-base font-extrabold gradient-text">
+              <h3 className="text-base font-extrabold text-amber-700 dark:text-amber-300">
                 רוצים להשפיע ולפענח חלומות? הירשמו זה 100% בחינם
               </h3>
               <button
                 onClick={() => onOpenChange(false)}
-                className="text-white/80 hover:text-white transition"
+                className="text-slate-500 hover:text-slate-700 dark:text-white/70 dark:hover:text-white transition"
                 aria-label="סגור"
               >
                 ✕
               </button>
             </div>
-            <div className="mt-3 inline-flex rounded-xl bg-white/10 p-1 border border-white/15">
+
+            {/* Tabs */}
+            <div
+              className="
+                mt-3 inline-flex rounded-xl p-1 border
+                bg-slate-100/80 border-black/10
+                dark:bg-white/[0.06] dark:border-white/10
+              "
+            >
               <button
                 onClick={() => setMode("signup")}
-                className={`px-4 py-1.5 rounded-lg text-sm transition ${
-                  mode === "signup"
-                    ? "bg-white/20 text-white shadow"
-                    : "text-white/80 hover:text-white"
-                }`}
+                className={`px-4 py-1.5 rounded-lg text-sm transition
+                  ${
+                    mode === "signup"
+                      ? "bg-white text-slate-900 shadow dark:bg-white/15 dark:text-white"
+                      : "text-slate-700 hover:text-slate-900 dark:text-white/70 dark:hover:text-white"
+                  }`}
               >
                 הרשמה
               </button>
               <button
                 onClick={() => setMode("login")}
-                className={`px-4 py-1.5 rounded-lg text-sm transition ${
-                  mode === "login"
-                    ? "bg-white/20 text-white shadow"
-                    : "text-white/80 hover:text-white"
-                }`}
+                className={`px-4 py-1.5 rounded-lg text-sm transition
+                  ${
+                    mode === "login"
+                      ? "bg-white text-slate-900 shadow dark:bg-white/15 dark:text-white"
+                      : "text-slate-700 hover:text-slate-900 dark:text-white/70 dark:hover:text-white"
+                  }`}
               >
                 התחברות
               </button>
             </div>
           </div>
 
+          {/* Body */}
           <div className="p-6 space-y-4">
             {mode === "login" ? (
               <LoginForm
@@ -103,7 +138,8 @@ export default function AuthGateDialog({
             )}
           </div>
 
-          <div className="px-6 pb-6 pt-1 text-center text-[11px] text-white/70">
+          {/* Footer */}
+          <div className="px-6 pb-6 pt-1 text-center text-[11px] text-slate-600 dark:text-white/70">
             אפשר לסגור כאן בכל רגע. הרקע חסום בזמן ההרשמה.
           </div>
         </div>

@@ -85,6 +85,10 @@ export default function FlipDreamCard({
     }
   }, [flipped, dreamId]);
 
+  React.useEffect(() => {
+    if (dreamId) DreamsApi.recordActivity(dreamId, "view");
+  }, [dreamId]);
+
   const userInput = (dream?.userInput ?? "").trim();
   const interpretation = (
     (dream as any)?.aiResponse ??
