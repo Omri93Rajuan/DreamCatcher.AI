@@ -1,5 +1,4 @@
 export type LoginDto = { email: string; password: string };
-export type User = { _id: string; name: string; email: string; role?: string };
 
 export type PopularRow = {
   rank: number;
@@ -20,32 +19,6 @@ export type SeriesPoint = {
   likes: number;
   score: number;
 };
-
-export enum UserRole {
-  Admin = "admin",
-  User = "user",
-}
-
-export enum SubscriptionType {
-  Free = "free",
-  Premium = "premium",
-}
-
-export interface IUser {
-  _id?: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password?: string;
-  role: UserRole;
-  subscription: SubscriptionType;
-  image?: string;
-  lastLogin?: Date;
-  isActive?: boolean;
-  subscriptionExpiresAt?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
 
 export type CreateDreamDto = {
   title: string;
@@ -128,3 +101,47 @@ export type GlobalDreamStats = {
   windowDays: number;
   sinceISO?: string;
 };
+
+export type UserRole = "admin" | "user";
+export type SubscriptionType = "free" | "premium";
+
+export interface User {
+  _id: string; // בצד לקוח תמיד כמחרוזת
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: UserRole;
+  subscription: SubscriptionType;
+  image?: string;
+  lastLogin?: string | Date;
+  isActive?: boolean;
+  subscriptionExpiresAt?: string | Date;
+
+  // Terms (קריאה בלבד ב־UI)
+  termsAccepted?: boolean;
+  termsAcceptedAt?: string | Date;
+  termsVersion?: string;
+  termsIp?: string | null;
+  termsUserAgent?: string | null;
+  termsLocale?: string | null;
+
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
+/** מה שאנחנו מרשים לערוך מה־UI */
+export type UpdateUserDTO = Partial<
+  Omit<
+    User,
+    | "_id"
+    | "email"
+    | "role"
+    | "subscription"
+    | "termsAccepted"
+    | "termsAcceptedAt"
+    | "termsVersion"
+    | "termsIp"
+    | "termsUserAgent"
+    | "termsLocale"
+  >
+>;

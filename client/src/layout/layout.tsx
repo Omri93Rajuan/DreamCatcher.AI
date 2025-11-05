@@ -7,6 +7,9 @@ import { AuthApi } from "@/lib/api/auth";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import logoMark from "@/assets/logo.png";
 
+// ▼ חדש: תפריט משתמש (Avatar + Dropdown)
+import UserMenu from "@/components/nav/UserMenu";
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
@@ -35,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
-        if (user && !user.name) {
+        if (user && !user.firstName) {
           const res = await AuthApi.getMe(user._id);
           if (res?.user) setUser(res.user);
         }
@@ -86,7 +89,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div
       dir="rtl"
       className="
-        min-h-screen flex flex-col              /* <<< עמודת Flex עם גובה מסך */
+        min-h-screen flex flex-col
         bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 text-slate-900
         dark:from-indigo-950 dark:via-purple-950 dark:to-slate-900 dark:text-white
       "
@@ -108,6 +111,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="h-16 flex items-center justify-between gap-4">
+            {/* לוגו + טקסט */}
             <Link
               to={createPageUrl("HomePage")}
               className="flex items-center gap-2.5 group rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
@@ -132,31 +136,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             {/* ניווט דסקטופ */}
             <nav className="hidden md:flex items-center gap-4">
-              {user && (
-                <span className="text-slate-700 dark:text-white/70 text-sm">
-                  שלום
-                  {user.name
-                    ? `, ${user.name}`
-                    : user.email
-                    ? `, ${user.email}`
-                    : ""}{" "}
-                  👋
-                </span>
-              )}
-
               <NavItem to="/">דף הבית</NavItem>
 
               {user ? (
                 <>
-                  <NavItem to="/me/dreams">החלומות שלי</NavItem>
-                  <button
-                    onClick={handleLogout}
-                    className="px-3.5 py-1.5 rounded-lg border border-black/10 text-slate-900 hover:bg-black/5
-                               dark:border-white/15 dark:text-white/90 dark:hover:bg-white/10
-                               active:scale-[0.98] transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
-                  >
-                    התנתק
-                  </button>
+                  {/* הוסר כדי למנוע כפילות: <NavItem to="/me/dreams">החלומות שלי</NavItem> */}
+                  {/* במקום זה: תפריט משתמש עם Avatar + Dropdown */}
+                  <UserMenu />
                 </>
               ) : (
                 <>
@@ -211,27 +197,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                        bg-white/80 dark:bg-[#0b0e1a]/70 backdrop-blur-md"
           >
             <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
-              {user && (
-                <div className="text-slate-700 dark:text-white/70 text-sm mb-1">
-                  שלום
-                  {user.name
-                    ? `, ${user.name}`
-                    : user.email
-                    ? `, ${user.email}`
-                    : ""}{" "}
-                  👋
-                </div>
-              )}
-
               <NavItem to="/" onClick={() => setMobileOpen(false)}>
                 דף הבית
               </NavItem>
 
               {user ? (
                 <>
+                  {/* במובייל משאירים לינקים ישירים (אין Dropdown) */}
+                  <NavItem to="/account" onClick={() => setMobileOpen(false)}>
+                    הפרופיל שלי
+                  </NavItem>
                   <NavItem to="/me/dreams" onClick={() => setMobileOpen(false)}>
                     החלומות שלי
                   </NavItem>
+
                   <div className="mt-1 flex items-center justify-between">
                     <button
                       onClick={() => {
@@ -276,10 +255,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       {/* MAIN — תופס את המקום שנותר ומדביק את הפוטר לתחתית */}
-      <main className="relative flex-1">
-        {/* אפשר להשאיר children כמו שהם, או לעטוף בריווח קבוע: */}
-        {children}
-      </main>
+      <main className="relative flex-1">{children}</main>
 
       {/* FOOTER */}
       <footer className="border-t border-black/10 dark:border-white/10">

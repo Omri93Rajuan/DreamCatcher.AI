@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./protected";
 import RegisterPage from "@/pages/RegisterPage";
 import MyDreamsPage from "@/pages/MyDreamsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
+import AccountPage from "@/pages/AccountPage";
 
 export const router = createBrowserRouter([
   {
@@ -39,6 +40,16 @@ export const router = createBrowserRouter([
       <Layout>
         <ProtectedRoute>
           <DreamDetailsPage />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: "/account",
+    element: (
+      <Layout>
+        <ProtectedRoute>
+          <AccountPage />
         </ProtectedRoute>
       </Layout>
     ),
