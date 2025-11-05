@@ -25,8 +25,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // תפריט מובייל
   const [mobileOpen, setMobileOpen] = useState(false);
   useEffect(() => {
-    if (mobileOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "";
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -72,7 +71,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           isActive
             ? "text-slate-900 dark:text-white"
             : "text-slate-700 hover:text-slate-900 dark:text-purple-200 dark:hover:text-white",
-          // underline anim (RTL: מתחיל מימין)
           "after:absolute after:bottom-0 after:right-0 after:h-[2px] after:w-0",
           "after:bg-gradient-to-l after:from-amber-500 after:to-purple-500 after:transition-all after:duration-300",
           "motion-reduce:after:transition-none",
@@ -86,30 +84,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      dir="rtl"
       className="
-        min-h-screen
+        min-h-screen flex flex-col              /* <<< עמודת Flex עם גובה מסך */
         bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 text-slate-900
         dark:from-indigo-950 dark:via-purple-950 dark:to-slate-900 dark:text-white
       "
-      dir="rtl"
     >
       {/* HEADER */}
       <header
         className={[
           "sticky top-0 z-50 border-b transition-all duration-300",
           scrolled
-            ? // SCROLLED
-              [
-                // Light: לבן נקי עם צל רך
+            ? [
                 "backdrop-blur-md bg-white/80 border-black/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.25)]",
-                // Dark: זכוכית כהה, קונטרסט עדין
                 "dark:bg-[#0b0e1a]/60 dark:border-white/10 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,.6)]",
               ].join(" ")
-            : // NOT SCROLLED
-              [
-                // Light: שקיפות עדינה
+            : [
                 "backdrop-blur-sm bg-white/30 border-black/10 shadow-none",
-                // Dark: כמעט שקוף עם קצה לבן עדין
                 "dark:bg-white/5 dark:border-white/10 dark:shadow-none",
               ].join(" "),
         ].join(" ")}
@@ -124,15 +116,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <img
                 src={logoMark}
                 alt="פתרון חלומות - לוגו"
-                className="w-20 h-20 transition-transform duration-200 group-hover:scale-105"
+                className="w-16 h-16 transition-transform duration-200 group-hover:scale-105"
                 decoding="async"
                 loading="eager"
               />
               <div className="leading-tight select-none">
-                <span className="text-[25px] font-bold tracking-tight text-slate-900 dark:text-white">
+                <span className="text-[22px] md:text-[25px] font-bold tracking-tight text-slate-900 dark:text-white">
                   פתרון חלומות
                 </span>
-                <span className="block text-[14px] text-slate-700 dark:text-white/70">
+                <span className="block text-[13px] md:text-[14px] text-slate-700 dark:text-white/70">
                   גלה את המשמעות הסמויה
                 </span>
               </div>
@@ -172,7 +164,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <Link
                     to="/register"
                     className="px-3.5 py-1.5 rounded-xl font-semibold
-                               text-slate-900 dark:text-white
+                               text-white
                                bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
                                hover:opacity-95 active:scale-[0.98]
                                shadow-[0_6px_20px_-10px_rgba(139,92,246,.35)]
@@ -184,7 +176,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </>
               )}
 
-              {/* טוגל ערכת נושא */}
               <ThemeToggle />
             </nav>
 
@@ -212,9 +203,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        {/* תפריט מובייל */}
+        {/* תפריט מובייל — שכבה קבועה שלא דוחפת את התוכן/פוטר */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-black/10 dark:border-white/10 bg-white/70 dark:bg-black/30 backdrop-blur-md">
+          <div
+            className="md:hidden fixed top-16 left-0 right-0 z-40
+                       border-t border-black/10 dark:border-white/10
+                       bg-white/80 dark:bg-[#0b0e1a]/70 backdrop-blur-md"
+          >
             <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
               {user && (
                 <div className="text-slate-700 dark:text-white/70 text-sm mb-1">
@@ -280,11 +275,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
       </header>
 
-      {/* MAIN */}
-      <main className="relative">{children}</main>
+      {/* MAIN — תופס את המקום שנותר ומדביק את הפוטר לתחתית */}
+      <main className="relative flex-1">
+        {/* אפשר להשאיר children כמו שהם, או לעטוף בריווח קבוע: */}
+        {children}
+      </main>
 
       {/* FOOTER */}
-      <footer className="mt-20 border-t border-black/10 dark:border-white/10">
+      <footer className="border-t border-black/10 dark:border-white/10">
         <div className="max-w-7xl mx-auto px-4 py-10 text-center">
           <div className="flex items-center justify-center gap-3 mb-3">
             <img

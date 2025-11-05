@@ -13,10 +13,6 @@ import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
 import DreamFlipCardMini from "@/components/dreams/DreamFlipCardMini";
 
-/* ================================
-   MyDreams — Grid of Flip Cards
-   ================================ */
-
 export default function MyDreams() {
   const qc = useQueryClient();
   const { user } = useAuthStore();
@@ -143,7 +139,7 @@ export default function MyDreams() {
           >
             הקודם
           </Button>
-          <span className="text-white/80 text-sm py-2">
+          <span className="text-black/80 dark:text-white text-lg py-2">
             עמוד {page} מתוך {pages}
           </span>
           <Button

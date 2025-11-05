@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import type { Dream } from "@/lib/api/types";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
+import ReactionsBar from "@/components/dreams/ReactionsBar"; // ⬅️ חדש
 
 type Props = {
   dream: Dream;
@@ -15,6 +16,10 @@ type Props = {
   bodyHeight?: number;
   maxWordsFront?: number;
   maxWordsBack?: number;
+  /** הצג/הסתר ReactionsBar */
+  showReactions?: boolean; // ⬅️ חדש
+  /** מצב קומפקטי ל־bar אם ממומש בתוך ReactionsBar עצמו (לא חובה) */
+  reactionsVariant?: "default" | "compact"; // ⬅️ אופציונלי
 };
 
 const truncateWords = (text: string, maxWords: number) => {
@@ -31,6 +36,8 @@ export default function DreamFlipCardMini({
   bodyHeight = 220,
   maxWordsFront = 55,
   maxWordsBack = 70,
+  showReactions = true, // ⬅️ חדש
+  reactionsVariant = "default", // ⬅️ חדש
 }: Props) {
   const [flipped, setFlipped] = React.useState(false);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -44,6 +51,7 @@ export default function DreamFlipCardMini({
     (dream as any)?.aiResponse ?? (dream as any)?.interpretation ?? "";
   const createdAt = dream?.createdAt ? new Date(dream.createdAt) : null;
   const isShared = !!(dream as any)?.isShared;
+  const dreamId = dream?._id as string | undefined;
 
   const frontTrunc = truncateWords(dreamText, maxWordsFront);
   const backTrunc = truncateWords(solution, maxWordsBack);
@@ -144,7 +152,6 @@ export default function DreamFlipCardMini({
               </button>
             )}
 
-            {/* טקסט עזר */}
             <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
               הפוך להצגה
             </div>
@@ -209,96 +216,111 @@ export default function DreamFlipCardMini({
               </button>
             )}
 
-            {/* טקסט עזר אחורי */}
             <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
               הפוך חזרה
             </div>
           </CardContent>
         </div>
 
-        {/* Footer */}
+        {/* Footer — כאן הוספנו את ReactionsBar */}
         <CardContent
           className="
-            pt-4 pb-5 flex items-center justify-end gap-2
+            pt-4 pb-5 flex items-center justify-between gap-3
             border-t border-black/10 dark:border-white/15
           "
+          dir="rtl"
         >
-          {onToggleShare && (
-            <Button
-              onClick={() => onToggleShare(!isShared)}
-              title={isShared ? "בטל שיתוף" : "שתף"}
-              className="
-                inline-flex items-center gap-2
-                bg-black/10 hover:bg-black/15 text-slate-900
-                dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
-              "
-              variant="ghost"
-            >
-              <Share2 className="w-4 h-4" />
-              {isShared ? "בטל שיתוף" : "שתף"}
-            </Button>
+          {/* צד שמאל: Reactions */}
+          {showReactions && dreamId && (
+            <div className="min-w-0">
+              {/* אם יש לך מצב קומפקטי בתוך ReactionsBar, אפשר להעביר prop כמו size='sm' */}
+              <ReactionsBar
+                dreamId={
+                  dreamId
+                } /* size={reactionsVariant === "compact" ? "sm" : "md"} */
+              />
+            </div>
           )}
 
-          {onDelete && (
-            <>
+          {/* צד ימין: פעולות */}
+          <div className="flex items-center gap-2">
+            {onToggleShare && (
               <Button
-                size="sm"
-                onClick={() => setConfirmOpen(true)}
-                title="מחק חלום"
+                onClick={() => onToggleShare(!isShared)}
+                title={isShared ? "בטל שיתוף" : "שתף"}
                 className="
+                  inline-flex items-center gap-2
                   bg-black/10 hover:bg-black/15 text-slate-900
                   dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
                 "
                 variant="ghost"
               >
-                <Trash2 className="w-4 h-4" />
+                <Share2 className="w-4 h-4" />
+                {isShared ? "בטל שיתוף" : "שתף"}
               </Button>
+            )}
 
-              {confirmOpen && (
-                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                  <div
-                    className="
-                      w-full max-w-sm rounded-2xl p-6
-                      bg-white/95 border border-rose-500/25 text-slate-900 shadow-xl
-                      dark:bg-white/[0.10] dark:text-white dark:border-rose-500/30
-                    "
-                  >
-                    <h2 className="text-xl font-bold mb-3 text-rose-700 dark:text-rose-300">
-                      למחוק את החלום הזה?
-                    </h2>
-                    <p className="text-slate-600 dark:text-white/70 mb-6 text-sm">
-                      אין דרך לשחזר לאחר המחיקה.
-                    </p>
-                    <div className="flex justify-end gap-3">
-                      <Button
-                        variant="outline"
-                        onClick={() => setConfirmOpen(false)}
-                        className="
-                          border-black/15 text-slate-800
-                          dark:border-white/20 dark:text-white
-                        "
-                      >
-                        ביטול
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setConfirmOpen(false);
-                          setTimeout(() => onDelete?.(), 100);
-                        }}
-                        className="bg-rose-600 hover:bg-rose-700 text-white"
-                      >
-                        מחק
-                      </Button>
+            {onDelete && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => setConfirmOpen(true)}
+                  title="מחק חלום"
+                  className="
+                    bg-black/10 hover:bg-black/15 text-slate-900
+                    dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
+                  "
+                  variant="ghost"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+
+                {confirmOpen && (
+                  <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
+                    <div
+                      className="
+                        w-full max-w-sm rounded-2xl p-6
+                        bg-white/95 border border-rose-500/25 text-slate-900 shadow-xl
+                        dark:bg-white/[0.10] dark:text-white dark:border-rose-500/30
+                      "
+                    >
+                      <h2 className="text-xl font-bold mb-3 text-rose-700 dark:text-rose-300">
+                        למחוק את החלום הזה?
+                      </h2>
+                      <p className="text-slate-600 dark:text-white/70 mb-6 text-sm">
+                        אין דרך לשחזר לאחר המחיקה.
+                      </p>
+                      <div className="flex justify-end gap-3">
+                        <Button
+                          variant="outline"
+                          onClick={() => setConfirmOpen(false)}
+                          className="
+                            border-black/15 text-slate-800
+                            dark:border-white/20 dark:text-white
+                          "
+                        >
+                          ביטול
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setConfirmOpen(false);
+                            setTimeout(() => onDelete?.(), 100);
+                          }}
+                          className="bg-rose-600 hover:bg-rose-700 text-white"
+                        >
+                          מחק
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* מודאל קריאה מלאה */}
+      {/* מודאל קריאה מלאה — הוספת ReactionsBar ליד הכותרת */}
       {fullOpen && (
         <div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
@@ -327,7 +349,19 @@ export default function DreamFlipCardMini({
               <X className="w-4 h-4" />
             </button>
 
-            <h3 className="text-2xl font-extrabold mb-2">{title}</h3>
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <h3 className="text-2xl font-extrabold">{title}</h3>
+              {showReactions && dreamId && (
+                <div className="pt-1">
+                  <ReactionsBar
+                    dreamId={
+                      dreamId
+                    } /* size={reactionsVariant === "compact" ? "sm" : "md"} */
+                  />
+                </div>
+              )}
+            </div>
+
             {createdAt && (
               <div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4" />
