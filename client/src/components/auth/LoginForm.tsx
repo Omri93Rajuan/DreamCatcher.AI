@@ -10,45 +10,69 @@ export default function LoginForm({ onSuccess }: Props) {
 
   return (
     <form
+      dir="rtl"
       onSubmit={async (e) => {
         e.preventDefault();
+        setError?.(null as any);
         const ok = await login(email, password);
         if (ok) onSuccess?.();
       }}
       className="space-y-4"
     >
       <div>
-        <label className="block text-sm text-white/80 mb-1">אימייל</label>
+        <label className="block text-sm mb-1 text-slate-700 dark:text-white/85">
+          אימייל
+        </label>
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full rounded-xl bg-white/15 border border-white/20 px-3 py-2 text-white placeholder:text-white/60 outline-none focus:border-[var(--primary-light)]"
           placeholder="name@example.com"
+          className="
+            w-full rounded-xl px-3 py-2 outline-none
+            bg-white/80 border border-black/10 text-slate-900 placeholder:text-slate-400
+            focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60
+            dark:bg-white/[0.06] dark:border-white/10 dark:text-white dark:placeholder:text-white/40
+          "
         />
       </div>
+
       <div>
-        <label className="block text-sm text-white/80 mb-1">סיסמה</label>
+        <label className="block text-sm mb-1 text-slate-700 dark:text-white/85">
+          סיסמה
+        </label>
         <input
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="w-full rounded-xl bg-white/15 border border-white/20 px-3 py-2 text-white placeholder:text-white/60 outline-none focus:border-[var(--primary-light)]"
           placeholder="••••••••"
+          className="
+            w-full rounded-xl px-3 py-2 outline-none
+            bg-white/80 border border-black/10 text-slate-900 placeholder:text-slate-400
+            focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/60
+            dark:bg-white/[0.06] dark:border-white/10 dark:text-white dark:placeholder:text-white/40
+          "
         />
       </div>
+
       {error && (
-        <div className="text-rose-300 text-sm">
-          {" "}
-          {"אימייל או סיסמה שגויים."}
+        <div className="text-sm text-rose-600 dark:text-rose-300">
+          אימייל או סיסמה שגויים.
         </div>
       )}
+
       <button
         type="submit"
         disabled={submitting}
-        className="w-full py-2.5 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white font-semibold transition disabled:opacity-50"
+        className="
+          w-full py-2.5 rounded-xl font-semibold text-white transition
+          shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)] dark:shadow-[0_8px_24px_-16px_rgba(0,0,0,.35)]
+          bg-[linear-gradient(135deg,#8b5cf6_0%,#f59e0b_100%)]
+          hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-amber-300/40
+          disabled:opacity-60 disabled:cursor-not-allowed
+        "
       >
         כניסה
       </button>

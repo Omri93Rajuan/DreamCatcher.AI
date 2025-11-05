@@ -5,17 +5,13 @@ import {
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, Loader2, X as XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DreamsApi, DreamsListResult } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
 import DreamFlipCardMini from "@/components/dreams/DreamFlipCardMini";
-
-/* ================================
-   MyDreams — Grid of Flip Cards
-   ================================ */
 
 export default function MyDreams() {
   const qc = useQueryClient();
@@ -143,7 +139,7 @@ export default function MyDreams() {
           >
             הקודם
           </Button>
-          <span className="text-white/80 text-sm py-2">
+          <span className="text-black/80 dark:text-white text-lg py-2">
             עמוד {page} מתוך {pages}
           </span>
           <Button
@@ -170,23 +166,127 @@ function Header({
   onSearch: () => void;
   isFetching: boolean;
 }) {
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // "/" focuses the search, "Esc" clears
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement)?.tagName === "INPUT") return;
+      if (e.key === "/") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="flex items-center justify-between mb-8">
-      <h2 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-amber-200 via-purple-200 to-rose-200 bg-clip-text text-transparent">
+      <h2
+        className="
+          font-extrabold leading-[1.1] tracking-tight
+          text-2xl sm:text-2xl md:text-3xl
+          bg-clip-text text-transparent
+          bg-gradient-to-r from-[#D4A100] via-[#C4903A] to-[#B87E40]
+          dark:from-purple-300 dark:via-purple-200 dark:to-amber-200
+          drop-shadow-[0_1px_0_rgba(0,0,0,0.12)]
+          dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.08)]
+          mb-6
+        "
+      >
         החלומות שלי
       </h2>
+
       <div className="flex items-center gap-3">
-        <div className="relative">
-          <Search className="absolute right-3 top-2.5 w-4 h-4 text-purple-300" />
+        {/* עטיפת החיפוש — אפקט focus-within + פס גרדיינט עדין */}
+        <div className="relative group">
+          <Search
+            className="
+              pointer-events-none absolute right-3 top-2.5 w-4 h-4
+              text-slate-500 dark:text-white/60
+              group-focus-within:text-purple-600
+              dark:group-focus-within:text-purple-300
+            "
+          />
           <Input
+            ref={inputRef}
             dir="rtl"
-            placeholder="חיפוש לפי טקסט/כותרת…"
+            placeholder="חיפוש לפי טקסט/כותרת…  (/)"
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            className="pr-9 w-72 bg-white/5 border-white/15 text-white focus:border-purple-400/60"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSearch();
+              if (e.key === "Escape" && q) setQ("");
+            }}
+            className="
+              pr-9 w-72 rounded-xl
+              bg-white/70 text-slate-900 placeholder:text-slate-500
+              border border-black/10 shadow-sm
+              focus:outline-none focus:ring-2 focus:ring-purple-500/35 focus:border-purple-500/60
+
+              dark:bg-white/[0.08] dark:text-white dark:placeholder:text-white/50
+              dark:border-white/15 dark:focus:ring-purple-300/25 dark:focus:border-purple-300/40
+
+              selection:bg-amber-200 selection:text-slate-900
+              dark:selection:bg-amber-300/30 dark:selection:text-white
+            "
           />
+
+          {/* פס גרדיינט בתחתית בעת פוקוס */}
+          <div
+            className="
+              pointer-events-none absolute left-2 right-2 -bottom-[2px] h-[2px]
+              rounded-full opacity-0 scale-x-75
+              bg-gradient-to-r from-fuchsia-500 via-purple-500 to-amber-400
+              transition-all duration-300
+              group-focus-within:opacity-100 group-focus-within:scale-x-100
+            "
+          />
+
+          {/* כפתור ניקוי */}
+          {q && (
+            <button
+              type="button"
+              onClick={() => setQ("")}
+              className="
+                absolute left-2 top-2.5 inline-flex items-center justify-center
+                w-6 h-6 rounded-md
+                text-slate-600 hover:text-slate-800 hover:bg-black/5
+                dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10
+              "
+              aria-label="נקה חיפוש"
+              title="נקה"
+            >
+              <XIcon className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* ספינר בזמן fetch */}
+          {isFetching && (
+            <Loader2
+              className="
+                absolute left-2 top-2.5 w-4 h-4 animate-spin
+                text-purple-600 dark:text-purple-300
+              "
+            />
+          )}
         </div>
-        <Button variant="primary" onClick={onSearch} disabled={isFetching}>
+
+        <Button
+          variant="primary"
+          onClick={onSearch}
+          disabled={isFetching}
+          className="
+            bg-gradient-to-r from-purple-600 to-amber-500
+            hover:from-purple-500 hover:to-amber-400
+            text-white shadow-md
+            disabled:opacity-70 disabled:cursor-not-allowed
+            dark:from-purple-500 dark:to-amber-400
+            dark:hover:from-purple-400 dark:hover:to-amber-300
+          "
+          title="חפש (Enter)"
+        >
           חפש
         </Button>
       </div>

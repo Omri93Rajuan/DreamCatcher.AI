@@ -45,7 +45,7 @@ api.interceptors.response.use(
 
       isRefreshing = true;
       // חשוב: לדלג על אינטרספטור ברענון עצמו
-      await api.post("/auth/refresh-token", null, { skipRefresh: true });
+      await api.post("/auth/refresh-token", { skipRefresh: true });
 
       waiting.forEach((r) => r());
       waiting = [];

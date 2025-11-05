@@ -4,16 +4,14 @@ import {
   getDreamReactions,
   getPopularController,
 } from "../controllers/dreamActivity.controller";
-import authenticate from "../middlewares/authenticate";
+import authenticateLite from "../middlewares/authenticateLite";
+
 const router = Router();
 
-// פופולרי
 router.get("/popular", getPopularController);
 
-// ריאקציות
 router.get("/:id/reactions", getDreamReactions);
 
-// פעילות (view/like/dislike)
-router.post("/:id", authenticate, postActivity);
+router.post("/:id", authenticateLite, postActivity);
 
 export default router;

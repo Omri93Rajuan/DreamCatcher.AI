@@ -1,17 +1,31 @@
 import * as React from "react";
 import { clsx } from "clsx";
 
-export const Textarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>
->(({ className, ...props }, ref) => (
-  <textarea
-    ref={ref}
-    className={clsx(
-      "w-full rounded-md bg-white/10 text-white placeholder:text-purple-300 border border-purple-500/30 px-3 py-2 min-h-32 resize-y focus:outline-none focus:border-purple-400",
-      className
-    )}
-    {...props}
-  />
-));
+export interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
+
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, ...props }, ref) => {
+    return (
+      <textarea
+        ref={ref}
+        className={clsx(
+          // בסיס
+          "w-full rounded-xl px-3.5 py-3 leading-relaxed",
+          "outline-none transition-colors duration-200",
+          "disabled:opacity-50 disabled:cursor-not-allowed",
+          // LIGHT — שחור על לבן (חד וקריא)
+          "bg-white text-black placeholder:text-slate-500 border border-black/15",
+          "focus-visible:ring-2 focus-visible:ring-black/20",
+          // DARK — כמו שהיה (זכוכיתי)
+          "dark:bg-white/10 dark:text-white dark:placeholder:text-white/50 dark:border-white/15",
+          "dark:focus-visible:ring-2 dark:focus-visible:ring-purple-400/30",
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
 Textarea.displayName = "Textarea";
+export default Textarea;

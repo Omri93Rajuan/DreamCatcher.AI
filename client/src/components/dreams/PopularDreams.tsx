@@ -30,13 +30,12 @@ export default function PopularDreams() {
     staleTime: 60_000,
   });
 
-  // נרמול מינימלי לפני רנדר – מבטיחים dreamId ו-series + ערכי ברירת מחדל למונים
+  // נרמול מינימלי לפני רנדר
   const safeRows: PopularRowForFlip[] = (Array.isArray(data) ? data : [])
     .filter(Boolean)
     .map((raw: any, idx: number) => {
       const dreamId = raw?.dreamId ?? raw?.id ?? raw?._id ?? "";
       const series = Array.isArray(raw?.series) ? raw.series : [];
-
       return {
         rank: Number(raw?.rank ?? idx + 1),
         dreamId,
@@ -55,23 +54,31 @@ export default function PopularDreams() {
     .filter((r) => !!r.dreamId);
 
   return (
-    <section className="max-w-7xl mx-auto px-4 mb-20">
+    <section className="max-w-7xl mx-auto px-4 mb-20" dir="rtl">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <TrendingUp className="w-8 h-8 text-amber-400" />
-          <h2 className="text-3xl font-bold">החלומות הפופולריים ביותר</h2>
+          <TrendingUp className="w-8 h-8 text-amber-500" />
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+            החלומות הפופולריים ביותר
+          </h2>
         </div>
 
-        <div className="flex items-center gap-2 bg-white/5 rounded-xl p-1">
+        {/* Window toggle */}
+        <div
+          className="flex items-center gap-2 rounded-xl p-1 border
+                        bg-white/80 border-black/10 backdrop-blur-sm
+                        dark:bg-white/[0.06] dark:border-white/10 dark:backdrop-blur-md"
+        >
           {([7, 30, 365] as WindowKind[]).map((n) => (
             <button
               key={n}
               onClick={() => setWindowKind(n)}
-              className={`px-3 py-1.5 rounded-lg text-sm transition ${
+              className={[
+                "px-3 py-1.5 rounded-lg text-sm transition",
                 windowKind === n
-                  ? "bg-amber-400 text-black"
-                  : "hover:bg-white/10"
-              }`}
+                  ? "bg-amber-400 text-slate-900"
+                  : "text-slate-700 hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/10",
+              ].join(" ")}
             >
               {n === 7 ? "שבוע" : n === 30 ? "חודש" : "שנה"}
             </button>
@@ -82,7 +89,11 @@ export default function PopularDreams() {
       {isLoading ? (
         <SkeletonGrid />
       ) : error ? (
-        <div className="flex items-center gap-2 text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-xl p-4">
+        <div
+          className="flex items-center gap-2 rounded-xl p-4 border
+                        text-rose-800 bg-rose-50 border-rose-200
+                        dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-500/30"
+        >
           <AlertTriangle className="w-5 h-5" />
           <div>
             <div className="font-semibold">שגיאה בטעינת פופולרים</div>
@@ -90,7 +101,9 @@ export default function PopularDreams() {
           </div>
         </div>
       ) : safeRows.length === 0 ? (
-        <div className="text-white/70">אין נתונים לתקופה הזו עדיין.</div>
+        <div className="text-slate-700 dark:text-white/70">
+          אין נתונים לתקופה הזו עדיין.
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {safeRows.map((row, i) => (
@@ -107,7 +120,9 @@ export default function PopularDreams() {
       )}
 
       {isFetching && !isLoading && (
-        <div className="mt-3 text-xs text-white/60">מרענן נתונים…</div>
+        <div className="mt-3 text-xs text-slate-600 dark:text-white/60">
+          מרענן נתונים…
+        </div>
       )}
     </section>
   );
@@ -119,7 +134,9 @@ function SkeletonGrid() {
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}
-          className="rounded-2xl bg-white/5 border border-white/10 animate-pulse h-64"
+          className="h-64 rounded-2xl animate-pulse border
+                     bg-white/70 border-black/10
+                     dark:bg-white/[0.06] dark:border-white/10"
         />
       ))}
     </div>

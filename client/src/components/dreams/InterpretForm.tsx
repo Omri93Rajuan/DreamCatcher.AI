@@ -1,4 +1,3 @@
-// src/components/InterpretForm.tsx
 import React, {
   useMemo,
   useRef,
@@ -83,13 +82,12 @@ function useWordStreamer({
       // Auto-scroll the container (if provided)
       const node = containerRef?.current as HTMLElement | null;
       if (node) {
-        // use requestAnimationFrame to avoid layout jank
         requestAnimationFrame(() => {
           node.scrollTop = node.scrollHeight;
         });
       }
 
-      // Pacing: add tiny pauses after punctuation to feel natural
+      // Pacing
       const lastChar = appended[appended.length - 1] ?? "";
       const isPunct = /[\.!?…,:;\)]/.test(lastChar);
       const isSentenceEnd = /[\.!?…]/.test(lastChar);
@@ -99,7 +97,6 @@ function useWordStreamer({
     };
 
     schedule(baseMs, step);
-
     return () => clearTimer();
   }, [fullText, baseMs, wordsPerTick, schedule, containerRef, tokens]);
 
@@ -109,8 +106,6 @@ function useWordStreamer({
 const MY_DREAMS_PATH = "/me/dreams";
 
 export default function InterpretForm() {
-  // Title is now owned by the AI; we keep it only to display after response
-
   const [text, setText] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
@@ -124,7 +119,7 @@ export default function InterpretForm() {
   const { streamedText, isStreaming } = useWordStreamer({
     fullText: dream?.aiResponse ?? "",
     baseMs: 40,
-    wordsPerTick: 2, // slightly smoother than strict word-by-word
+    wordsPerTick: 2,
     containerRef,
   });
 
@@ -144,12 +139,10 @@ export default function InterpretForm() {
     try {
       const { dream: saved } = await DreamsApi.interpret({
         text,
-        // Let the AI own the title entirely
         titleOverride: undefined,
         isShared: false,
       });
       setDream(saved);
-      // adopt AI title if provided
     } catch (e: any) {
       if (e?.response?.status === 401) setAuthOpen(true);
       console.error(e);
@@ -179,20 +172,41 @@ export default function InterpretForm() {
       {/* Input card */}
       <div className="grid gap-3 max-w-3xl mx-auto mb-8">
         <div className="relative">
-          <Search className="absolute right-4 top-3 w-5 h-5 text-purple-400" />
+          {/* Light/Dark icon color */}
+          <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-purple-400" />
           <Textarea
             dir="rtl"
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="תאר/י את החלום שלך... (אפשר גם להדביק)"
-            className="pr-10 font-he min-h-[140px]"
             disabled={isInterpreting}
+            className={[
+              "pr-10 font-he min-h-[140px]",
+              // --- LIGHT MODE --- //
+              "bg-white text-black placeholder:text-slate-500",
+              "border border-black/10",
+              "focus-visible:ring-2 focus-visible:ring-black/20",
+              // --- DARK MODE (לשמור בדיוק כמו שהיה) --- //
+              "dark:bg-white/10 dark:text-white",
+              "dark:placeholder:text-white/50",
+              "dark:border-white/15",
+              "dark:focus-visible:ring-2 dark:focus-visible:ring-purple-400/30",
+              "transition-all duration-300",
+            ].join(" ")}
           />
         </div>
+
+        {/* CTA Button: Light זהב, Dark גרדיאנט סגול→ענבר כמו שהיה */}
         <Button
           onClick={handleInterpret}
           disabled={!text.trim() || isInterpreting}
-          className="w-full bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white font-bold py-3 rounded-xl"
+          className={[
+            "w-full font-bold py-3 rounded-xl",
+            // Light
+            "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
+            // Dark (השארתי בדיוק כמו שהיה)
+            "dark:bg-gradient-to-r dark:from-purple-600 dark:to-amber-600 dark:hover:from-purple-700 dark:hover:to-amber-700 dark:text-white",
+          ].join(" ")}
         >
           {isInterpreting ? (
             <>
@@ -211,17 +225,31 @@ export default function InterpretForm() {
       {(dream || isInterpreting) && (
         <div className="max-w-3xl mx-auto mb-10">
           <div
-            className="relative rounded-3xl border border-white/15 bg-white/5 p-6 text-white shadow-xl backdrop-blur"
+            className={[
+              "relative rounded-3xl p-6 shadow-xl backdrop-blur",
+              // Light
+              "bg-white border border-black/10 text-slate-900",
+              // Dark – כמו שהיה
+              "dark:border-white/15 dark:bg-white/5 dark:text-white",
+            ].join(" ")}
             aria-live="polite"
             aria-busy={isThinking}
           >
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-lg font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-amber-200 font-he">
+              <h4
+                className={[
+                  "text-lg font-extrabold font-he",
+                  // Light: טקסט כהה
+                  "text-slate-900",
+                  // Dark: גרדיאנט כמו שהיה
+                  "dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-purple-300 dark:to-amber-200",
+                ].join(" ")}
+              >
                 פתרון החלום
               </h4>
             </div>
 
-            {/* while waiting and BEFORE we have any text, show only logo */}
+            {/* waiting logo */}
             {!dream && isInterpreting && (
               <div className="grid place-items-center py-14">
                 <img
@@ -233,7 +261,7 @@ export default function InterpretForm() {
               </div>
             )}
 
-            {/* streaming OR final text (always visible after it ends) */}
+            {/* streaming/final */}
             {(isStreaming || dream) && (
               <div
                 ref={containerRef as any}
@@ -248,8 +276,9 @@ export default function InterpretForm() {
                   letterSpacing: "0.2px",
                 }}
               >
-                {/* show streamed while streaming; afterwards keep the full text */}
-                <bdi>{isStreaming ? streamedText : dream?.aiResponse}</bdi>
+                <bdi className="text-slate-800 dark:text-white">
+                  {isStreaming ? streamedText : dream?.aiResponse}
+                </bdi>
                 {isStreaming && (
                   <span className="inline-block w-2 h-5 align-text-bottom animate-pulse">
                     ‎
@@ -264,12 +293,18 @@ export default function InterpretForm() {
                 {!dream.isShared ? (
                   <Button
                     onClick={shareWithEveryone}
-                    className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl"
+                    className={[
+                      "px-4 py-2 rounded-xl",
+                      // Light
+                      "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
+                      // Dark (זהה לסגנון הענברי הקיים)
+                      "dark:bg-amber-600 dark:hover:bg-amber-700 dark:text-white",
+                    ].join(" ")}
                   >
                     שתף/י עם כולם
                   </Button>
                 ) : (
-                  <div className="inline-flex items-center gap-2 text-emerald-300 text-sm">
+                  <div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-300 text-sm">
                     <CheckCircle2 className="w-5 h-5" />
                     שותף בהצלחה!
                   </div>
@@ -277,13 +312,13 @@ export default function InterpretForm() {
 
                 <button
                   onClick={openMyDreams}
-                  className="text-sm underline underline-offset-4 text-white/90 hover:text-white"
+                  className="text-sm underline underline-offset-4 text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white"
                 >
                   פתח/י את החלומות שלי
                 </button>
 
                 {justShared && (
-                  <div className="text-emerald-300 text-xs">
+                  <div className="text-emerald-700 dark:text-emerald-300 text-xs">
                     החלום פורסם ויראה לכלל המשתמשים.
                   </div>
                 )}

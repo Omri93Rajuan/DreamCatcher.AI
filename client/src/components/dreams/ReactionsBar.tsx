@@ -46,40 +46,67 @@ export default function ReactionsBar({
     mutateReaction.mutate(type);
   };
 
+  const baseBtn =
+    "inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm transition select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40";
+  const disabledCls = disabled ? "opacity-50 cursor-not-allowed" : "";
+
   return (
     <>
-      <div className={`flex items-center gap-4 text-sm ${className || ""}`}>
+      <div
+        className={`flex items-center gap-4 text-sm ${className || ""}`}
+        dir="rtl"
+      >
+        {/* Like */}
         <button
           type="button"
           onClick={() => handleReact("like")}
           disabled={disabled}
-          className={`inline-flex items-center gap-1 transition ${
-            myReaction === "like"
-              ? "text-emerald-400"
-              : "hover:text-emerald-300"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          aria-pressed={myReaction === "like"}
           title="לייק"
+          className={[
+            baseBtn,
+            disabledCls,
+            myReaction === "like"
+              ? // Active
+                "text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 " +
+                "dark:text-emerald-400 dark:bg-emerald-900/30 dark:border-emerald-400/20 dark:hover:bg-emerald-900/50"
+              : // Idle
+                "text-slate-700 hover:bg-black/5 " +
+                "dark:text-white/80 dark:hover:bg-white/10",
+          ].join(" ")}
         >
           <ThumbsUp className="w-4 h-4" />
           {likes}
         </button>
 
+        {/* Dislike */}
         <button
           type="button"
           onClick={() => handleReact("dislike")}
           disabled={disabled}
-          className={`inline-flex items-center gap-1 transition ${
-            myReaction === "dislike" ? "text-rose-400" : "hover:text-rose-300"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          aria-pressed={myReaction === "dislike"}
           title="דיסלייק"
+          className={[
+            baseBtn,
+            disabledCls,
+            myReaction === "dislike"
+              ? // Active
+                "text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 " +
+                "dark:text-rose-400 dark:bg-rose-900/30 dark:border-rose-400/20 dark:hover:bg-rose-900/50"
+              : // Idle
+                "text-slate-700 hover:bg-black/5 " +
+                "dark:text-white/80 dark:hover:bg-white/10",
+          ].join(" ")}
         >
           <ThumbsDown className="w-4 h-4" />
           {dislikes}
         </button>
 
+        {/* Views */}
         <span
-          className="inline-flex items-center gap-1 text-white/70"
+          className="inline-flex items-center gap-1 text-slate-600 dark:text-white/70"
           title="צפיות"
+          aria-label={`צפיות: ${viewsTotal}`}
         >
           <Eye className="w-4 h-4" />
           {viewsTotal}
