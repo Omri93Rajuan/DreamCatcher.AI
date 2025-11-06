@@ -112,7 +112,7 @@ export default function MyDreams() {
       {isLoading ? (
         <SkeletonGrid />
       ) : dreams.length === 0 ? (
-        <div className="text-white/70 text-center py-20">
+        <div className="text-black dark:text-white/70 text-center py-20">
           אין חלומות להצגה כרגע.
         </div>
       ) : (

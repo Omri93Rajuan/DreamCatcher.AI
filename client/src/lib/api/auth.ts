@@ -49,4 +49,5 @@ export const AuthApi = {
     api
       .post("/auth/password/reset-with-cookie", { newPassword })
       .then((r) => r.data),
+  deleteAccount: (userId: string) => api.delete(`/users/${userId}`),
 };
