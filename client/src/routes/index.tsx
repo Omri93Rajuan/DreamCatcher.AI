@@ -10,6 +10,7 @@ import NotFoundPage from "@/pages/NotFoundPage";
 import AccountPage from "@/pages/AccountPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ArticlesPage from "@/pages/ArticlesPage";
 
 export const router = createBrowserRouter([
   {
@@ -67,10 +68,20 @@ export const router = createBrowserRouter([
     ),
   },
   {
+    path: "/articles",
+    element: (
+      <Layout>
+        <ArticlesPage />
+      </Layout>
+    ),
+  },
+  {
     path: "/reset-password",
     element: (
       <Layout>
-        <ResetPasswordPage />
+        <ProtectedRoute>
+          <ResetPasswordPage />
+        </ProtectedRoute>
       </Layout>
     ),
   },

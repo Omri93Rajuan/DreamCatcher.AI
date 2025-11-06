@@ -146,6 +146,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </>
               ) : (
                 <>
+                  <NavItem to="/articles">מאמרים</NavItem>
                   <NavItem to="/login">התחברות</NavItem>
                   <Link
                     to="/register"

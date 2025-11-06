@@ -145,3 +145,14 @@ export type UpdateUserDTO = Partial<
     | "termsLocale"
   >
 >;
+export type Article = {
+  id: string;
+  title: string;
+  author: string;
+  content: string;
+  excerpt?: string;
+  coverUrl?: string;
+  authorAvatar?: string;
+  publishedAt?: string; // ISO
+  tags?: string[];
+};
