@@ -26,7 +26,7 @@ export default function Pagination({ page, pages, onChange, disabled }: Props) {
     const activeBtn = "bg-[var(--brand)] text-[color:var(--brand-fg)] shadow-[0_0_14px_rgba(201,162,58,0.35)] hover:brightness-105";
     const prev = () => page > 1 && onChange(page - 1);
     const next = () => page < pages && onChange(page + 1);
-    return (<div className="flex items-center justify-center gap-3 mt-10" dir="rtl">
+    return (<div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3" dir="rtl">
       <Button onClick={prev} className={`${baseBtn} ${outlineBtn} ${page <= 1 ? "opacity-50 pointer-events-none" : ""}`}>
         הקודם
       </Button>

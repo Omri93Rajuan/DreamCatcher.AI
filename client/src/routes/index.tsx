@@ -11,6 +11,7 @@ import AccountPage from "@/pages/AccountPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ArticlesPage from "@/pages/ArticlesPage";
+import ContactPage from "@/pages/ContactPage";
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -61,6 +62,12 @@ export const router = createBrowserRouter([
       </Layout>),
     },
     {
+        path: "/contact",
+        element: (<Layout>
+        <ContactPage />
+      </Layout>),
+    },
+    {
         path: "/reset-password",
         element: (<Layout>
         <ProtectedRoute>
@@ -81,3 +88,5 @@ export const router = createBrowserRouter([
       </Layout>),
     },
 ]);
+
+

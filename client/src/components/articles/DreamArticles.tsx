@@ -46,7 +46,7 @@ export default function DreamArticles({ articles, initialSelectedId = null, onSe
         setPage(nextPage);
         requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
     };
-    return (<div dir="rtl" className="w-full mx-auto max-w-6xl p-4 sm:p-6">
+    return (<div dir="rtl" className="w-full mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
       {selected ? (<ArticleView article={selected} onBack={handleBack}/>) : (<>
           <ArticlesGrid items={pagedArticles} onOpen={handleOpen}/>
           <Pagination page={page} pages={totalPages} onChange={handlePageChange}/>
