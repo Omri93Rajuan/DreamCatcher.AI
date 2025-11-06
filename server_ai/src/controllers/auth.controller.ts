@@ -7,6 +7,21 @@ import {
   register as registerSvc,
 } from "../services/auth.service";
 import { handleError } from "../utils/ErrorHandle";
+import { sendMail } from "../helpers/mailer";
+
+import { hashPassword } from "../helpers/bcrypt";
+import User from "../models/user";
+
+import {
+  canRequestPasswordReset,
+  createResetToken,
+  stampPasswordReset,
+  verifyAndConsumeResetToken,
+} from "../services/password.service";
+
+// ✔︎ token generation/consumption (one-time reset tokens)
+
+// ✔︎ per-user daily quota (once per day)
 
 const ACCESS_SECRET =
   process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || "supersecret";
@@ -14,7 +29,12 @@ const REFRESH_SECRET =
   process.env.JWT_REFRESH_SECRET ||
   process.env.REFRESH_SECRET ||
   "refreshsecret";
-const isProd = process.env.NODE_ENV === "production";
+const appUrl = (process.env.APP_URL || "").toLowerCase();
+const isHttps = appUrl.startsWith("https://");
+const isProd = process.env.NODE_ENV === "production" && isHttps;
+// Cookie reset session (short-lived, HttpOnly – no token in URL on the app)
+const RESET_COOKIE = "pw_reset";
+const RESET_SESSION_SECRET = process.env.JWT_SECRET || "supersecret";
 
 function setAccessCookie(res: Response, token: string) {
   res.cookie("auth_token", token, {
@@ -34,19 +54,22 @@ function setRefreshCookie(res: Response, token: string) {
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7d
   });
 }
+function clearAuthCookies(res: Response) {
+  res.clearCookie("auth_token", { path: "/" });
+  res.clearCookie("refresh_token", { path: "/" });
+  res.clearCookie(RESET_COOKIE, { path: "/" });
+}
 
+/* ===== Auth core ===== */
 export const registerUser = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    // אוכפים קבלה של תנאי שימוש כבר בקונטרולר
     const termsAgreed = !!req.body?.termsAgreed;
     const termsVersion = req.body?.termsVersion as string | undefined;
-    if (!termsAgreed || !termsVersion) {
-      handleError(res, 400, "Terms must be accepted");
-      return;
-    }
+    if (!termsAgreed || !termsVersion)
+      return handleError(res, 400, "Terms must be accepted");
 
     const user = await registerSvc({
       ...req.body,
@@ -72,7 +95,6 @@ export const registerUser = async (
     );
     setAccessCookie(res, accessToken);
     setRefreshCookie(res, refreshToken);
-
     res.status(201).json({ user });
   } catch (error: any) {
     handleError(
@@ -86,7 +108,6 @@ export const registerUser = async (
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await loginSvc(req.body);
-
     const accessToken = jwt.sign(
       { _id: user._id, role: user.role, email: user.email },
       ACCESS_SECRET,
@@ -97,21 +118,18 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       REFRESH_SECRET,
       { expiresIn: "7d" }
     );
-
     setAccessCookie(res, accessToken);
     setRefreshCookie(res, refreshToken);
-
     res.status(200).json({ user });
   } catch (error: any) {
     handleError(res, error.status || 401, error.message || "Login failed");
   }
 };
 
-export const logoutUser = (req: Request, res: Response): void => {
+export const logoutUser = (_req: Request, res: Response): void => {
   try {
     logoutSvc();
-    res.clearCookie("auth_token", { path: "/" });
-    res.clearCookie("refresh_token", { path: "/" });
+    clearAuthCookies(res);
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
     handleError(res, 500, error.message);
@@ -121,17 +139,11 @@ export const logoutUser = (req: Request, res: Response): void => {
 export const refreshToken = (req: Request, res: Response): void => {
   try {
     const rt = req.cookies?.refresh_token as string | undefined;
-    if (!rt) {
-      handleError(res, 401, "No refresh token provided");
-      return;
-    }
+    if (!rt) return handleError(res, 401, "No refresh token provided");
 
     jwt.verify(rt, REFRESH_SECRET, (err: any, decoded: any) => {
-      if (err || !decoded) {
-        handleError(res, 401, "Invalid refresh token");
-        return;
-      }
-
+      if (err || !decoded)
+        return handleError(res, 401, "Invalid refresh token");
       const newAccess = jwt.sign(
         { _id: decoded._id, role: decoded.role },
         ACCESS_SECRET,
@@ -151,17 +163,10 @@ export const verifyToken = (req: Request, res: Response): void => {
     const auth = req.headers.authorization;
     const fromHeader = auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
     const token = fromCookie || fromHeader;
-
-    if (!token) {
-      handleError(res, 401, "No token provided");
-      return;
-    }
+    if (!token) return handleError(res, 401, "No token provided");
 
     jwt.verify(token, ACCESS_SECRET, (err: any, decoded: any) => {
-      if (err || !decoded) {
-        handleError(res, 401, "Invalid token");
-        return;
-      }
+      if (err || !decoded) return handleError(res, 401, "Invalid token");
       const p = decoded as any;
       res.json({
         valid: true,
@@ -178,14 +183,136 @@ export const getUserById = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { id } = req.params;
-    const foundUser = await getMe(id);
-    if (!foundUser) {
-      res.status(404).json({ message: "User not found" });
-      return;
-    }
+    const foundUser = await getMe(req.params.id);
+    if (!foundUser)
+      return void res.status(404).json({ message: "User not found" });
     res.status(200).json({ user: foundUser });
   } catch (error: any) {
     handleError(res, 500, error.message);
   }
 };
+
+/* ===== Password reset (Cookie Flow, per-user once/day) ===== */
+
+export async function requestPasswordReset(req: Request, res: Response) {
+  const { email } = req.body || {};
+  if (!email)
+    return res.status(400).json({ error: { message: "email_required" } });
+
+  try {
+    const user = await User.findOne({ email }).select("_id email");
+    // לא מדליפים קיום משתמש
+    if (!user) return res.json({ ok: true });
+
+    // בדיקת קוואטה למשתמש – פעם ביום
+    const quota = await canRequestPasswordReset(user._id.toString());
+    if (!quota.allowed) {
+      // אם תרצה לא לחשוף – החזר 200. כאן מחזירים 429 כדי שהפרונט יוכל להראות הודעה מדויקת.
+      return res.status(429).json({
+        error: { message: "too_many_requests", nextAt: quota.nextAt },
+      });
+    }
+
+    // מייצרים טוקן חד-פעמי
+    const { token, expires } = await createResetToken(user._id.toString());
+
+    // חותמת זמן (שומר את הבקשה של היום)
+    await stampPasswordReset(user._id.toString());
+
+    const apiBase =
+      process.env.API_URL?.replace(/\/+$/, "") ||
+      `http://localhost:${process.env.PORT || 1000}`;
+
+    const link = `${apiBase}/api/auth/password/consume?token=${encodeURIComponent(
+      token
+    )}`;
+
+    const html = `
+      <div dir="rtl" style="font-family:Arial,sans-serif">
+        <h2>איפוס סיסמה</h2>
+        <p>להגדרת סיסמה חדשה לחץ/י על הקישור:</p>
+        <p><a href="${link}">${link}</a></p>
+        <p>תוקף הקישור עד: ${expires.toLocaleString("he-IL")}</p>
+      </div>
+    `;
+
+    await sendMail(user.email, "איפוס סיסמה", html);
+    return res.json({ ok: true });
+  } catch (e) {
+    console.warn("[PasswordReset] error:", e);
+    // לא חושפים יותר מדי
+    return res.json({ ok: true });
+  }
+}
+
+export async function consumeResetToken(req: Request, res: Response) {
+  try {
+    const token = String(req.query.token || "");
+    if (!token) return res.status(400).send("missing token");
+
+    const user = await verifyAndConsumeResetToken(token);
+    if (!user) return res.status(400).send("invalid or expired");
+
+    // JWT קצר-חיים ל-session של reset, נשמר כ-cookie HttpOnly
+    const session = jwt.sign({ uid: user._id }, RESET_SESSION_SECRET, {
+      expiresIn: "10m",
+    });
+
+    res.cookie(RESET_COOKIE, session, {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: isProd,
+      path: "/",
+      maxAge: 10 * 60 * 1000,
+    });
+
+    const app = (process.env.APP_URL || "http://localhost:5173").replace(
+      /\/+$/,
+      ""
+    );
+    return res.redirect(302, `${app}/reset-password`);
+  } catch (e) {
+    console.error("[consumeResetToken] error:", e);
+    return res.status(500).send("server error");
+  }
+}
+
+export async function resetPasswordWithCookie(req: Request, res: Response) {
+  try {
+    const { newPassword } = req.body || {};
+    if (!newPassword)
+      return res.status(400).json({ error: { message: "missing_params" } });
+
+    const raw = req.cookies?.[RESET_COOKIE] as string | undefined;
+    if (!raw)
+      return res
+        .status(401)
+        .json({ error: { message: "reset_session_missing" } });
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(raw, RESET_SESSION_SECRET);
+    } catch {
+      return res
+        .status(401)
+        .json({ error: { message: "reset_session_invalid" } });
+    }
+
+    const user = await User.findById(decoded.uid);
+    if (!user)
+      return res.status(404).json({ error: { message: "user_not_found" } });
+
+    user.password = hashPassword(newPassword);
+    user.passwordChangedAt = new Date(); // מבטל JWT ישנים
+    await user.save();
+
+    // ניתוק מלא אחרי שינוי סיסמה
+    clearAuthCookies(res);
+    return res.json({ ok: true });
+  } catch (e: any) {
+    console.error("[resetPasswordWithCookie] error:", e);
+    return res
+      .status(500)
+      .json({ error: { message: e.message || "server_error" } });
+  }
+}

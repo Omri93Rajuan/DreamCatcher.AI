@@ -8,7 +8,7 @@ const authenticateSoft = (
   next: NextFunction
 ): void => {
   const token = req.cookies?.auth_token;
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_ACCESS_SECRET;
 
   if (!token || !secret) {
     // אין טוקן → ממשיכים בתור לא מחובר

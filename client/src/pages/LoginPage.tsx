@@ -1,4 +1,5 @@
 import LoginForm from "@/components/auth/LoginForm";
+import { Link } from "react-router-dom";
 
 export default function LoginPage() {
   return (
@@ -11,6 +12,16 @@ export default function LoginPage() {
             window.location.href = "/";
           }}
         />
+
+        {/* כפתור / לינק לאיפוס סיסמה */}
+        <div className="text-center mt-4">
+          <Link
+            to="/forgot-password"
+            className="text-blue-400 hover:underline transition"
+          >
+            שכחתי סיסמה
+          </Link>
+        </div>
       </div>
     </div>
   );

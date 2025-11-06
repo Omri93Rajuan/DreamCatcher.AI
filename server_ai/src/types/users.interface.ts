@@ -80,3 +80,32 @@ export interface AcceptTermsDTO {
   termsUserAgent?: string | null;
   termsLocale?: string | null;
 }
+
+export interface IUserDoc extends Document {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password?: string; // select:false כאשר קוראים למשתמש בצד הלקוח
+  role: UserRole;
+  subscription: SubscriptionType;
+  image?: string;
+  lastLogin?: Date;
+  isActive?: boolean;
+  subscriptionExpiresAt?: Date;
+
+  termsAccepted?: boolean;
+  termsAcceptedAt?: Date;
+  termsVersion?: string;
+  termsIp?: string | null;
+  termsUserAgent?: string | null;
+  termsLocale?: string | null;
+
+  resetPasswordTokenHash?: string | null;
+  resetPasswordExpiresAt?: Date | null;
+
+  lastPasswordResetRequestAt: Date;
+  passwordChangedAt: Date;
+
+  createdAt?: Date;
+  updatedAt?: Date;
+}

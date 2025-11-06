@@ -8,6 +8,8 @@ import RegisterPage from "@/pages/RegisterPage";
 import MyDreamsPage from "@/pages/MyDreamsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import AccountPage from "@/pages/AccountPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +63,22 @@ export const router = createBrowserRouter([
         <ProtectedRoute>
           <MyDreamsPage />
         </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: "/reset-password",
+    element: (
+      <Layout>
+        <ResetPasswordPage />
+      </Layout>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <Layout>
+        <ForgotPasswordPage />
       </Layout>
     ),
   },

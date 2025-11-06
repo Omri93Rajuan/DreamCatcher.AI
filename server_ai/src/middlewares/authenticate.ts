@@ -1,62 +1,69 @@
-import { NextFunction, Response } from "express";
+import type { NextFunction, Response } from "express";
 import jwt from "jsonwebtoken";
-import { AuthRequest, JwtPayload } from "../types/auth.interface";
+import type { AuthRequest, JwtPayload } from "../types/auth.interface";
+import User from "../models/user";
 
-/**
- * ודא שבאפליקציה הראשית מוגדר:
- *   app.use(cookieParser())
- * ושיש JWT_SECRET בסביבת הריצה
- */
-const authenticate = (
+export default async function authenticate(
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> {
   try {
-    const token = req.cookies?.auth_token;
-
-    // לוגים שימושיים אך לא חושפים סודות
-    const short = token ? token.slice(0, 16) + "..." : "(none)";
-    console.log("[AUTH] cookies present:", !!req.cookies, "| token:", short);
+    const bearer = req.headers.authorization;
+    const headerToken =
+      bearer && bearer.startsWith("Bearer ") ? bearer.slice(7) : undefined;
+    const token = req.cookies?.auth_token || headerToken;
 
     if (!token) {
       res.status(401).json({ error: "Unauthorized: No token provided" });
       return;
     }
 
-    const secret = process.env.JWT_SECRET;
+    const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
-      console.error("[AUTH] Missing JWT_SECRET env");
+      console.error("[AUTH] Missing JWT_ACCESS_SECRET env");
       res.status(500).json({ error: "server_misconfigured" });
       return;
     }
 
-    // אימות אמיתי
-    const decoded = jwt.verify(token, secret) as JwtPayload;
-    console.log(
-      "[AUTH] verified OK. payload keys:",
-      Object.keys(decoded || {})
-    );
+    const decoded = jwt.verify(token, secret) as JwtPayload & { iat?: number };
 
-    // תמיכה בכל וריאציות ה-id, כולל _id (כמו בלוג שלך)
     const userId =
       decoded._id?.toString() ||
       decoded.id?.toString() ||
       decoded.sub?.toString() ||
       null;
 
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized: bad payload" });
+      return;
+    }
+
+    const user = await User.findById(userId).select(
+      "_id role isActive passwordChangedAt"
+    );
+    if (!user || user.isActive === false) {
+      res.status(401).json({ error: "Unauthorized: user_inactive_or_missing" });
+      return;
+    }
+
+    if (user.passwordChangedAt && decoded.iat) {
+      const issuedAtMs = decoded.iat * 1000;
+      if (issuedAtMs < user.passwordChangedAt.getTime()) {
+        res.status(401).json({ error: "token_revoked" });
+        return;
+      }
+    }
+
     req.user = {
-      _id: userId,
-      role: decoded.role,
-      isAdmin: decoded.role === "admin",
+      _id: String(user._id),
+      role: user.role,
+      isAdmin: user.role === "admin",
     };
 
-    console.log("[AUTH] using userId:", req.user._id);
     next();
   } catch (err: any) {
     console.error("[AUTH] verify failed:", err?.name, err?.message);
     res.status(401).json({ error: "Unauthorized: Invalid or expired token" });
   }
-};
-
-export default authenticate;
+}

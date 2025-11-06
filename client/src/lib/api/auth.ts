@@ -41,4 +41,12 @@ export const AuthApi = {
     api
       .post("/auth/register", data, { withCredentials: true })
       .then((r) => r.data),
+  // Password reset
+  requestPasswordReset: (email: string) =>
+    api.post("/auth/password/request-reset", { email }).then((r) => r.data),
+
+  resetPasswordWithCookie: (newPassword: string) =>
+    api
+      .post("/auth/password/reset-with-cookie", { newPassword })
+      .then((r) => r.data),
 };

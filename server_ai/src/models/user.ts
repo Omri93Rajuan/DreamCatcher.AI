@@ -1,7 +1,12 @@
 import { Schema, model, models, HydratedDocument } from "mongoose";
-import { IUser, UserRole, SubscriptionType } from "../types/users.interface";
+import {
+  IUser,
+  UserRole,
+  SubscriptionType,
+  IUserDoc,
+} from "../types/users.interface";
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IUserDoc>(
   {
     firstName: { type: String, required: true, minlength: 2, maxlength: 50 },
     lastName: { type: String, required: true, minlength: 2, maxlength: 50 },
@@ -35,6 +40,12 @@ const userSchema = new Schema<IUser>(
     termsIp: { type: String, default: null },
     termsUserAgent: { type: String, default: null },
     termsLocale: { type: String, default: null },
+
+    resetPasswordTokenHash: { type: String, default: null, select: false },
+    resetPasswordExpiresAt: { type: Date, default: null },
+
+    lastPasswordResetRequestAt: Date, // בקשה אחרונה לאיפוס
+    passwordChangedAt: Date,
   },
   {
     timestamps: true,
@@ -52,4 +63,4 @@ userSchema.virtual("name").get(function (this: HydratedDocument<IUser>) {
   return `${this.firstName} ${this.lastName}`.trim();
 });
 
-export default (models.User as any) || model<IUser>("User", userSchema);
+export default (models.User as any) || model<IUserDoc>("User", userSchema);

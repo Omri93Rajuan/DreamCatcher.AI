@@ -2,6 +2,7 @@ import * as React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/useAuthStore";
 import UserProfileForm from "@/components/ui/users/UserProfileForm";
+import PasswordActionsCard from "@/components/ui/users/PasswordActionsCard";
 
 export default function AccountPage() {
   const user = useAuthStore((s) => s.user);
@@ -32,6 +33,7 @@ export default function AccountPage() {
 
       <section className="max-w-3xl md:max-w-4xl mx-auto px-4 pb-20" dir="rtl">
         <UserProfileForm user={user} />
+        <PasswordActionsCard />
       </section>
     </div>
   );
