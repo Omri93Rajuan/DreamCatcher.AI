@@ -1,16 +1,12 @@
 import express, { IRouter } from "express";
 import * as userController from "../controllers/users.controller";
 import authenticate from "../middlewares/authenticate";
-
 const router: IRouter = express.Router();
-
 router.use(authenticate);
-
-router.get("/", userController.getAll); // admin only
-router.get("/getUsersByCall", userController.getByCall); // admin only
-router.get("/:id", userController.getById); // admin or owner
-router.post("/", userController.create); // admin only
-router.patch("/:id", userController.update); // admin or owner
-router.delete("/:id", userController.remove); // admin or owner
-
+router.get("/", userController.getAll);
+router.get("/getUsersByCall", userController.getByCall);
+router.get("/:id", userController.getById);
+router.post("/", userController.create);
+router.patch("/:id", userController.update);
+router.delete("/:id", userController.remove);
 export default router;

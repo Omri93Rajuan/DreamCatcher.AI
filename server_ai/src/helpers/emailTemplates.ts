@@ -1,8 +1,5 @@
-export function generatePasswordResetEmail(
-  link: string,
-  expires: Date
-): string {
-  return `
+export function generatePasswordResetEmail(link: string, expires: Date): string {
+    return `
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>

@@ -1,22 +1,13 @@
 import express, { IRouter } from "express";
 import * as authController from "../controllers/auth.controller";
-
 const router: IRouter = express.Router();
-
-// auth
 router.post("/register", authController.registerUser);
 router.post("/login", authController.loginUser);
 router.post("/logout", authController.logoutUser);
 router.post("/refresh", authController.refreshToken);
 router.get("/verify", authController.verifyToken);
 router.get("/user/:id", authController.getUserById);
-
-// password reset (cookie flow)
 router.post("/password/request-reset", authController.requestPasswordReset);
 router.get("/password/consume", authController.consumeResetToken);
-router.post(
-  "/password/reset-with-cookie",
-  authController.resetPasswordWithCookie
-);
-
+router.post("/password/reset-with-cookie", authController.resetPasswordWithCookie);
 export default router;
