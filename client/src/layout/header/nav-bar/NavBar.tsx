@@ -1,56 +1,53 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { useCart } from "../../../providers/ThemeProvider";
-import { useAuth } from "../../../providers/QueryProvider";
+import { Link, NavLink } from "react-router-dom";
 import Logo from "../logo/Logo";
+import { useAuthStore } from "@/stores/useAuthStore";
+
+const NAV_LINKS = [
+    { to: "/", label: "בית" },
+    { to: "/articles", label: "מאמרים" },
+    { to: "/contact", label: "צור קשר" },
+];
+
 export default function NavBar() {
-    const { cartCount } = useCart();
-    const { user, logout } = useAuth();
-    return (<nav className="fixed top-0 left-0 w-full z-50 bg-black/80 backdrop-blur-md border-b border-red-600 text-white">
-      <div className="flex items-center justify-between px-8 py-3 max-w-7xl mx-auto">
-        
-        <div className="flex-shrink-0">
-          <Link to="/">
-            <Logo />
-          </Link>
+    const { user, logout } = useAuthStore();
+    const handleLogout = async () => {
+        await logout();
+    };
+    return (<nav className="sticky top-0 z-40 border-b border-black/10 bg-white/80 backdrop-blur dark:border-white/10 dark:bg-slate-950/70">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <Link to="/" className="flex items-center gap-2" aria-label="DreamCatcher.AI">
+          <Logo />
+          <span className="text-lg font-semibold text-slate-900 dark:text-white">
+            DreamCatcher.AI
+          </span>
+        </Link>
+
+        <div className="flex items-center gap-4 text-sm font-semibold">
+          {NAV_LINKS.map((item) => (<NavLink key={item.to} to={item.to} className={({ isActive }) => [
+                    "transition-colors",
+                    isActive
+                        ? "text-amber-600 dark:text-amber-300"
+                        : "text-slate-600 hover:text-slate-900 dark:text-white/70 dark:hover:text-white",
+                ].join(" ")}>
+              {item.label}
+            </NavLink>))}
         </div>
 
-        
-        <div className="flex-1 flex justify-center space-x-10 text-lg font-semibold tracking-wide">
-          <Link to="/home" className="hover:text-red-400 transition-colors">
-            Home
-          </Link>
-          <Link to="/about" className="hover:text-red-400 transition-colors">
-            About
-          </Link>
-          <Link to="/store" className="hover:text-red-400 transition-colors">
-            Store
-          </Link>
-          <div className="relative">
-            <Link to="/checkout" className="hover:text-red-400 transition-colors">
-              Cart
-            </Link>
-            {cartCount > 0 && (<div className="absolute -top-3 -right-6 bg-red-600 text-xs font-bold px-2 py-0.5 rounded-full shadow-lg">
-                {cartCount}
-              </div>)}
-          </div>
-        </div>
-
-        
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {!user ? (<>
-              <Link to="/login" className="px-6 py-2 rounded-md bg-red-600 hover:bg-red-700 transition-colors font-bold shadow-md">
-                Login
+              <Link to="/login" className="rounded-lg border border-black/10 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-black/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10">
+                התחברות
               </Link>
-              <Link to="/register" className="px-6 py-2 rounded-md bg-white text-black hover:bg-gray-200 transition-colors font-bold shadow-md">
-                Register
+              <Link to="/register" className="rounded-lg bg-gradient-to-l from-amber-500 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:opacity-90">
+                הרשמה
               </Link>
             </>) : (<>
-              <span className="font-medium text-gray-300">
-                Welcome, {user.firstName || user.email}
+              <span className="text-sm font-medium text-slate-600 dark:text-white/80">
+                שלום, {user.firstName || user.email}
               </span>
-              <button onClick={logout} className="px-6 py-2 rounded-md bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 transition-colors font-bold shadow-md">
-                Logout
+              <button onClick={handleLogout} className="rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-black/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10">
+                יציאה
               </button>
             </>)}
         </div>

@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "framer-motion": "^12.23.24",
-    "i18next": "^23.14.0",
+    "i18next": "^25.6.1",
     "lucide-react": "^0.453.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -30,6 +30,7 @@
     "react-router-dom": "^6.26.2",
     "react-toastify": "^11.0.5",
     "recharts": "^3.3.0",
+    "redux": "^4.2.1",
     "swr": "^2.3.6",
     "zod": "^3.25.76",
     "zustand": "^5.0.8"

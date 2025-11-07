@@ -97,12 +97,12 @@ export default function InterpretForm() {
         setDream(null);
         setJustShared(false);
         try {
-            const { dream: saved } = await DreamsApi.interpret({
-                text,
-                titleOverride: undefined,
-                isShared: false,
-            });
-            setDream(saved);
+        const { dream: saved } = await DreamsApi.interpret({
+            text,
+            titleOverride: undefined,
+            isShared: false,
+        });
+        setDream(saved ?? null);
         }
         catch (e: any) {
             if (e?.response?.status === 401)
@@ -118,7 +118,7 @@ export default function InterpretForm() {
             return;
         setJustShared(false);
         const updated = await DreamsApi.update(dream._id, { isShared: true });
-        setDream(updated);
+        setDream(updated ?? null);
         setJustShared(true);
     };
     const openMyDreams = () => {

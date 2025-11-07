@@ -47,13 +47,11 @@ export default function SignupForm({ onSuccess }: Props) {
     return Math.min(score, 100);
   }, [form.password]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };

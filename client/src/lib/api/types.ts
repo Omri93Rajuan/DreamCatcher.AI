@@ -52,11 +52,8 @@ export type InterpretResponse = {
     aiResponse: string;
     dream?: Dream | null;
 };
-export type DreamCategory = "love" | "adventure" | "nightmare" | "flying" | "water" | "prophetic" | "lucid" | "other";
-export interface CategoryScore {
-    category: DreamCategory;
-    confidence: number;
-}
+export type DreamCategory = "flying" | "falling" | "being_chased" | "teeth" | "exam" | "late" | "death" | "romance" | "work" | "school" | "family" | "animals" | "water" | "house" | "vehicle" | "travel" | "lost" | "monster" | "paralysis" | "lucid";
+export type CategoryScores = Partial<Record<DreamCategory | string, number>>;
 export interface Dream {
     _id: string;
     userId: string;
@@ -64,16 +61,11 @@ export interface Dream {
     userInput: string;
     aiResponse: string;
     isShared: boolean;
+    sharedAt?: string | null;
     categories?: DreamCategory[];
-    categoryScores?: CategoryScore[];
+    categoryScores?: CategoryScores;
     createdAt: string;
     updatedAt: string;
-}
-export interface DreamsPage {
-    dreams: Dream[];
-    total: number;
-    page: number;
-    pages: number;
 }
 export type GlobalDreamStats = {
     totalAll: number;

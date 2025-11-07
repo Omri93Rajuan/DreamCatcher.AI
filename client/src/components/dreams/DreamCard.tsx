@@ -75,9 +75,13 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
     const dreamText = safe(dream.userInput);
     const interpretation = safe((dream as any).aiResponse ?? (dream as any).interpretation);
     const created = dream.createdAt ? new Date(dream.createdAt) : null;
-    const categories = useMemo<CategoryKey[]>(() => (Array.isArray((dream as any).categories)
-        ? (dream as any).categories
-        : []).filter((k: any): k is CategoryKey => k && CATEGORY_META[k]), [dream]);
+    const categories = useMemo<CategoryKey[]>(() => {
+        const raw = Array.isArray((dream as any)?.categories)
+            ? (dream as any).categories
+            : [];
+        return raw.filter((candidate: unknown): candidate is CategoryKey => typeof candidate === "string" &&
+            Object.prototype.hasOwnProperty.call(CATEGORY_META, candidate));
+    }, [dream]);
     const dreamPreviewLength = compact ? 100 : 200;
     const interpretationPreviewLength = compact ? 120 : 180;
     const dreamNeedsMore = dreamText.length > dreamPreviewLength;

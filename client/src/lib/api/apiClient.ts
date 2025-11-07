@@ -1,6 +1,10 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 declare module "axios" {
-    export interface AxiosRequestConfig {
+    export interface AxiosRequestConfig<D = any> {
+        skipRefresh?: boolean;
+        _retry?: boolean;
+    }
+    export interface InternalAxiosRequestConfig<D = any> {
         skipRefresh?: boolean;
         _retry?: boolean;
     }
@@ -14,9 +18,15 @@ let isRefreshing = false;
 let waiting: Array<() => void> = [];
 const isAuthPath = (url = "") => /\/auth\/(login|register|refresh-token|verify-token|verify)\b/.test(url);
 api.interceptors.response.use((res) => res, async (error: AxiosError) => {
-    const original = error.config || {};
+    type RetriableConfig = InternalAxiosRequestConfig & {
+        skipRefresh?: boolean;
+        _retry?: boolean;
+    };
+    const original = error.config as RetriableConfig | undefined;
     const status = error.response?.status;
     if (status !== 401)
+        return Promise.reject(error);
+    if (!original)
         return Promise.reject(error);
     if (original.skipRefresh || original._retry || isAuthPath(original.url)) {
         return Promise.reject(error);
