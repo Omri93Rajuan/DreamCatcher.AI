@@ -12,6 +12,11 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --font-he: "Heebo", system-ui, -apple-system, "Segoe UI", Roboto,
     "Noto Sans Hebrew", Arial, sans-serif;
+  --a11y-text-scale: 1;
+  --body-bg-light: radial-gradient(circle at top, #fdf5ff 0%, #f9f0ff 35%, #f7f4ff 70%, #f4f1ff 100%);
+  --body-bg-dark: radial-gradient(circle at 20% 15%, #522a92 0%, #2a0f5c 40%, #120528 75%, #070213 100%);
+  --body-fg-light: #1f163f;
+  --body-fg-dark: #f8f5ff;
 }
 
 html,
@@ -20,8 +25,29 @@ body,
   height: 100%;
 }
 
+#a11y-app-shell {
+  min-height: 100%;
+  color: inherit;
+}
+
+html {
+  font-size: calc(100% * var(--a11y-text-scale));
+}
+
 * {
   font-family: "Assistant", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--body-bg-light);
+  color: var(--body-fg-light);
+  transition: background 0.45s ease, color 0.45s ease;
+}
+
+.dark body {
+  background: var(--body-bg-dark);
+  color: var(--body-fg-dark);
 }
 
 .glass-card {
@@ -29,6 +55,12 @@ body,
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+}
+
+.dark .glass-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 60px -25px rgba(5, 2, 13, 0.85);
 }
 .glow-effect {
   box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
@@ -43,4 +75,116 @@ body,
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.a11y-contrast body {
+  background-color: #050505 !important;
+}
+
+.a11y-contrast #a11y-app-shell {
+  background-color: #050505 !important;
+  color: #fefefe !important;
+}
+
+.a11y-contrast #a11y-app-shell * {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+.a11y-theme-bright #a11y-app-shell {
+  color-scheme: light;
+  background-color: #f4f7fb !important;
+  color: #0f172a !important;
+}
+
+.a11y-theme-bright #a11y-app-shell * {
+  border-color: rgba(15, 23, 42, 0.25) !important;
+}
+
+.a11y-theme-dim #a11y-app-shell {
+  color-scheme: dark;
+  background-color: #050b16 !important;
+  color: #f8fafc !important;
+}
+
+.a11y-theme-dim #a11y-app-shell * {
+  border-color: rgba(248, 250, 252, 0.2) !important;
+}
+
+.a11y-theme-monochrome #a11y-app-shell {
+  filter: grayscale(1);
+}
+
+.a11y-theme-invert #a11y-app-shell {
+  filter: invert(0.95) hue-rotate(180deg);
+}
+
+.a11y-theme-monochrome [data-a11y-root],
+.a11y-theme-invert [data-a11y-root] {
+  filter: none !important;
+}
+
+.a11y-highlight-links #a11y-app-shell a {
+  text-decoration: underline wavy #ffb300 !important;
+  outline: 2px solid rgba(255, 179, 0, 0.6) !important;
+  outline-offset: 2px;
+}
+
+.a11y-dyslexic #a11y-app-shell {
+  font-family: "OpenDyslexic", "Arial", "Rubik", system-ui, sans-serif !important;
+}
+
+.a11y-reduce-motion #a11y-app-shell *,
+.a11y-reduce-motion #a11y-app-shell *::before,
+.a11y-reduce-motion #a11y-app-shell *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+.a11y-focus-ring #a11y-app-shell *:focus-visible {
+  outline: 3px solid #fbbf24 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.35) !important;
+}
+
+.a11y-text-spacing #a11y-app-shell {
+  line-height: 1.8 !important;
+}
+
+.a11y-text-spacing #a11y-app-shell p,
+.a11y-text-spacing #a11y-app-shell span,
+.a11y-text-spacing #a11y-app-shell li {
+  letter-spacing: 0.06em !important;
+  word-spacing: 0.1em !important;
+}
+
+.a11y-reader-mode #a11y-app-shell {
+  background-color: #fffef6 !important;
+  color: #111827 !important;
+}
+
+.a11y-reader-mode #a11y-app-shell * {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.a11y-reader-mode [data-a11y-root],
+.a11y-reader-mode [data-a11y-root] * {
+  background-color: inherit !important;
+  color: inherit !important;
+  filter: none !important;
+  box-shadow: none !important;
+}
+
+.a11y-big-cursor {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='12' fill='white' stroke='%23fbbf24' stroke-width='3'/%3E%3C/svg%3E")
+      14 14,
+    auto !important;
+}
+
+.a11y-big-cursor * {
+  cursor: inherit !important;
 }
