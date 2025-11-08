@@ -33,18 +33,19 @@ export default function AuthGateDialog({ open, onOpenChange, onSuccess, initialM
         return () => window.removeEventListener("keydown", onKey);
     }, [open, onOpenChange]);
     if (!open || !mounted)
-        return null;
-    return createPortal(<div className="fixed inset-0 z-[9999]" onClick={() => onOpenChange(false)} role="dialog" aria-modal="true" dir="rtl">
+    return null;
+    return createPortal(<div className="fixed inset-0 z-[9999] overflow-y-auto" onClick={() => onOpenChange(false)} role="dialog" aria-modal="true" dir="rtl">
       
       <div className="absolute inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-[2px]"/>
 
-      <div className="relative min-h-full w-full flex items-center justify-center p-4">
+      <div className="relative flex min-h-full w-full items-center justify-center p-4 sm:p-6">
         
         <div onClick={(e) => e.stopPropagation()} role="document" className="
-            w-full max-w-md rounded-2xl overflow-hidden
+            w-full max-w-md sm:max-w-lg rounded-2xl
             bg-white/90 text-slate-900 border border-black/10
             shadow-[0_20px_60px_-30px_rgba(0,0,0,.45)]
             dark:bg-white/[0.08] dark:text-white dark:border-white/12
+            max-h-[calc(100vh-3rem)] overflow-y-auto
           ">
           
           <div className="px-6 pt-5 pb-3 border-b border-black/10 dark:border-white/10">
