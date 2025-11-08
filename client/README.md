@@ -1,50 +1,76 @@
-# React + TypeScript + Vite
+# DreamCatcher.AI – Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+אפליקציית ה-Frontend של DreamCatcher.AI נבנתה עם **React 18 + Vite** ומציעה חוויית RTL מלאה, ספריית מאמרים מתקדמת, טפסי אימות עשירים וטפסי צור קשר. המסמוך הנוכחי מספק תיאור קצר של התצורה, תהליכי פיתוח וסטנדרטים עיצוביים.
 
-Currently, two official plugins are available:
+## תכונות עיקריות
+- 🧭 Layout מותאם RTL עם ניווט Desktop/Mobile, Theme toggle ופוטר מותאם.
+- 📚 מודול מאמרים עם כרטיסי Spotlight, Pagination, תגיות אחידות ותמונות מאונדקסות.
+- 🔐 זרימת Auth מודרנית: Signup/Login ב-Hebrew UX, אימות שדות, טופס “שכחתי סיסמה”.
+- 📨 דף צור קשר עם אימותים, הודעות מצב והכנה לשליחה לשרת.
+- 🌗 Theme Management + תמיכה מלאה ב-Responsive breakpoints.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## טכנולוגיות
+| קטגוריה | כלים |
+| --- | --- |
+| Framework | React 18, TypeScript |
+| Build | Vite |
+| Styling | TailwindCSS, Framer Motion, Radix UI Icons |
+| State/Data | Zustand, TanStack Query, i18next |
+| Utilities | clsx, zod, dayjs |
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## התחלה מהירה
+```bash
+cd client
+npm install
+npm run dev   # http://localhost:5173
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### סקריפטים שימושיים
+| פקודה | הסבר |
+| --- | --- |
+| `npm run dev` | Vite dev server עם HMR. |
+| `npm run build` | בניית Production לטובת דפלוימנט. |
+| `npm run preview` | הרצת build מקומי לבדיקה לפני העלאה. |
+| `npm run lint` | בדיקת ESLint + TypeScript. |
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+## קובצי סביבה
+צור קובץ `client/.env` (או `.env.local`) עם הערכים:
 ```
+VITE_API_BASE_URL=http://localhost:3000
+VITE_APP_NAME=DreamCatcher.AI
+```
+ניתן להוסיף ערכים נוספים (כגון `VITE_SENTRY_DSN`) לפי הצורך. הקפד לא להתחייב סודות למאגר.
+
+## מבנה ספרייה מרכזי
+```
+src/
+  components/
+    articles/        # ArticleCard, Spotlight, ArticleView, coverImages etc.
+    auth/            # SignupForm, LoginForm, related hooks
+    dreams/          # Category pills, stats widgets
+  pages/             # HomePage, ArticlesPage, Login/Register וכו'
+  layout/            # layout.tsx (Header, Footer, Drawer)
+  lib/
+    api/             # קריאות REST + category metadata
+    hooks/           # TanStack Query hooks
+  i18n/              # הגדרות תרגום (he-IL כברירת מחדל)
+  assets/            # לוגואים ותמונות סטטיות
+```
+
+## קווים מנחים לעיצוב
+1. **Minimalistic Premium** – ללא אפקטים מוגזמים, שימוש ב-gradients רכים וצל קל.
+2. **Hover חלק** – אין שינויי border-radius על hover (נבחר transition אחיד בין scale/opacity).
+3. **Spacing קבוע** – שימוש ב-gap ו-padding אחידים לטובת קונסיסטנטיות רספונסיבית.
+4. **טיפוגרפיה** – כותרות במשקל 600–700, טקסט גוף ב-`text-slate-600` או `dark:text-white/70`.
+
+## בדיקות והקשחה
+- הפעל `npm run lint` לפני כל PR.
+- מומלץ להריץ `npm run build && npm run preview` כדי לוודא שאין בעיות RTL ב-SSR.
+- בדיקות UI בצד שלישי (Playwright/Cypress) בתהליך תכנון – מכינים Storybook ייעודי.
+
+## טיפים לפיתוח
+- עבדו ב-`dir="rtl"` היכן שצריך, אך השאירו מרכיבים גלובליים דו-כיווניים (למשל הכפתורים בטפסים).
+- שמרו על פריסה אחידה של תגיות במאמרים באמצעות utility ב-`coverImages.ts`.
+- אם מוסיפים תכונת ניווט חדשה – עדכנו גם את ה-drawer במובייל כדי לשמור סנכרון.
+
+בהצלחה! 💫
