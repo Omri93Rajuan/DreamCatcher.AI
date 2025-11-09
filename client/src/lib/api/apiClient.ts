@@ -16,7 +16,7 @@ export const api = axios.create({
 });
 let isRefreshing = false;
 let waiting: Array<() => void> = [];
-const isAuthPath = (url = "") => /\/auth\/(login|register|refresh-token|verify-token|verify)\b/.test(url);
+const isAuthPath = (url = "") => /\/auth\/(login|register|refresh-token|verify)\b/.test(url);
 api.interceptors.response.use((res) => res, async (error: AxiosError) => {
     type RetriableConfig = InternalAxiosRequestConfig & {
         skipRefresh?: boolean;

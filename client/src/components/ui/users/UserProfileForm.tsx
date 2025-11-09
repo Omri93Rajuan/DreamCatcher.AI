@@ -40,6 +40,14 @@ export default function UserProfileForm({ user }: {
     });
     const [preview, setPreview] = React.useState<string | undefined>(user.image || undefined);
     React.useEffect(() => {
+        reset({
+            firstName: user.firstName ?? "",
+            lastName: user.lastName ?? "",
+            image: user.image ?? "",
+        });
+        setPreview(user.image || undefined);
+    }, [user, reset]);
+    React.useEffect(() => {
         const sub = watch((vals) => setPreview(vals.image || undefined));
         return () => sub.unsubscribe();
     }, [watch]);
