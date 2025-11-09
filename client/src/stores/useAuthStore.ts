@@ -32,7 +32,8 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     refreshMe: async (id?: string) => {
         try {
             const curr = get().user;
-            const userId = id ?? curr?._id;
+            const fallbackId = (curr as any)?.id;
+            const userId = id ?? curr?._id ?? fallbackId;
             if (!userId)
                 return;
             const res = await AuthApi.getMe(userId);

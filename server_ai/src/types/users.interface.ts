@@ -25,6 +25,7 @@ export interface IUser {
     termsIp?: string | null;
     termsUserAgent?: string | null;
     termsLocale?: string | null;
+    googleId?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -41,6 +42,7 @@ export interface CreateUserDTO {
     termsIp?: string | null;
     termsUserAgent?: string | null;
     termsLocale?: string | null;
+    googleId?: string | null;
 }
 export type UpdateUserDTO = Partial<Omit<IUser, "password" | "role" | "subscription" | "termsAccepted" | "termsAcceptedAt" | "termsVersion" | "termsIp" | "termsUserAgent" | "termsLocale">>;
 export interface AcceptTermsDTO {
@@ -72,6 +74,7 @@ export interface IUserDoc extends Document {
     resetPasswordExpiresAt?: Date | null;
     lastPasswordResetRequestAt: Date;
     passwordChangedAt: Date;
+    googleId?: string | null;
     createdAt?: Date;
     updatedAt?: Date;
 }

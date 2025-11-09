@@ -6,6 +6,8 @@ router.post("/login", authController.loginUser);
 router.post("/logout", authController.logoutUser);
 router.post("/refresh", authController.refreshToken);
 router.get("/verify", authController.verifyToken);
+router.get("/google/url", authController.getGoogleAuthUrl);
+router.get("/google/callback", authController.handleGoogleCallback);
 router.get("/user/:id", authController.getUserById);
 router.post("/password/request-reset", authController.requestPasswordReset);
 router.get("/password/consume", authController.consumeResetToken);

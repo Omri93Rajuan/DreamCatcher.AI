@@ -15,6 +15,14 @@ export type RegisterDto = {
     termsUserAgent?: string;
     termsLocale?: string;
 };
+export type GoogleUrlParams = {
+    mode: "login" | "signup";
+    next?: string;
+    redirectTo?: string;
+    termsAccepted?: boolean;
+    termsVersion?: string | null;
+    termsLocale?: string | null;
+};
 export const AuthApi = {
     login: (data: LoginDto) => api
         .post("/auth/login", data, { withCredentials: true })
@@ -24,13 +32,13 @@ export const AuthApi = {
         .post("/auth/refresh-token", null, { withCredentials: true })
         .then((r) => r.data),
     verify: () => api
-        .get("/auth/verify-token", { withCredentials: true })
+        .get("/auth/verify", { withCredentials: true })
         .then((r) => r.data as {
         valid: boolean;
         user?: User;
     }),
     getMe: (id: string) => api
-        .get(`/auth/me/${id}`, { withCredentials: true })
+        .get(`/auth/user/${id}`, { withCredentials: true })
         .then((r) => r.data as {
         user?: User;
     })
@@ -42,5 +50,10 @@ export const AuthApi = {
     resetPasswordWithCookie: (newPassword: string) => api
         .post("/auth/password/reset-with-cookie", { newPassword })
         .then((r) => r.data),
+    googleUrl: (params: GoogleUrlParams) => api
+        .get("/auth/google/url", { params, withCredentials: true })
+        .then((r) => r.data as {
+        url: string;
+    }),
     deleteAccount: (userId: string) => api.delete(`/users/${userId}`),
 };

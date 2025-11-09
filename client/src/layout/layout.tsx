@@ -14,6 +14,7 @@ export default function Layout({ children }: {
     const setUser = useAuthStore((s) => s.setUser);
     const clearUser = useAuthStore((s) => s.logout);
     const [scrolled, setScrolled] = useState(false);
+    const [checkedAuth, setCheckedAuth] = useState(false);
     useEffect(() => {
         const onScroll = () => setScrolled(window.scrollY > 8);
         onScroll();
@@ -27,6 +28,36 @@ export default function Layout({ children }: {
             document.body.style.overflow = "";
         };
     }, [mobileOpen]);
+    useEffect(() => {
+        if (checkedAuth)
+            return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await AuthApi.verify();
+                if (!cancelled && res?.user) {
+                    const id = (res.user as any)._id || (res.user as any).id;
+                    if (id) {
+                        const full = await AuthApi.getMe(id);
+                        if (!cancelled && full?.user) {
+                            setUser(full.user);
+                            return;
+                        }
+                    }
+                    setUser(res.user as any);
+                }
+            }
+            catch {
+            }
+            finally {
+                if (!cancelled)
+                    setCheckedAuth(true);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [checkedAuth, setUser]);
     useEffect(() => {
         (async () => {
             try {

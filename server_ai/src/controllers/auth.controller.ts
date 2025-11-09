@@ -6,15 +6,49 @@ import { sendMail } from "../helpers/mailer";
 import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
 import { canRequestPasswordReset, createResetToken, stampPasswordReset, verifyAndConsumeResetToken, } from "../services/password.service";
+import { buildGoogleAuthUrl, createGoogleStateToken, decodeGoogleStateToken, defaultGoogleRedirect, exchangeCodeForTokens, fetchGoogleProfile, sanitizeNextPath, sanitizeRedirectUrl, upsertGoogleUser, } from "../services/googleAuth.service";
+import type { GoogleStatePayload } from "../services/googleAuth.service";
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || "supersecret";
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ||
     process.env.REFRESH_SECRET ||
     "refreshsecret";
-const appUrl = (process.env.APP_URL || "").toLowerCase();
+const resolvedAppUrl = (process.env.APP_URL || "").toLowerCase();
+const apiBaseUrl = (process.env.API_URL || `http://localhost:${process.env.PORT || 1000}`).replace(/\/+$/, "");
+const appUrl = resolvedAppUrl;
 const isHttps = appUrl.startsWith("https://");
 const isProd = process.env.NODE_ENV === "production" && isHttps;
 const RESET_COOKIE = "pw_reset";
 const RESET_SESSION_SECRET = process.env.JWT_SECRET || "supersecret";
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
+const SERVER_GOOGLE_REDIRECT = `${apiBaseUrl}/api/auth/google/callback`;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || SERVER_GOOGLE_REDIRECT;
+const DEFAULT_TERMS_VERSION = process.env.TERMS_VERSION || "2025-10-28";
+const GOOGLE_ERROR_MESSAGE = "Google OAuth is temporarily unavailable, please try again later.";
+
+function ensureGoogleConfig() {
+    if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+        const err: any = new Error("Google OAuth is not configured correctly");
+        err.status = 500;
+        throw err;
+    }
+}
+
+const getClientIp = (req: Request) => {
+    const forwarded = (req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim();
+    return forwarded || req.ip || null;
+};
+
+const buildGoogleRedirect = (base: string | undefined, status: "success" | "error", next?: string | null, message?: string) => {
+    const target = sanitizeRedirectUrl(base);
+    const url = new URL(target);
+    url.searchParams.set("status", status);
+    url.searchParams.set("next", sanitizeNextPath(next));
+    if (message) {
+        url.searchParams.set("message", message.slice(0, 200));
+    }
+    return url.toString();
+};
 function setAccessCookie(res: Response, token: string) {
     res.cookie("auth_token", token, {
         httpOnly: true,
@@ -38,6 +72,100 @@ function clearAuthCookies(res: Response) {
     res.clearCookie("refresh_token", { path: "/" });
     res.clearCookie(RESET_COOKIE, { path: "/" });
 }
+
+type TokenUser = {
+    _id: string;
+    role: string;
+    email?: string;
+};
+
+function issueAuthTokens(res: Response, user: TokenUser) {
+    const payload = {
+        _id: user._id,
+        role: user.role,
+        email: user.email,
+    };
+    const accessToken = jwt.sign(payload, ACCESS_SECRET, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ _id: user._id, role: user.role }, REFRESH_SECRET, { expiresIn: "7d" });
+    setAccessCookie(res, accessToken);
+    setRefreshCookie(res, refreshToken);
+    return { accessToken, refreshToken };
+}
+
+export const getGoogleAuthUrl = (req: Request, res: Response) => {
+    try {
+        ensureGoogleConfig();
+        const requestedMode = String(req.query.mode || "login").toLowerCase();
+        const mode = requestedMode === "signup" ? "signup" : "login";
+        const redirectTo = (req.query.redirectTo as string) || defaultGoogleRedirect;
+        const next = (req.query.next as string) || "/";
+        const termsAccepted = req.query.termsAccepted === "true" || req.query.termsAccepted === "1";
+        const termsVersion = (req.query.termsVersion as string) || DEFAULT_TERMS_VERSION;
+        if (mode === "signup" && (!termsAccepted || !termsVersion)) {
+            return handleError(res, 400, "Terms must be accepted before Google signup");
+        }
+        const state = createGoogleStateToken({
+            redirectTo,
+            next,
+            mode,
+            termsAccepted: mode === "signup" ? termsAccepted : false,
+            termsVersion: mode === "signup" ? termsVersion : null,
+            termsLocale: (req.query.termsLocale as string) ||
+                (req.headers["accept-language"] as string)?.split(",")[0] ||
+                null,
+            termsUserAgent: req.headers["user-agent"] || null,
+        });
+        const url = buildGoogleAuthUrl(GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URI, state);
+        res.json({ url });
+    }
+    catch (error: any) {
+        console.error("[GoogleOAuth] url error:", error);
+        handleError(res, error.status || 500, error.message || GOOGLE_ERROR_MESSAGE);
+    }
+};
+
+export const handleGoogleCallback = async (req: Request, res: Response) => {
+    let decoded: GoogleStatePayload | null = null;
+    try {
+        ensureGoogleConfig();
+        const code = req.query.code as string | undefined;
+        const stateToken = req.query.state as string | undefined;
+        if (!code)
+            throw new Error("Missing authorization code");
+        if (!stateToken)
+            throw new Error("Missing state parameter");
+        decoded = decodeGoogleStateToken(stateToken);
+        if (decoded.mode === "signup" && !decoded.termsAccepted) {
+            throw new Error("Terms must be accepted to continue with Google signup");
+        }
+        const tokens = await exchangeCodeForTokens(code, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
+        const profile = await fetchGoogleProfile(tokens.access_token);
+        const user = await upsertGoogleUser(profile, {
+            requireTerms: decoded.mode === "signup",
+            allowCreate: decoded.mode === "signup",
+            termsVersion: decoded.termsVersion || DEFAULT_TERMS_VERSION,
+            termsLocale: decoded.termsLocale ||
+                profile.locale ||
+                (req.headers["accept-language"] as string)?.split(",")[0] ||
+                null,
+            termsUserAgent: decoded.termsUserAgent || req.headers["user-agent"] || null,
+            ip: getClientIp(req),
+        });
+        issueAuthTokens(res, {
+            _id: user._id.toString(),
+            role: user.role,
+            email: user.email,
+        });
+        const target = buildGoogleRedirect(decoded.redirectTo, "success", decoded.next);
+        return res.redirect(302, target);
+    }
+    catch (error: any) {
+        console.error("[GoogleOAuth] callback error:", error);
+        const message = error?.message || GOOGLE_ERROR_MESSAGE;
+        const target = buildGoogleRedirect(decoded?.redirectTo, "error", decoded?.next, message);
+        return res.redirect(302, target);
+    }
+};
 export const registerUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const termsAgreed = !!req.body?.termsAgreed;
@@ -54,10 +182,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
             termsUserAgent: req.headers["user-agent"] || null,
             termsLocale: (req.headers["accept-language"] as string) || null,
         });
-        const accessToken = jwt.sign({ _id: user._id, role: user.role, email: user.email }, ACCESS_SECRET, { expiresIn: "15m" });
-        const refreshToken = jwt.sign({ _id: user._id, role: user.role }, REFRESH_SECRET, { expiresIn: "7d" });
-        setAccessCookie(res, accessToken);
-        setRefreshCookie(res, refreshToken);
+        issueAuthTokens(res, {
+            _id: user._id,
+            role: user.role,
+            email: user.email,
+        });
         res.status(201).json({ user });
     }
     catch (error: any) {
@@ -67,10 +196,11 @@ export const registerUser = async (req: Request, res: Response): Promise<void> =
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
     try {
         const user = await loginSvc(req.body);
-        const accessToken = jwt.sign({ _id: user._id, role: user.role, email: user.email }, ACCESS_SECRET, { expiresIn: "15m" });
-        const refreshToken = jwt.sign({ _id: user._id, role: user.role }, REFRESH_SECRET, { expiresIn: "7d" });
-        setAccessCookie(res, accessToken);
-        setRefreshCookie(res, refreshToken);
+        issueAuthTokens(res, {
+            _id: user._id,
+            role: user.role,
+            email: user.email,
+        });
         res.status(200).json({ user });
     }
     catch (error: any) {

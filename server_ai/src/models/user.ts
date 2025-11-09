@@ -32,6 +32,7 @@ const userSchema = new Schema<IUserDoc>({
     termsIp: { type: String, default: null },
     termsUserAgent: { type: String, default: null },
     termsLocale: { type: String, default: null },
+    googleId: { type: String, unique: true, sparse: true, index: true, default: null },
     resetPasswordTokenHash: { type: String, default: null, select: false },
     resetPasswordExpiresAt: { type: Date, default: null },
     lastPasswordResetRequestAt: Date,

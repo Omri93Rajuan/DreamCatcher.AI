@@ -12,6 +12,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ArticlesPage from "@/pages/ArticlesPage";
 import ContactPage from "@/pages/ContactPage";
+import GoogleCallbackPage from "@/pages/GoogleCallbackPage";
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -29,6 +30,12 @@ export const router = createBrowserRouter([
         path: "/register",
         element: (<Layout>
         <RegisterPage />
+      </Layout>),
+    },
+    {
+        path: "/auth/google/callback",
+        element: (<Layout>
+        <GoogleCallbackPage />
       </Layout>),
     },
     {
