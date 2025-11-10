@@ -3,7 +3,7 @@
     "target": "ES2020",
     "module": "commonjs",
     "moduleResolution": "node",
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -11,7 +11,7 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["index.ts", "router.ts", "src/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
