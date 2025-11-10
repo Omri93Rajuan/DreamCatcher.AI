@@ -32,7 +32,7 @@ const userSchema = new Schema<IUserDoc>({
     termsIp: { type: String, default: null },
     termsUserAgent: { type: String, default: null },
     termsLocale: { type: String, default: null },
-    googleId: { type: String, unique: true, sparse: true, index: true, default: null },
+    googleId: { type: String, default: null },
     resetPasswordTokenHash: { type: String, default: null, select: false },
     resetPasswordExpiresAt: { type: Date, default: null },
     lastPasswordResetRequestAt: Date,
@@ -49,5 +49,13 @@ const userSchema = new Schema<IUserDoc>({
 });
 userSchema.virtual("name").get(function (this: HydratedDocument<IUser>) {
     return `${this.firstName} ${this.lastName}`.trim();
+});
+userSchema.index({
+    googleId: 1,
+}, {
+    unique: true,
+    partialFilterExpression: {
+        googleId: { $type: "string" },
+    },
 });
 export default (models.User as any) || model<IUserDoc>("User", userSchema);
