@@ -101,9 +101,10 @@ function setRefreshCookie(res: Response, token: string) {
   });
 }
 function clearAuthCookies(res: Response) {
-  res.clearCookie("auth_token", { path: "/" });
-  res.clearCookie("refresh_token", { path: "/" });
-  res.clearCookie(RESET_COOKIE, { path: "/" });
+  const opts = buildCookieOptions();
+  res.clearCookie("auth_token", opts);
+  res.clearCookie("refresh_token", opts);
+  res.clearCookie(RESET_COOKIE, opts);
 }
 
 type TokenUser = {
