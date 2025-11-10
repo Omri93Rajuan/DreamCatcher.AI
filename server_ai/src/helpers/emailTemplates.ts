@@ -1,140 +1,280 @@
-export function generatePasswordResetEmail(link: string, expires: Date): string {
-    return `
-<!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>איפוס סיסמה - פתרון חלומות</title>
-</head>
-<body style="margin: 0; padding: 0; background: #f5f5f7; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-  
-  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0; padding: 40px 20px;">
-    <tr>
-      <td align="center">
+const APP_NAME = process.env.APP_NAME || "DreamCatcher.AI";
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || "dream770catcher@gmail.com";
+
+export type ResetEmailResult = {
+  subject: string;
+  html: string;
+};
+
+export function buildPasswordResetEmail(
+  link: string,
+  expires: Date
+): ResetEmailResult {
+  const subject = `איפוס סיסמה ב-${APP_NAME}`;
+  const formattedExpires = expires.toLocaleString("he-IL", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  const html = `<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <title>${subject}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Assistant', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      
+      .wrapper {
+        width: 100%;
+        padding: 60px 20px;
+        min-height: 100vh;
+      }
+      
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+      }
+      
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 50px 40px;
+        text-align: center;
+        position: relative;
+      }
+      
+      .logo {
+        display: inline-block;
+        width: 70px;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+      
+      .header h1 {
+        color: #ffffff;
+        font-size: 32px;
+        font-weight: 800;
+        margin: 0 0 12px 0;
+        letter-spacing: -0.5px;
+      }
+      
+      .header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 16px;
+        margin: 0;
+        font-weight: 500;
+      }
+      
+      .content {
+        padding: 50px 40px;
+      }
+      
+      .alert-box {
+        background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%);
+        border-right: 4px solid #667eea;
+        padding: 20px 24px;
+        border-radius: 12px;
+        margin-bottom: 32px;
+      }
+      
+      .alert-box p {
+        color: #1e293b;
+        font-size: 16px;
+        line-height: 1.7;
+        margin: 0;
+        text-align: right;
+      }
+      
+      .button-container {
+        text-align: center;
+        margin: 36px 0;
+      }
+      
+      .button {
+        display: inline-block;
+        padding: 18px 60px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        text-decoration: none;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 17px;
+        letter-spacing: 0.3px;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+      }
+      
+      .info-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin: 28px 0;
+      }
+      
+      .info-item {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        margin-bottom: 12px;
+        color: #64748b;
+        font-size: 14px;
+      }
+      
+      .info-item:last-child {
+        margin-bottom: 0;
+      }
+      
+      .info-item .icon {
+        margin-left: 10px;
+        font-size: 18px;
+      }
+      
+      .warning {
+        background: #fef3c7;
+        border-right: 3px solid #f59e0b;
+        padding: 16px 20px;
+        border-radius: 10px;
+        margin: 24px 0;
+      }
+      
+      .warning p {
+        color: #92400e;
+        font-size: 14px;
+        line-height: 1.6;
+        margin: 0;
+        text-align: right;
+        font-weight: 500;
+      }
+      
+      .divider {
+        height: 1px;
+        background: linear-gradient(to left, transparent, #e2e8f0, transparent);
+        margin: 32px 0;
+      }
+      
+      .support {
+        text-align: center;
+        margin-top: 28px;
+      }
+      
+      .support p {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+      
+      .support a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 15px;
+      }
+      
+      .footer {
+        background: #f8fafc;
+        padding: 30px 40px;
+        text-align: center;
+        border-top: 1px solid #e2e8f0;
+      }
+      
+      .footer p {
+        color: #94a3b8;
+        font-size: 13px;
+        line-height: 1.8;
+        margin: 0;
+      }
+      
+      .footer-logo {
+        color: #667eea;
+        font-weight: 700;
+        font-size: 14px;
+        margin-top: 12px;
+      }
+      
+      @media only screen and (max-width: 600px) {
+        .wrapper { padding: 30px 15px; }
+        .header { padding: 40px 25px; }
+        .content { padding: 35px 25px; }
+        .header h1 { font-size: 26px; }
+        .button { padding: 16px 40px; font-size: 16px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="container">
+        <div class="header">
+          <div class="logo">🌙</div>
+          <h1>${APP_NAME}</h1>
+          <p>אבטחת החשבון שלך היא בראש סדר העדיפויות שלנו</p>
+        </div>
         
-        <!-- Main Container -->
-        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.08);">
+        <div class="content">
+          <div class="alert-box">
+            <p>
+              <strong>שלום!</strong><br/>
+              קיבלנו בקשה לאיפוס סיסמת החשבון שלך. כדי להמשיך ולהגדיר סיסמה חדשה, לחץ על הכפתור למטה.
+            </p>
+          </div>
           
-          <!-- Gradient Header Bar -->
-          <tr>
-            <td style="padding: 0; height: 4px; background: linear-gradient(90deg, #a855f7 0%, #f97316 100%);"></td>
-          </tr>
+          <div class="button-container">
+            <a class="button" href="${link}" target="_blank" rel="noreferrer">
+              🔐 אפס את הסיסמה שלי
+            </a>
+          </div>
           
-          <!-- Logo & Title -->
-          <tr>
-            <td style="padding: 48px 40px 32px; text-align: center;">
-              <div style="width: 72px; height: 72px; margin: 0 auto 24px; background: linear-gradient(135deg, #a855f7 0%, #f97316 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: block;">
-                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" fill="white"/>
-                </svg>
-              </div>
-              <h1 style="margin: 0 0 12px; color: #1f2937; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">
-                איפוס סיסמה
-              </h1>
-              <p style="margin: 0; color: #6b7280; font-size: 16px; line-height: 1.5;">
-                קיבלנו בקשה לאיפוס הסיסמה שלך
-              </p>
-            </td>
-          </tr>
+          <div class="info-box">
+            <div class="info-item">
+              <span> תקף עד ${formattedExpires}</span>
+              <span class="icon">⏰</span>
+            </div>
+          </div>
           
-          <!-- Content -->
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              
-              <p style="margin: 0 0 24px; color: #374151; font-size: 15px; line-height: 1.7;">
-                שלום! 👋
-              </p>
-              
-              <p style="margin: 0 0 32px; color: #4b5563; font-size: 15px; line-height: 1.7;">
-                כדי להגדיר סיסמה חדשה, לחץ על הכפתור למטה. הקישור תקף למשך 10 דקות בלבד.
-              </p>
-              
-              <!-- CTA Button -->
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                <tr>
-                  <td align="center" style="padding: 0 0 32px;">
-                    <a href="https://example.com/reset-password?token=demo123" style="display: inline-block; background: linear-gradient(90deg, #a855f7 0%, #f97316 100%); color: white; text-decoration: none; padding: 16px 48px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 16px rgba(168, 85, 247, 0.3); transition: transform 0.2s;">
-                      איפוס סיסמה ←
-                    </a>
-                  </td>
-                </tr>
-              </table>
-              
-              <!-- Time Info Box -->
-              <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                  <tr>
-                    <td style="padding: 0;">
-                      <p style="margin: 0 0 8px; color: #7c3aed; font-size: 14px; font-weight: 600;">
-                        ⏰ תוקף הקישור
-                      </p>
-                      <p style="margin: 0; color: #6b21a8; font-size: 14px; line-height: 1.5;">
-                        הקישור תקף עד: <strong>7 בנובמבר 2025 בשעה 14:30</strong>
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </div>
-              
-              <!-- Alternative Link -->
-              <div style="background: #fefce8; border: 1px solid #fde047; border-radius: 12px; padding: 20px; margin-bottom: 32px;">
-                <p style="margin: 0 0 12px; color: #854d0e; font-size: 13px; font-weight: 600;">
-                  הכפתור לא עובד?
-                </p>
-                <p style="margin: 0 0 12px; color: #a16207; font-size: 13px; line-height: 1.5;">
-                  העתק והדבק את הקישור הבא בדפדפן:
-                </p>
-                <div style="background: white; padding: 12px; border-radius: 8px; word-break: break-all; border: 1px solid #fef3c7;">
-                  <a href="https://example.com/reset-password?token=demo123" style="color: #a855f7; font-size: 12px; text-decoration: none; font-family: monospace;">
-                    https://example.com/reset-password?token=demo123
-                  </a>
-                </div>
-              </div>
-              
-              <!-- Security Notice -->
-              <div style="border-top: 1px solid #e5e7eb; padding-top: 24px; margin-bottom: 8px;">
-                <p style="margin: 0 0 16px; color: #6b7280; font-size: 14px; line-height: 1.7;">
-                  <strong style="color: #374151;">🛡️ הערת אבטחה</strong><br>
-                  אם לא ביקשת לאפס את הסיסמה, אין צורך לעשות דבר. הסיסמה שלך תישאר ללא שינוי.
-                </p>
-                <p style="margin: 0; color: #9ca3af; font-size: 13px; line-height: 1.6;">
-                  לעולם אל תשתף את הקישור הזה עם אף אחד. הצוות שלנו לעולם לא יבקש ממך את הסיסמה.
-                </p>
-              </div>
-              
-            </td>
-          </tr>
+          <div class="warning">
+            <p>
+              ⚠️ <strong>לא ביקשת איפוס סיסמה?</strong><br/>
+              אם לא ביצעת בקשה זו, התעלם מהמייל הזה. הסיסמה שלך תישאר מאובטחת ולא תשתנה.
+            </p>
+          </div>
           
-          <!-- Footer -->
-          <tr>
-            <td style="background: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #e5e7eb;">
-              <!-- Logo -->
-              <div style="margin-bottom: 16px;">
-                <img src="https://your-domain.com/logo.png" alt="פתרון חלומות" style="height: 48px; width: auto; display: inline-block;" />
-              </div>
-              <p style="margin: 0 0 8px; color: #374151; font-size: 14px; font-weight: 600;">
-                פתרון חלומות
-              </p>
-              <p style="margin: 0 0 20px; color: #6b7280; font-size: 13px; line-height: 1.6;">
-                גלה את המשמעות האמיתית של החלומות שלך
-              </p>
-              <p style="margin: 0; color: #9ca3af; font-size: 12px;">
-                © 2025 כל הזכויות שמורות
-              </p>
-            </td>
-          </tr>
+          <div class="divider"></div>
           
-        </table>
+          <div class="support">
+            <p>נתקלת בבעיה או צריך עזרה?</p>
+            <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a>
+          </div>
+        </div>
         
-        <!-- Spacing -->
-        <div style="height: 40px;"></div>
-        
-      </td>
-    </tr>
-  </table>
-  
-</body>
-</html>
-  `.trim();
+        <div class="footer">
+          <p>מייל זה נשלח אוטומטית מהמערכת שלנו</p>
+          <p>אנא אל תשיב ישירות למייל זה</p>
+          <div class="footer-logo">✨ ${APP_NAME} - שומרים על החלומות שלך ✨</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>`;
+
+  return { subject, html };
 }

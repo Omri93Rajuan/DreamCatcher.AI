@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { getMe, login as loginSvc, logout as logoutSvc, register as registerSvc, } from "../services/auth.service";
 import { handleError } from "../utils/ErrorHandle";
 import { sendMail } from "../helpers/mailer";
+import { buildPasswordResetEmail } from "../helpers/emailTemplates";
 import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
 import { canRequestPasswordReset, createResetToken, stampPasswordReset, verifyAndConsumeResetToken, } from "../services/password.service";
@@ -284,17 +285,10 @@ export async function requestPasswordReset(req: Request, res: Response) {
         const { token, expires } = await createResetToken(user._id.toString());
         await stampPasswordReset(user._id.toString());
         const apiBase = process.env.API_URL?.replace(/\/+$/, "") ||
-            `http://localhost:${process.env.PORT || 1000}`;
+            (`http://localhost:${process.env.PORT || 1000}`);
         const link = `${apiBase}/api/auth/password/consume?token=${encodeURIComponent(token)}`;
-        const html = `
-      <div dir="rtl" style="font-family:Arial,sans-serif">
-        <h2>איפוס סיסמה</h2>
-        <p>להגדרת סיסמה חדשה לחץ/י על הקישור:</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>תוקף הקישור עד: ${expires.toLocaleString("he-IL")}</p>
-      </div>
-    `;
-        await sendMail(user.email, "איפוס סיסמה", html);
+        const template = buildPasswordResetEmail(link, expires);
+        await sendMail(user.email, template.subject, template.html);
         return res.json({ ok: true });
     }
     catch (e) {
