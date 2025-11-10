@@ -50,21 +50,21 @@ const buildGoogleRedirect = (base: string | undefined, status: "success" | "erro
     }
     return url.toString();
 };
-const buildCookieOptions = () => ({
-    httpOnly: true,
-    sameSite: isProd ? "none" as const : "lax" as const,
-    secure: isProd,
-    path: "/",
-});
 function setAccessCookie(res: Response, token: string) {
     res.cookie("auth_token", token, {
-        ...buildCookieOptions(),
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+        path: "/",
         maxAge: 15 * 60 * 1000,
     });
 }
 function setRefreshCookie(res: Response, token: string) {
     res.cookie("refresh_token", token, {
-        ...buildCookieOptions(),
+        httpOnly: true,
+        sameSite: "lax",
+        secure: isProd,
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 }
