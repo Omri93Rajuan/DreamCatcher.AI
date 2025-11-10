@@ -20,7 +20,7 @@ const ensureGoogleIdIndex = async (): Promise<void> => {
         name: GOOGLE_ID_INDEX_NAME,
         unique: true,
         partialFilterExpression: {
-            googleId: { $exists: true, $ne: null, $type: "string" },
+            googleId: { $type: "string" },
         },
     });
 };
