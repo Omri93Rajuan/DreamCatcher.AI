@@ -39,11 +39,16 @@ export const getById = async (req: AuthRequest, res: Response): Promise<void> =>
             handleError(res, 401, "Unauthorized");
             return;
         }
-        if (!isAdmin(req) && getUserId(req) !== req.params.id) {
+        const targetId = req.params.id;
+        if (!targetId) {
+            handleError(res, 400, "Missing user id");
+            return;
+        }
+        if (!isAdmin(req) && getUserId(req) !== targetId) {
             handleError(res, 403, "You can only view your own account");
             return;
         }
-        const user = await userService.getUserById(req.params.id);
+        const user = await userService.getUserById(targetId);
         if (!user) {
             handleError(res, 404, "User not found");
             return;
@@ -60,7 +65,7 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
             handleError(res, 403, "Only admins can create users");
             return;
         }
-        const user = await userService.addUser(req.body as CreateUserDTO);
+        const user = await userService.addUser(req.body as unknown as CreateUserDTO);
         res.status(201).json(user);
     }
     catch (e: any) {
@@ -73,11 +78,16 @@ export const update = async (req: AuthRequest, res: Response): Promise<void> => 
             handleError(res, 401, "Unauthorized");
             return;
         }
-        if (!isAdmin(req) && getUserId(req) !== req.params.id) {
+        const targetId = req.params.id;
+        if (!targetId) {
+            handleError(res, 400, "Missing user id");
+            return;
+        }
+        if (!isAdmin(req) && getUserId(req) !== targetId) {
             handleError(res, 403, "You can only update your own account");
             return;
         }
-        const updated = await userService.updateUser(req.params.id, req.body as UpdateUserDTO);
+        const updated = await userService.updateUser(targetId, req.body as unknown as UpdateUserDTO);
         res.json(updated);
     }
     catch (e: any) {
@@ -90,11 +100,16 @@ export const remove = async (req: AuthRequest, res: Response): Promise<void> => 
             handleError(res, 401, "Unauthorized");
             return;
         }
-        if (!isAdmin(req) && getUserId(req) !== req.params.id) {
+        const targetId = req.params.id;
+        if (!targetId) {
+            handleError(res, 400, "Missing user id");
+            return;
+        }
+        if (!isAdmin(req) && getUserId(req) !== targetId) {
             handleError(res, 403, "You can only delete your own account");
             return;
         }
-        const result = await userService.deleteUser(req.params.id);
+        const result = await userService.deleteUser(targetId);
         res.json(result);
     }
     catch (e: any) {

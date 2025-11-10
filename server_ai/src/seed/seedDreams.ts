@@ -1,7 +1,11 @@
 import { faker } from "@faker-js/faker";
+import type { Types } from "mongoose";
 import { Dream } from "../models/dream";
 import User from "../models/user";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
+type DocumentWithId = Record<string, unknown> & {
+    _id: Types.ObjectId | string;
+};
 type DreamCategory = (typeof DREAM_CATEGORIES)[number];
 const ALLOWED = new Set<string>(DREAM_CATEGORIES);
 const clamp01 = (n: number) => Math.max(0, Math.min(1, Number(n) || 0));
@@ -56,7 +60,7 @@ async function seedDreams(count: number = 10, force: boolean = false) {
         console.log("Dreams already exist, skipping...");
         return existing;
     }
-    const users = await User.find();
+    const users = (await User.find()) as DocumentWithId[];
     if (users.length === 0) {
         console.warn("⚠️ No users found! Please seed users first.");
         return [];
