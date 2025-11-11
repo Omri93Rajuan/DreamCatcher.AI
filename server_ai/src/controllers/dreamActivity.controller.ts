@@ -14,7 +14,11 @@ const handleErr = (res: any, code: number, msg: string) => {
 };
 export const postActivity: RequestHandler = async (req: AuthRequest, res) => {
     try {
-        const { id } = req.params;
+        const dreamId = req.params.id;
+        if (!dreamId) {
+            res.status(400).json({ error: "missing_dreamId" });
+            return;
+        }
         const { type } = req.body as {
             type?: "view" | "like" | "dislike";
         };
@@ -24,7 +28,7 @@ export const postActivity: RequestHandler = async (req: AuthRequest, res) => {
         }
         const { userId } = getAuth(req);
         const result = await recordActivity({
-            dreamId: id,
+            dreamId,
             userId,
             ip: req.ip,
             type,
@@ -49,9 +53,13 @@ export const postActivity: RequestHandler = async (req: AuthRequest, res) => {
 };
 export const getDreamReactions: RequestHandler = async (req: AuthRequest, res) => {
     try {
-        const { id } = req.params;
+        const dreamId = req.params.id;
+        if (!dreamId) {
+            handleErr(res, 400, "missing_dreamId");
+            return;
+        }
         const { userId } = getAuth(req);
-        const data = await getReactions(id, userId);
+        const data = await getReactions(dreamId, userId);
         res.json(data);
     }
     catch (e: any) {

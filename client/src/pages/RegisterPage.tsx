@@ -1,4 +1,6 @@
+"use client";
 import SignupForm from "@/components/auth/SignupForm";
+import { Link, useNavigate } from "react-router-dom";
 
 const benefits = [
   "פרשנות חכמה לחלומות בעזרת בינה מלאכותית שמדברת עברית.",
@@ -7,6 +9,7 @@ const benefits = [
 ];
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f6f2ff] via-[#fff6ec] to-[#fef5f5] px-4 py-16 dark:from-[#0b0b1a] dark:via-[#141426] dark:to-[#221933]">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-stretch lg:gap-16">
@@ -43,12 +46,12 @@ export default function RegisterPage() {
 
           <p className="text-sm text-slate-500 dark:text-white/60">
             כבר יש לכם משתמש?{" "}
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="font-semibold text-amber-700 hover:text-amber-500 dark:text-amber-200"
             >
               התחברות לחשבון
-            </a>
+            </Link>
           </p>
         </section>
 
@@ -66,20 +69,20 @@ export default function RegisterPage() {
           <div className="mt-6">
             <SignupForm
               onSuccess={() => {
-                window.location.href = "/";
+                navigate("/");
               }}
             />
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-400 dark:text-white/50" dir="rtl">
             בלחיצה על "הרשמה" אתם מאשרים את{" "}
-            <a href="/terms" className="underline hover:text-amber-500">
+            <Link to="/terms" className="underline hover:text-amber-500">
               תנאי השימוש
-            </a>{" "}
+            </Link>{" "}
             ואת{" "}
-            <a href="/privacy" className="underline hover:text-amber-500">
+            <Link to="/privacy" className="underline hover:text-amber-500">
               מדיניות הפרטיות
-            </a>
+            </Link>
             .
           </p>
         </section>

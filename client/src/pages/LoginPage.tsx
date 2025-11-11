@@ -1,4 +1,5 @@
 import LoginForm from "@/components/auth/LoginForm";
+import { useNavigate } from "react-router-dom";
 
 const highlights = [
   "גישה לכל החלומות והפרשנויות שנשמרו",
@@ -7,6 +8,7 @@ const highlights = [
 ];
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#f6f2ff] via-[#fff6ec] to-[#fef5f5] px-4 py-16 dark:from-[#0b0b1a] dark:via-[#141426] dark:to-[#221933]">
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-12 lg:flex-row lg:items-stretch lg:gap-16">
@@ -51,7 +53,7 @@ export default function LoginPage() {
           <div className="mt-6">
             <LoginForm
               onSuccess={() => {
-                window.location.href = "/";
+                navigate("/");
               }}
             />
           </div>

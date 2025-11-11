@@ -1,7 +1,11 @@
 import { faker } from "@faker-js/faker";
+import type { Types } from "mongoose";
 import { DreamActivity } from "../models/dreamActivity";
 import { Dream } from "../models/dream";
 import User from "../models/user";
+type DocumentWithId = Record<string, unknown> & {
+    _id: Types.ObjectId | string;
+};
 export default async function seedDreamActivities({ viewsRange = [30, 120], likesRange = [0, 30], dislikesRange = [0, 6], daysBack = 45, }: {
     viewsRange?: [
         number,
@@ -17,8 +21,8 @@ export default async function seedDreamActivities({ viewsRange = [30, 120], like
     ];
     daysBack?: number;
 } = {}) {
-    const dreams = await Dream.find().lean();
-    const users = await User.find().lean();
+    const dreams = (await Dream.find().lean()) as unknown as DocumentWithId[];
+    const users = (await User.find().lean()) as unknown as DocumentWithId[];
     if (!dreams.length) {
         console.warn("⚠️ No dreams found. Seed dreams first.");
         return;

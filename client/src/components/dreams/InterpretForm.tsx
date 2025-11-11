@@ -6,6 +6,7 @@ import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.png";
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
     fullText: string;
@@ -72,13 +73,14 @@ function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef
 }
 const MY_DREAMS_PATH = "/me/dreams";
 export default function InterpretForm() {
-    const [text, setText] = useState("");
+  const [text, setText] = useState("");
     const [isInterpreting, setIsInterpreting] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
     const [dream, setDream] = useState<Dream | null>(null);
     const [justShared, setJustShared] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const { isAuthenticated } = useAuthStore();
+    const navigate = useNavigate();
     const { streamedText, isStreaming } = useWordStreamer({
         fullText: dream?.aiResponse ?? "",
         baseMs: 40,
@@ -113,22 +115,17 @@ export default function InterpretForm() {
             setIsInterpreting(false);
         }
     };
-    const shareWithEveryone = async () => {
+  const shareWithEveryone = async () => {
         if (!dream || dream.isShared)
             return;
         setJustShared(false);
         const updated = await DreamsApi.update(dream._id, { isShared: true });
         setDream(updated ?? null);
         setJustShared(true);
-    };
-    const openMyDreams = () => {
-        try {
-            window.location.assign(MY_DREAMS_PATH);
-        }
-        catch {
-            window.location.href = MY_DREAMS_PATH;
-        }
-    };
+  };
+  const openMyDreams = () => {
+    navigate(MY_DREAMS_PATH);
+  };
     return (<>
       
       <div className="grid gap-3 max-w-3xl mx-auto mb-8">

@@ -11,7 +11,7 @@ const dreamActivitySchema = new Schema({
     ipHash: { type: String, default: null },
     type: { type: String, enum: ["view", "like", "dislike"], required: true },
     dayBucket: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now, index: true },
+    createdAt: { type: Date, default: Date.now },
 }, { versionKey: false });
 dreamActivitySchema.index({ dreamId: 1, userId: 1, ipHash: 1, dayBucket: 1, type: 1 }, { unique: true });
 dreamActivitySchema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 24 * 60 * 60 });

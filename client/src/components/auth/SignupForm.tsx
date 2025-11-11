@@ -129,8 +129,7 @@ export default function SignupForm({ onSuccess }: Props) {
         error?.response?.data?.message || error?.message || FALLBACK_MESSAGE;
       if (status === 409) {
         setErrors({
-          email:
-            'כתובת הדוא"ל כבר קיימת במערכת. תוכלו להתחבר או לאפס סיסמה.',
+          email: 'כתובת הדוא"ל כבר קיימת במערכת. תוכלו להתחבר או לאפס סיסמה.',
         });
       } else {
         setErrors({ general: message });
@@ -294,7 +293,7 @@ export default function SignupForm({ onSuccess }: Props) {
 
         <button
           type="button"
-          aria-label="????? ??????? Google"
+          aria-label="Google"
           disabled={googleAuth.loading}
           onClick={() =>
             googleAuth.start({
@@ -302,7 +301,9 @@ export default function SignupForm({ onSuccess }: Props) {
               termsAccepted: acceptedTerms,
               termsVersion: TERMS_VERSION,
               termsLocale:
-                typeof navigator !== "undefined" ? navigator.language : undefined,
+                typeof navigator !== "undefined"
+                  ? navigator.language
+                  : undefined,
             })
           }
           className={`inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/15 dark:bg-white/10 dark:text-white ${
@@ -310,9 +311,14 @@ export default function SignupForm({ onSuccess }: Props) {
           }`}
         >
           {googleAuth.loading ? (
-            "???????..."
+            "מתחבר...."
           ) : (
-            <img src={googleLogo} alt="Google" loading="lazy" className="h-6 w-auto" />
+            <img
+              src={googleLogo}
+              alt="Google"
+              loading="lazy"
+              className="h-6 w-auto"
+            />
           )}
         </button>
 
@@ -333,5 +339,3 @@ export default function SignupForm({ onSuccess }: Props) {
     </>
   );
 }
-
-

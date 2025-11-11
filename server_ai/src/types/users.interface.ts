@@ -1,4 +1,4 @@
-import { ObjectId } from "mongoose";
+import { Document, ObjectId } from "mongoose";
 export enum UserRole {
     Admin = "admin",
     User = "user"

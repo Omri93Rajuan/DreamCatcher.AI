@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Document, Types } from "mongoose";
 import { DreamCategory } from "./categories.interface";
 export interface IDream extends Document {
     userId: Types.ObjectId;
