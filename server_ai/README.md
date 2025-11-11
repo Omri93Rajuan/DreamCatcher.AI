@@ -1,4 +1,3 @@
-```markdown
 # DreamCatcher.AI Server
 
 The `server_ai` workspace powers the backend API, authentication, MongoDB models, and the OpenRouter/MCP integration that drives the AI dream interpretation layer.
@@ -84,4 +83,3 @@ types/          # shared TS definitions (DreamCategory, responses, etc.)
 ---
 
 ✅ This backend is **production-ready**, with typed contracts, central validation, AI orchestration, and clean deployment scripts.
-```
