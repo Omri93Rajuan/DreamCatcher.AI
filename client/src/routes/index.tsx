@@ -13,6 +13,8 @@ import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ArticlesPage from "@/pages/ArticlesPage";
 import ContactPage from "@/pages/ContactPage";
 import GoogleCallbackPage from "@/pages/GoogleCallbackPage";
+import TermsPage from "@/pages/TermsPage";
+import PrivacyPage from "@/pages/PrivacyPage";
 export const router = createBrowserRouter([
     {
         path: "/",
@@ -84,6 +86,18 @@ export const router = createBrowserRouter([
         path: "/forgot-password",
         element: (<Layout>
         <ForgotPasswordPage />
+      </Layout>),
+    },
+    {
+        path: "/terms",
+        element: (<Layout>
+        <TermsPage />
+      </Layout>),
+    },
+    {
+        path: "/privacy",
+        element: (<Layout>
+        <PrivacyPage />
       </Layout>),
     },
     {

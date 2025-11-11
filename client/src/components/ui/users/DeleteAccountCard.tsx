@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { AuthApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useNavigate } from "react-router-dom";
 type Props = {
     userId?: string;
 };
 export default function DeleteAccountCard({ userId }: Props) {
     const logout = useAuthStore((s) => s.logout);
     const user = useAuthStore((s) => s.user);
+    const navigate = useNavigate();
     const [open, setOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [ack, setAck] = React.useState(false);
@@ -30,7 +32,7 @@ export default function DeleteAccountCard({ userId }: Props) {
             catch { }
             setTimeout(() => {
                 logout?.();
-                window.location.assign("/login");
+                navigate("/login");
             }, 1400);
         }
         catch {

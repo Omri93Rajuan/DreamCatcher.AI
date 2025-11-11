@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { useAuthLogin } from "@/hooks/useAuthLogin";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import googleLogo from "@/assets/logoGoogle.png";
@@ -112,23 +113,23 @@ export default function LoginForm({ onSuccess }: Props) {
       <div className="text-center text-xs text-slate-500 dark:text-white/60">
         שכחתם סיסמה?
         <br />
-        <a
-          href="/forgot-password"
+        <Link
+          to="/forgot-password"
           className="font-semibold text-amber-700 hover:text-amber-500 dark:text-amber-200"
         >
           שליחת קישור לאיפוס
-        </a>
+        </Link>
       </div>
 
       <p className="text-center text-xs text-slate-500 dark:text-white/60">
         עדיין לא רשומים?
         <br />
-        <a
-          href="/register"
+        <Link
+          to="/register"
           className="font-semibold text-amber-700 hover:text-amber-500 dark:text-amber-200"
         >
           הרשמה חדשה
-        </a>
+        </Link>
       </p>
     </form>
   );
