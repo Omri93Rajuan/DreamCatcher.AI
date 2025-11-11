@@ -1,4 +1,3 @@
-```markdown
 # DreamCatcher.AI Client
 
 This is the React/Vite frontend for **DreamCatcher.AI**.  
@@ -84,4 +83,3 @@ src/
 ---
 
 ✅ This client is **production-ready**, **RTL-first**, and designed for a confident **DreamCatcher.AI** rollout.
-```
