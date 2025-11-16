@@ -8,6 +8,9 @@ import { handleError } from "./src/utils/ErrorHandle";
 import activityRoutes from "./src/routes/activity.routes";
 const router: IRouter = express.Router();
 router.use(requestLogger);
+router.get("/healthz", (_req, res) => {
+  return res.status(200).json({ status: "ok" });
+});
 router.use("/api/users", usersRoutes);
 router.use("/api/dreams", dreamRoutes);
 router.use("/api/auth", authRoutes);
