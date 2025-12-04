@@ -93,12 +93,15 @@ export default function UserMenu() {
                   src={
                     user.image ||
                     (user as any).avatar ||
-                    "/avatar-placeholder.png"
+                    "/avatar-placeholder.svg"
                   }
                   referrerPolicy="no-referrer"
                   onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src =
-                      "/avatar-placeholder.png";
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (!img.dataset.fallback) {
+                      img.dataset.fallback = "true";
+                      img.src = "/avatar-placeholder.svg";
+                    }
                   }}
                   alt={displayName}
                   className="w-full h-full object-cover"

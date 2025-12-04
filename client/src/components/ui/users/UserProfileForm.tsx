@@ -95,10 +95,18 @@ export default function UserProfileForm({ user }: {
           <div className="relative shrink-0">
             <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-amber-400">
               <div className="w-full h-full rounded-full overflow-hidden border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/10">
-                <img src={preview || "/avatar-placeholder.png"} alt={user.firstName || "avatar"} className="w-full h-full object-cover" onError={(e) => {
-            (e.currentTarget as HTMLImageElement).src =
-                "/avatar-placeholder.png";
-        }}/>
+                <img
+                  src={preview || "/avatar-placeholder.svg"}
+                  alt={user.firstName || "avatar"}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const img = e.currentTarget as HTMLImageElement;
+                    if (!img.dataset.fallback) {
+                      img.dataset.fallback = "true";
+                      img.src = "/avatar-placeholder.svg";
+                    }
+                  }}
+                />
               </div>
             </div>
             <button type="button" className="absolute -bottom-1 -left-1 p-2 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 dark:bg-white/10 dark:hover:bg-white/15 dark:border-white/15" title="שנה תמונה" onClick={() => toast.info("העלאת תמונה ישירה תתווסף בהמשך. כרגע הדבק/י URL.")}>

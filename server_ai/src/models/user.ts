@@ -34,7 +34,7 @@ const userSchema = new Schema<IUserDoc>(
       default: SubscriptionType.Free,
     },
 
-    image: { type: String, default: "default-avatar.jpg" },
+    image: { type: String, default: null },
 
     lastLogin: { type: Date },
     isActive: { type: Boolean, default: true },
