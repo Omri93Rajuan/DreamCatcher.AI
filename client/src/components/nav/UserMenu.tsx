@@ -5,6 +5,7 @@ import { LogOut, User, NotebookPen, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import AvatarChip from "./AvatarChip";
+import { toProxiedImage } from "@/lib/images";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -35,6 +36,10 @@ export default function UserMenu() {
 
   if (!user) return null;
 
+  const avatarSrc =
+    toProxiedImage(user.image || (user as any).avatar) ||
+    "/avatar-placeholder.svg";
+
   const nameFromParts = [user.firstName, user.lastName]
     .filter(Boolean)
     .join(" ")
@@ -61,7 +66,7 @@ export default function UserMenu() {
       <span ref={btnRef as any}>
         <AvatarChip
           name={displayName}
-          image={user.image || (user as any).avatar}
+          image={avatarSrc}
           active={open}
           onClick={() => setOpen((v) => !v)}
         />
@@ -90,11 +95,7 @@ export default function UserMenu() {
             <div className="flex items-center gap-3">
               <div className="w-14 h-14 rounded-full overflow-hidden border border-black/10 dark:border-white/15 shadow-[0_0_0_2px_rgba(139,92,246,.18)] bg-slate-100 dark:bg-white/10">
                 <img
-                  src={
-                    user.image ||
-                    (user as any).avatar ||
-                    "/avatar-placeholder.svg"
-                  }
+                  src={avatarSrc}
                   referrerPolicy="no-referrer"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;

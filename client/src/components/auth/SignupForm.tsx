@@ -6,6 +6,9 @@ import TermsDialog from "./TermsDialog";
 import { TERMS_VERSION } from "@/constants/legal";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import googleLogo from "@/assets/logoGoogle.png";
+import { UploadsApi } from "@/lib/api/uploads";
+import { toast } from "react-toastify";
+import { toProxiedImage } from "@/lib/images";
 
 type Props = {
   onSuccess?: () => void;
@@ -31,8 +34,7 @@ const initialState: FormState = {
   confirmPassword: "",
 };
 
-const FALLBACK_MESSAGE =
-  "משהו השתבש, נסה שוב או פנה אלינו אם הבעיה נמשכת.";
+const FALLBACK_MESSAGE = "משהו השתבש, נסה שוב.";
 
 const AVATARS = [
   "/avatars/avatar-1.svg",
@@ -57,6 +59,10 @@ export default function SignupForm({ onSuccess }: Props) {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATARS[0]);
   const [showAllAvatars, setShowAllAvatars] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   const primaryAvatars = AVATARS.slice(0, 4);
   const collapsedAvatars = React.useMemo(() => {
@@ -94,21 +100,17 @@ export default function SignupForm({ onSuccess }: Props) {
 
   const validate = () => {
     const next: Errors = {};
-    if (!form.firstName.trim()) {
-      next.firstName = "נדרש למלא שם פרטי";
-    }
-    if (!form.lastName.trim()) {
-      next.lastName = "נדרש למלא שם משפחה";
-    }
+    if (!form.firstName.trim()) next.firstName = "נדרש שם פרטי";
+    if (!form.lastName.trim()) next.lastName = "נדרש שם משפחה";
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim().toLowerCase())
     ) {
       next.email = "אימייל לא תקין";
     }
     if (!form.password) {
-      next.password = "נדרש למלא סיסמה";
+      next.password = "נדרשת סיסמה";
     } else if (form.password.length < 8) {
-      next.password = "סיסמה חייבת להיות באורך 8 תווים לפחות";
+      next.password = "סיסמה חייבת להיות לפחות 8 תווים";
     }
     if (form.password !== form.confirmPassword) {
       next.confirmPassword = "הסיסמאות לא תואמות";
@@ -117,7 +119,7 @@ export default function SignupForm({ onSuccess }: Props) {
       next.avatar = "בחר אווטאר";
     }
     if (!acceptedTerms) {
-      next.terms = "יש לאשר תנאי שימוש לפני ההרשמה";
+      next.terms = "חובה לאשר תנאי שימוש";
     }
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -130,12 +132,44 @@ export default function SignupForm({ onSuccess }: Props) {
     setSubmitting(true);
     setErrors({});
 
+    let imageUrl = selectedAvatar;
+
+    // אם המשתמש בחר קובץ, נעלה אותו עכשיו (לפני שליחת ההרשמה)
+    if (avatarFile) {
+      setUploadingAvatar(true);
+      try {
+        const presign = await UploadsApi.getAvatarUploadUrl({
+          contentType: avatarFile.type,
+          contentLength: avatarFile.size,
+        });
+        if (avatarFile.size > presign.maxBytes) {
+          throw new Error("הקובץ גדול מדי");
+        }
+        const putRes = await fetch(presign.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": avatarFile.type },
+          body: avatarFile,
+        });
+        if (!putRes.ok) {
+          throw new Error(`Upload failed (${putRes.status})`);
+        }
+        imageUrl = toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
+      } catch (err: any) {
+        toast.error(err?.message || "העלאת אווטאר נכשלה");
+        setSubmitting(false);
+        setUploadingAvatar(false);
+        return;
+      } finally {
+        setUploadingAvatar(false);
+      }
+    }
+
     const payload: RegisterDto = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
       password: form.password,
-      image: selectedAvatar,
+      image: imageUrl,
       termsAgreed: true,
       termsVersion: TERMS_VERSION,
       termsUserAgent:
@@ -177,6 +211,18 @@ export default function SignupForm({ onSuccess }: Props) {
     }
   };
 
+  const handleAvatarFileSelect = (file: File) => {
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      toast.error("פורמט לא נתמך (PNG/JPEG/WebP)");
+      return;
+    }
+    setAvatarFile(file);
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
+    setSelectedAvatar(url);
+    setShowAllAvatars(false);
+  };
+
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-6" dir="rtl" noValidate>
@@ -215,7 +261,7 @@ export default function SignupForm({ onSuccess }: Props) {
 
         <div className="space-y-2">
           <p className="text-sm font-semibold text-slate-700 dark:text-white/80">
-            בחר אווטאר שמייצג אותך
+            בחר אווטאר
           </p>
           <div
             className={[
@@ -229,7 +275,11 @@ export default function SignupForm({ onSuccess }: Props) {
                 <button
                   key={src}
                   type="button"
-                  onClick={() => setSelectedAvatar(src)}
+                  onClick={() => {
+                    setSelectedAvatar(src);
+                    setAvatarFile(null);
+                    setAvatarPreview(null);
+                  }}
                   className={[
                     "relative aspect-square w-16 md:w-20 rounded-full overflow-hidden group transition shrink-0",
                     active
@@ -262,7 +312,7 @@ export default function SignupForm({ onSuccess }: Props) {
               );
             })}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {!showAllAvatars && (
               <button
                 type="button"
@@ -281,6 +331,26 @@ export default function SignupForm({ onSuccess }: Props) {
                 הצג פחות
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="text-xs px-3 py-2 rounded-full border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 transition dark:border-white/20 dark:text-white dark:bg-slate-800 dark:hover:bg-slate-700"
+            >
+              {uploadingAvatar ? "מעלה..." : "העלה אווטאר משלך"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                handleAvatarFileSelect(file);
+              }}
+            />
           </div>
           {errors.avatar && (
             <p className="text-xs text-red-500">{errors.avatar}</p>
@@ -435,7 +505,9 @@ export default function SignupForm({ onSuccess }: Props) {
         </button>
 
         {googleAuth.error && (
-          <p className="text-center text-xs text-red-500">{googleAuth.error}</p>
+          <p className="text-center text-xs text-red-500">
+            {googleAuth.error}
+          </p>
         )}
       </form>
 
