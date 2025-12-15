@@ -54,7 +54,37 @@ export default function UserProfileForm({ user }: { user: User }) {
     toProxiedImage(user.image) || undefined
   );
   const [uploading, setUploading] = React.useState(false);
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const selectedFileRef = React.useRef<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const objectUrlRef = React.useRef<string | null>(null);
+
+  const setLocalFile = React.useCallback((file: File | null) => {
+    selectedFileRef.current = file;
+    setSelectedFile(file);
+  }, []);
+
+  const setPreviewUrl = React.useCallback(
+    (url?: string) => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+        objectUrlRef.current = null;
+      }
+      if (url && url.startsWith("blob:")) {
+        objectUrlRef.current = url;
+      }
+      setPreview(url);
+    },
+    [setPreview]
+  );
+
+  React.useEffect(() => {
+    return () => {
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
+      }
+    };
+  }, []);
 
   React.useEffect(() => {
     reset({
@@ -63,16 +93,20 @@ export default function UserProfileForm({ user }: { user: User }) {
       image: user.image ?? "",
     });
     const proxied = toProxiedImage(user.image) || undefined;
-    setPreview(proxied);
+    setLocalFile(null);
+    setPreviewUrl(proxied);
     if (proxied && proxied !== user.image) {
       setValue("image", proxied, { shouldDirty: false });
     }
-  }, [user, reset, setValue]);
+  }, [user, reset, setValue, setPreviewUrl, setLocalFile]);
 
   React.useEffect(() => {
-    const sub = watch((vals) => setPreview(toProxiedImage(vals.image) || undefined));
+    const sub = watch((vals) => {
+      if (selectedFileRef.current) return;
+      setPreviewUrl(toProxiedImage(vals.image) || undefined);
+    });
     return () => sub.unsubscribe();
-  }, [watch]);
+  }, [watch, setPreviewUrl]);
 
   const mUpdate = useMutation({
     mutationFn: (payload: UpdateUserDTO) => UsersApi.update(user._id, payload),
@@ -84,6 +118,8 @@ export default function UserProfileForm({ user }: { user: User }) {
         lastName: updated.lastName ?? "",
         image: updated.image ?? "",
       });
+      setLocalFile(null);
+      setPreviewUrl(toProxiedImage(updated.image) || undefined);
       if (patchUser) {
         patchUser({
           firstName: updated.firstName,
@@ -104,14 +140,49 @@ export default function UserProfileForm({ user }: { user: User }) {
     },
   });
 
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
+    let imageUrl = values.image?.trim() || undefined;
+
+    if (selectedFile) {
+      setUploading(true);
+      try {
+        const presign = await UploadsApi.getAvatarUploadUrl({
+          contentType: selectedFile.type,
+          contentLength: selectedFile.size,
+        });
+        if (selectedFile.size > presign.maxBytes) {
+          toast.error("x\"xxx`x x'x\"xxo xzx\"xT");
+          return;
+        }
+        const putRes = await fetch(presign.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": selectedFile.type },
+          body: selectedFile,
+        });
+        if (!putRes.ok) {
+          throw new Error(`Upload failed (${putRes.status})`);
+        }
+        imageUrl =
+          toProxiedImage(presign.proxyUrl || presign.publicUrl) ||
+          presign.publicUrl;
+      } catch (err: any) {
+        toast.error(err?.message || "x\"x›xox?x\" xÿx>xcxox\"");
+        return;
+      } finally {
+        setUploading(false);
+      }
+    }
+
     const payload: UpdateUserDTO = {
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),
-      image: values.image?.trim() || undefined,
+      image: imageUrl,
     };
     mUpdate.mutate(payload);
   };
+
+  const hasLocalFile = !!selectedFile;
+  const isSaving = mUpdate.isPending || uploading;
 
   return (
     <div className="relative rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur shadow-[0_12px_40px_-20px_rgba(0,0,0,.35)]">
@@ -221,7 +292,7 @@ export default function UserProfileForm({ user }: { user: User }) {
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 hidden
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   e.target.value = "";
                   if (!file) return;
@@ -229,33 +300,10 @@ export default function UserProfileForm({ user }: { user: User }) {
                     toast.error("פורמט לא נתמך (PNG/JPEG/WebP)");
                     return;
                   }
-                  setUploading(true);
-                  try {
-                    const presign = await UploadsApi.getAvatarUploadUrl({
-                      contentType: file.type,
-                      contentLength: file.size,
-                    });
-                    if (file.size > presign.maxBytes) {
-                      toast.error("הקובץ גדול מדי");
-                      return;
-                    }
-                    const putRes = await fetch(presign.uploadUrl, {
-                      method: "PUT",
-                      headers: { "Content-Type": file.type },
-                      body: file,
-                    });
-                    if (!putRes.ok) {
-                      throw new Error(`Upload failed (${putRes.status})`);
-                    }
-                    const proxied = toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
-                    setPreview(proxied);
-                    setValue("image", proxied, { shouldDirty: true });
-                    toast.success("אווטאר הועלה");
-                  } catch (err: any) {
-                    toast.error(err?.message || "העלאה נכשלה");
-                  } finally {
-                    setUploading(false);
-                  }
+                  const objectUrl = URL.createObjectURL(file);
+                  setLocalFile(file);
+                  setPreviewUrl(objectUrl);
+                  setValue("image", watch("image") ?? "", { shouldDirty: true, shouldTouch: true });
                 }}
               />
             </div>
@@ -271,13 +319,15 @@ export default function UserProfileForm({ user }: { user: User }) {
           <Button
             type="button"
             variant="outline"
-            onClick={() =>
+            onClick={() => {
               reset({
                 firstName: user.firstName ?? "",
                 lastName: user.lastName ?? "",
                 image: user.image ?? "",
-              })
-            }
+              });
+              setLocalFile(null);
+              setPreviewUrl(toProxiedImage(user.image) || undefined);
+            }}
             className="border-black/15 dark:border-white/20 dark:text-white"
           >
             איפוס
@@ -285,10 +335,10 @@ export default function UserProfileForm({ user }: { user: User }) {
 
           <Button
             type="submit"
-            disabled={mUpdate.isPending || !isDirty}
+            disabled={isSaving || (!isDirty && !hasLocalFile)}
             className="px-6 bg-gradient-to-r from-purple-600 to-amber-500 hover:from-purple-500 hover:to-amber-400 text-white shadow-md disabled:opacity-60 dark:from-purple-500 dark:to-amber-400 dark:hover:from-purple-400 dark:hover:to-amber-300"
           >
-            {mUpdate.isPending ? (
+            {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 ml-2 animate-spin" /> שומר...
               </>
@@ -301,5 +351,3 @@ export default function UserProfileForm({ user }: { user: User }) {
     </div>
   );
 }
-
-
