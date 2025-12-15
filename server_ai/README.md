@@ -6,11 +6,11 @@ The `server_ai` workspace powers the backend API, authentication, MongoDB models
 
 ## ⚙️ Stack Highlights
 
-- **Runtime:** Node.js 20  
-- **Framework:** Express + TypeScript  
-- **Database:** MongoDB with Mongoose models (`dream`, `user`) + Zod validation under `/validation`  
-- **AI Middleware:** OpenRouter/MCP provider located under `/llm/`, with helper hooks for language models  
-- **Infrastructure:** JWT auth, Nodemailer helpers, validation middleware, and error sanitization for production readiness  
+- **Runtime:** Node.js 20
+- **Framework:** Express + TypeScript
+- **Database:** MongoDB with Mongoose models (`dream`, `user`) + Zod validation under `/validation`
+- **AI Middleware:** OpenRouter/MCP provider located under `/llm/`, with helper hooks for language models
+- **Infrastructure:** JWT auth, Nodemailer helpers, validation middleware, and error sanitization for production readiness
 
 ---
 
@@ -47,12 +47,12 @@ Add monitoring, analytics, or extra API credentials only when they are configure
 
 ## 📜 NPM Scripts
 
-| Script | Description |
-|--------|--------------|
-| `npm run dev` | Development server with tsc-watch + nodemon |
-| `npm run build` | Compiles TypeScript to `dist/` |
-| `npm start` | Runs the compiled server from `dist/` |
-| `npm test` | Jest unit tests (Mongo Memory Server) |
+| Script          | Description                                 |
+| --------------- | ------------------------------------------- |
+| `npm run dev`   | Development server with tsc-watch + nodemon |
+| `npm run build` | Compiles TypeScript to `dist/`              |
+| `npm start`     | Runs the compiled server from `dist/`       |
+| `npm test`      | Jest unit tests (Mongo Memory Server)       |
 
 ---
 
@@ -74,10 +74,10 @@ types/          # shared TS definitions (DreamCategory, responses, etc.)
 
 ## 🧠 Production Guidance
 
-1. Supply a secure `JWT_SECRET` and point `MONGO_URI` at your production database.  
-2. Enable **TLS/HTTPS** via reverse proxy (e.g., Nginx or cloud load balancer) before exposing the API.  
-3. Run `npm run lint`, `npm test`, and `npm run build` before rolling out a release.  
-4. Configure **rate limiting**, **Redis session caching**, or **Sentry tracing** as needed — the scaffolding supports middleware extensions.  
+1. Supply a secure `JWT_SECRET` and point `MONGO_URI` at your production database.
+2. Enable **TLS/HTTPS** via reverse proxy (e.g., Nginx or cloud load balancer) before exposing the API.
+3. Run `npm run lint`, `npm test`, and `npm run build` before rolling out a release.
+4. Configure **rate limiting**, **Redis session caching**, or **Sentry tracing** as needed — the scaffolding supports middleware extensions.
 5. Use the `APP_URL` variable so the backend can craft full URLs (emails, redirects, Google callbacks).
 
 ---
