@@ -61,6 +61,10 @@ export default function SignupForm({ onSuccess }: Props) {
   const [showAllAvatars, setShowAllAvatars] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarUploadCache, setAvatarUploadCache] = useState<{
+    fingerprint: string;
+    url: string;
+  } | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -136,31 +140,38 @@ export default function SignupForm({ onSuccess }: Props) {
 
     // אם המשתמש בחר קובץ, נעלה אותו עכשיו (לפני שליחת ההרשמה)
     if (avatarFile) {
-      setUploadingAvatar(true);
-      try {
-        const presign = await UploadsApi.getAvatarUploadUrl({
-          contentType: avatarFile.type,
-          contentLength: avatarFile.size,
-        });
-        if (avatarFile.size > presign.maxBytes) {
-          throw new Error("הקובץ גדול מדי");
+      const fingerprint = `${avatarFile.name}-${avatarFile.size}-${avatarFile.lastModified}`;
+      if (avatarUploadCache && avatarUploadCache.fingerprint === fingerprint) {
+        imageUrl = avatarUploadCache.url;
+      } else {
+        setUploadingAvatar(true);
+        try {
+          const presign = await UploadsApi.getAvatarUploadUrl({
+            contentType: avatarFile.type,
+            contentLength: avatarFile.size,
+          });
+          if (avatarFile.size > presign.maxBytes) {
+            throw new Error("הקובץ גדול מדי");
+          }
+          const putRes = await fetch(presign.uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": avatarFile.type },
+            body: avatarFile,
+          });
+          if (!putRes.ok) {
+            throw new Error(`Upload failed (${putRes.status})`);
+          }
+          imageUrl =
+            toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
+          setAvatarUploadCache({ fingerprint, url: imageUrl });
+        } catch (err: any) {
+          toast.error(err?.message || "העלאת אווטאר נכשלה");
+          setSubmitting(false);
+          setUploadingAvatar(false);
+          return;
+        } finally {
+          setUploadingAvatar(false);
         }
-        const putRes = await fetch(presign.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": avatarFile.type },
-          body: avatarFile,
-        });
-        if (!putRes.ok) {
-          throw new Error(`Upload failed (${putRes.status})`);
-        }
-        imageUrl = toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
-      } catch (err: any) {
-        toast.error(err?.message || "העלאת אווטאר נכשלה");
-        setSubmitting(false);
-        setUploadingAvatar(false);
-        return;
-      } finally {
-        setUploadingAvatar(false);
       }
     }
 
@@ -217,6 +228,7 @@ export default function SignupForm({ onSuccess }: Props) {
       return;
     }
     setAvatarFile(file);
+    setAvatarUploadCache(null);
     const url = URL.createObjectURL(file);
     setAvatarPreview(url);
     setSelectedAvatar(url);
@@ -279,6 +291,7 @@ export default function SignupForm({ onSuccess }: Props) {
                     setSelectedAvatar(src);
                     setAvatarFile(null);
                     setAvatarPreview(null);
+                    setAvatarUploadCache(null);
                   }}
                   className={[
                     "relative aspect-square w-16 md:w-20 rounded-full overflow-hidden group transition shrink-0",

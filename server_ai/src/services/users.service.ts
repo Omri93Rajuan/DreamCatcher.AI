@@ -2,6 +2,7 @@ import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
 import { handleBadRequest } from "../utils/ErrorHandle";
 import { IUser, UserRole, SubscriptionType, PublicUser, CreateUserDTO, UpdateUserDTO, } from "../types/users.interface";
+import { deleteUserAvatar } from "./upload.service";
 const toPublic = (u: any): PublicUser => (u?.toJSON?.() ?? u) as PublicUser;
 export const getAllUsers = async (): Promise<PublicUser[]> => {
     try {
@@ -67,10 +68,16 @@ export const updateUser = async (userId: string, updateData: UpdateUserDTO): Pro
         if (!existingUser) {
             throw new Error("User not found");
         }
+        const previousImage = existingUser.image;
         const updatedUser = await User.findByIdAndUpdate(userId, {
             ...updateData,
             password: existingUser.password,
         }, { new: true, runValidators: true }).select("-password");
+
+        if (previousImage && previousImage !== (updatedUser as any)?.image) {
+            await deleteUserAvatar(userId, previousImage);
+        }
+
         return toPublic(updatedUser);
     }
     catch (error: any) {
@@ -86,10 +93,16 @@ export const adminUpdateUser = async (userId: string, updateData: Partial<IUser>
         if (!existingUser) {
             throw new Error("User not found");
         }
+        const previousImage = existingUser.image;
         const updatedUser = await User.findByIdAndUpdate(userId, {
             ...updateData,
             password: existingUser.password,
         }, { new: true, runValidators: true }).select("-password");
+
+        if (previousImage && previousImage !== (updatedUser as any)?.image) {
+            await deleteUserAvatar(userId, previousImage);
+        }
+
         return toPublic(updatedUser);
     }
     catch (error: any) {
@@ -101,6 +114,7 @@ export const deleteUser = async (userId: string) => {
         const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser)
             throw new Error("User not found");
+        await deleteUserAvatar(userId, (deletedUser as any).image);
         return { message: "User deleted successfully" };
     }
     catch (error: any) {

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 
@@ -48,6 +48,49 @@ function extFromMime(mime: string): string {
   if (mime === "image/png") return "png";
   if (mime === "image/webp") return "webp";
   return "bin";
+}
+
+function extractAvatarKeyFromUrl(url?: string | null): string | null {
+  if (!url) return null;
+
+  // Proxy path: /api/images/<key>
+  const proxyMatch = url.match(/\/api\/images\/(.+)/i);
+  if (proxyMatch?.[1]) return proxyMatch[1];
+
+  // Direct public URL based on configured public base
+  if (S3_PUBLIC_BASE && url.startsWith(S3_PUBLIC_BASE)) {
+    const key = url.slice(S3_PUBLIC_BASE.length).replace(/^\/+/, "");
+    return key || null;
+  }
+
+  // Path-style endpoint fallback: <endpoint>/<bucket>/<key>
+  if (S3_ENDPOINT && S3_BUCKET) {
+    const endpoint = S3_ENDPOINT.startsWith("http") ? S3_ENDPOINT : `https://${S3_ENDPOINT}`;
+    const prefix = `${endpoint}/${S3_BUCKET}/`;
+    if (url.startsWith(prefix)) {
+      const key = url.slice(prefix.length);
+      return key || null;
+    }
+  }
+
+  return null;
+}
+
+export async function deleteUserAvatar(userId: string, imageUrl?: string | null) {
+  const key = extractAvatarKeyFromUrl(imageUrl);
+  if (!key || !key.startsWith("avatars/")) return;
+  try {
+    ensureEnv();
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: S3_BUCKET,
+        Key: key,
+      })
+    );
+  } catch (err) {
+    // We don't fail the request if cleanup fails; log for observability.
+    console.warn("[upload] Failed to delete old avatar", { key, err });
+  }
 }
 
 export async function createAvatarUploadUrl(opts: {
