@@ -119,14 +119,14 @@ export default function SignupForm({ onSuccess }: Props) {
     if (form.password !== form.confirmPassword) {
       next.confirmPassword = "הסיסמאות לא תואמות";
     }
-    if (!selectedAvatar) {
-      next.avatar = "בחר אווטאר";
-    }
-    if (!acceptedTerms) {
-      next.terms = "חובה לאשר תנאי שימוש";
-    }
+    if (!selectedAvatar) next.avatar = "בחר אווטאר";
+    if (!acceptedTerms) next.terms = "חובה לאשר תנאי שימוש";
+    const isValid = Object.keys(next).length === 0;
     setErrors(next);
-    return Object.keys(next).length === 0;
+    if (!isValid && next.terms) {
+      toast.error(next.terms);
+    }
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -459,9 +459,7 @@ export default function SignupForm({ onSuccess }: Props) {
               <span className="text-emerald-600 dark:text-emerald-300">
                 אישרת תנאי שימוש
               </span>
-            ) : (
-              <span className="text-red-500">חובה לאשר תנאי שימוש</span>
-            )}
+            ) : null}
           </div>
           {errors.terms && (
             <p className="mt-2 text-xs text-red-500">{errors.terms}</p>
@@ -490,7 +488,11 @@ export default function SignupForm({ onSuccess }: Props) {
           type="button"
           aria-label="Google"
           disabled={googleAuth.loading}
-          onClick={() =>
+          onClick={() => {
+            if (!acceptedTerms) {
+              toast.error("חובה לאשר תנאי שימוש");
+              return;
+            }
             googleAuth.start({
               next: "/",
               termsAccepted: acceptedTerms,
@@ -499,8 +501,8 @@ export default function SignupForm({ onSuccess }: Props) {
                 typeof navigator !== "undefined"
                   ? navigator.language
                   : undefined,
-            })
-          }
+            });
+          }}
           className={`inline-flex w-full items-center justify-center rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-70 dark:border-white/15 dark:bg-white/10 dark:text-white ${
             !acceptedTerms ? "opacity-60" : ""
           }`}
