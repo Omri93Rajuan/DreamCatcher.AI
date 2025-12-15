@@ -1,12 +1,10 @@
 import { Request, Response } from "express";
 import { createAvatarUploadUrl } from "../services/upload.service";
 import jwt from "jsonwebtoken";
-import { Request } from "express";
 
 const SECRET_KEY = process.env.JWT_ACCESS_SECRET || "fallback_secret_key";
 
 function resolveUserId(req: Request): string {
-  // Prefer authenticated user (cookie-based JWT)
   const token = (req as any).cookies?.["auth_token"];
   if (token) {
     try {
