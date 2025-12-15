@@ -40,13 +40,11 @@ export default function UserMenu() {
     toProxiedImage(user.image || (user as any).avatar) ||
     "/avatar-placeholder.svg";
 
-  const nameFromParts = [user.firstName, user.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  const nameFromParts = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
   const displayName =
+    (user.firstName || "").trim() ||
+    (user as any).name?.split(" ")?.[0] ||
     nameFromParts ||
-    (user as any).name ||
     user.email?.split("@")[0] ||
     "משתמש";
   const email = user.email || "";
