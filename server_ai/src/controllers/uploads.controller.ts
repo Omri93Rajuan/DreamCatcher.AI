@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import { createAvatarUploadUrl } from "../services/upload.service";
 import jwt from "jsonwebtoken";
+import { createAvatarUploadUrl } from "../services/upload.service";
 
 const SECRET_KEY = process.env.JWT_ACCESS_SECRET || "fallback_secret_key";
 

@@ -12,11 +12,16 @@ export async function proxyImage(req: Request, res: Response) {
     const obj = await getImageObject(key);
 
     if (obj.contentType) res.setHeader("Content-Type", obj.contentType);
-    if (obj.contentLength) res.setHeader("Content-Length", obj.contentLength.toString());
-    if (obj.lastModified) res.setHeader("Last-Modified", obj.lastModified.toUTCString());
+    if (obj.contentLength)
+      res.setHeader("Content-Length", obj.contentLength.toString());
+    if (obj.lastModified)
+      res.setHeader("Last-Modified", obj.lastModified.toUTCString());
     if (obj.etag) res.setHeader("ETag", obj.etag);
 
-    res.setHeader("Cache-Control", `public, max-age=${obj.cacheSeconds}, stale-while-revalidate=60`);
+    res.setHeader(
+      "Cache-Control",
+      `public, max-age=${obj.cacheSeconds}, stale-while-revalidate=60`
+    );
 
     pipeline(obj.stream, res, (err) => {
       if (err && !res.headersSent) {

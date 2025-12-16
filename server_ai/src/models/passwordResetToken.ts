@@ -1,26 +1,33 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Document, Schema } from "mongoose";
 export interface PasswordResetQuotaDoc extends Document {
-    userId: mongoose.Types.ObjectId;
-    lastRequestedAt: Date;
-    createdAt: Date;
-    updatedAt: Date;
+  userId: mongoose.Types.ObjectId;
+  lastRequestedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
-const PasswordResetQuotaSchema = new Schema<PasswordResetQuotaDoc>({
+const PasswordResetQuotaSchema = new Schema<PasswordResetQuotaDoc>(
+  {
     userId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: true,
-        unique: true,
-        index: true,
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
     },
     lastRequestedAt: {
-        type: Date,
-        required: true,
-        default: () => new Date(),
+      type: Date,
+      required: true,
+      default: () => new Date(),
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 PasswordResetQuotaSchema.index({ userId: 1 }, { unique: true });
-const PasswordResetQuota = (mongoose.models
+const PasswordResetQuota =
+  (mongoose.models
     .PasswordResetQuota as mongoose.Model<PasswordResetQuotaDoc>) ||
-    mongoose.model<PasswordResetQuotaDoc>("PasswordResetQuota", PasswordResetQuotaSchema);
+  mongoose.model<PasswordResetQuotaDoc>(
+    "PasswordResetQuota",
+    PasswordResetQuotaSchema
+  );
 export default PasswordResetQuota;

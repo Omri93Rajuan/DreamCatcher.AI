@@ -1,16 +1,17 @@
 import chalk from "chalk";
+import seedDreamActivities from "./seedDreamActivities";
 import seedDreams from "./seedDreams";
 import seedUsers from "./seedUsers";
-import seedDreamActivities from "./seedDreamActivities";
 export async function runSeeding() {
-    try {
-        await seedDreams();
-        await seedUsers();
-        await seedDreamActivities();
-        console.log(chalk.bgMagenta.white.bold(" Database seeding completed successfully "));
-    }
-    catch (error) {
-        console.error(chalk.bgRed.white.bold(" Seeding failed: "), error);
-    }
+  try {
+    await seedDreams();
+    await seedUsers();
+    await seedDreamActivities();
+    console.log(
+      chalk.bgMagenta.white.bold(" Database seeding completed successfully ")
+    );
+  } catch (error) {
+    console.error(chalk.bgRed.white.bold(" Seeding failed: "), error);
+  }
 }
 export default runSeeding;
