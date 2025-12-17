@@ -211,7 +211,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                                     dark:bg-purple-500/20 dark:border-purple-400/30">
                       <Calendar className="w-4 h-4 text-slate-600 dark:text-purple-300"/>
                       <span className="text-sm text-slate-700 dark:text-purple-200">
-                        {formatDate(created)}
+                        {formatDate(created, i18n.language)}
                       </span>
                     </div>)}
                   {categories.length > 0 && (<TagsRow categories={categories} maxVisible={99} align="left"/>)}

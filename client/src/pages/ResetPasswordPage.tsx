@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
       return;
     }
     try {
-      await AuthApi.resetPasswordWithToken(token, values.password);
+      await AuthApi.resetPasswordWithCookie(values.password);
       toast.success(t("auth.reset.success"));
     } catch (e: any) {
       const status = e?.response?.status;

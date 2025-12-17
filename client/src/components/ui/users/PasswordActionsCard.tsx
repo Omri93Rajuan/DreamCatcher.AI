@@ -25,8 +25,9 @@ export default function PasswordActionsCard() {
     try {
       await AuthApi.requestPasswordReset(user?.email || "");
       toast.success(t("account.security.sent"));
-    } catch (err: AnyErr) {
-      if (err?.response?.status === 429) {
+    } catch (err: unknown) {
+      const e = err as AnyErr;
+      if (e?.response?.status === 429) {
         toast.error(t("account.security.rateLimit"));
       } else {
         toast.error(t("account.security.error"));
