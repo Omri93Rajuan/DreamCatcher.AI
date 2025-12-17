@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api/apiClient";
+import { useTranslation } from "react-i18next";
 
 type FormState = { name: string; email: string; message: string };
 type FormErrors = Partial<FormState>;
@@ -8,39 +9,55 @@ const initialForm: FormState = { name: "", email: "", message: "" };
 const MIN_NAME = 2;
 const MIN_MESSAGE = 10;
 
-function validateField(key: keyof FormState, value: string): string | undefined {
-  const trimmed = value.trim();
-  switch (key) {
-    case "name":
-      if (trimmed.length < MIN_NAME) return `שם חייב להכיל לפחות ${MIN_NAME} תווים`;
-      return;
-    case "email":
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) return "אימייל לא תקין";
-      return;
-    case "message":
-      if (trimmed.length < MIN_MESSAGE) return `הודעה חייבת להיות לפחות ${MIN_MESSAGE} תווים`;
-      return;
-    default:
-      return;
-  }
-}
-
-function validateAll(form: FormState): { next: FormErrors; isValid: boolean } {
-  const next: FormErrors = {};
-  (Object.keys(form) as Array<keyof FormState>).forEach((key) => {
-    const err = validateField(key, form[key]);
-    if (err) next[key] = err;
-  });
-  return { next, isValid: Object.keys(next).length === 0 };
-}
-
 export default function ContactPage() {
+  const { t } = useTranslation();
   const [form, setForm] = useState<FormState>(initialForm);
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
   const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
+  const messages = useMemo(
+    () => ({
+      nameMin: t("contact.errors.nameMin", { min: MIN_NAME }),
+      emailInvalid: t("contact.errors.emailInvalid"),
+      messageMin: t("contact.errors.messageMin", { min: MIN_MESSAGE }),
+      generalInvalid: t("contact.errors.generalInvalid"),
+      general400Empty: t("contact.errors.general400Empty"),
+      fieldInvalid: t("contact.errors.fieldInvalid"),
+      fallback: t("contact.errors.fallback"),
+      success: t("contact.success"),
+      generalError: t("contact.errors.generalInvalid"),
+    }),
+    [t]
+  );
+
+  const validateField = (key: keyof FormState, value: string): string | undefined => {
+    const trimmed = value.trim();
+    switch (key) {
+      case "name":
+        if (trimmed.length < MIN_NAME) return messages.nameMin;
+        return;
+      case "email":
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) return messages.emailInvalid;
+        return;
+      case "message":
+        if (trimmed.length < MIN_MESSAGE) return messages.messageMin;
+        return;
+      default:
+        return;
+    }
+  };
+
+  const validateAll = (formState: FormState): { next: FormErrors; isValid: boolean } => {
+    const next: FormErrors = {};
+    (Object.keys(formState) as Array<keyof FormState>).forEach((key) => {
+      const err = validateField(key, formState[key]);
+      if (err) next[key] = err;
+    });
+    return { next, isValid: Object.keys(next).length === 0 };
+  };
 
   useEffect(() => {
     if (!firstErrorRef.current) return;
@@ -70,7 +87,7 @@ export default function ContactPage() {
     const { next, isValid } = validateAll(form);
     setErrors(next);
     if (!isValid) {
-      setError("תקן את השדות המסומנים.");
+      setError(messages.generalInvalid);
       return;
     }
 
@@ -90,18 +107,18 @@ export default function ContactPage() {
         const mapped: FormErrors = {};
         issues.forEach((issue) => {
           const path = (issue?.path || "").replace(/^body\./, "") as keyof FormState;
-          if (path in initialForm) mapped[path] = issue?.message || "ערך לא תקין";
+          if (path in initialForm) mapped[path] = issue?.message || messages.fieldInvalid;
         });
         setErrors(mapped);
         if (!issues.length) {
-          setError("אחד השדות לא תקין.");
+          setError(messages.general400Empty);
         }
       }
 
       const message =
         err?.response?.data?.error?.message ||
         err?.message ||
-        "משהו השתבש. נסו שוב מאוחר יותר.";
+        messages.fallback;
       setError(message);
     } finally {
       setSubmitting(false);
@@ -119,21 +136,19 @@ export default function ContactPage() {
       <div className="relative mx-auto max-w-5xl">
         <div className="flex flex-col gap-4 text-center">
           <p className="text-sm uppercase tracking-[0.3em] text-amber-500 dark:text-amber-300/80">DreamCatcher.AI</p>
-          <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">
-            צור קשר, תן לחלום שלך להגיע
-          </h1>
+          <h1 className="text-4xl font-extrabold leading-tight md:text-5xl">{t("contact.title")}</h1>
           <p className="mx-auto max-w-2xl text-lg text-slate-700 dark:text-white/80">
-            יש לכם רעיון, שאלה או השראה לילית? השאירו פרטים ואחזור אליכם עם תשובה וחוויה שממשיכה את החלום.
+            {t("contact.subtitle")}
           </p>
           <div className="mx-auto flex flex-wrap justify-center gap-3 text-xs text-slate-700 dark:text-white/70">
             <span className="rounded-full border border-slate-200 bg-white/70 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-              תמיכה מהירה
+              {t("contact.tagFastSupport")}
             </span>
             <span className="rounded-full border border-slate-200 bg-white/70 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-              השראות AI
+              {t("contact.tagAi")}
             </span>
             <span className="rounded-full border border-slate-200 bg-white/70 px-3 py-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5">
-              שאלות על חלומות
+              {t("contact.tagDreams")}
             </span>
           </div>
         </div>
@@ -158,7 +173,7 @@ export default function ContactPage() {
 
               <div className="grid gap-6 md:grid-cols-2">
                 <label className="flex flex-col gap-2 text-sm font-semibold text-slate-800 dark:text-white/90">
-                  שם מלא
+                  {t("contact.field.name")}
                   <input
                     type="text"
                     name="name"
@@ -175,7 +190,7 @@ export default function ContactPage() {
                         ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
                         : "border-slate-200 focus:border-amber-400 focus:ring-amber-300/60 dark:border-white/15"
                     }`}
-                    placeholder="השם המלא שלך"
+                    placeholder={t("contact.placeholder.name")}
                   />
                   {errors.name && (
                     <span id="name-error" className="text-xs font-normal text-red-500 dark:text-red-300">
@@ -185,7 +200,7 @@ export default function ContactPage() {
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-slate-800 dark:text-white/90">
-                  אימייל לחזרה
+                  {t("contact.field.email")}
                   <input
                     type="email"
                     name="email"
@@ -202,7 +217,7 @@ export default function ContactPage() {
                         ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
                         : "border-slate-200 focus:border-amber-400 focus:ring-amber-300/60 dark:border-white/15"
                     }`}
-                    placeholder="you@dreams.com"
+                    placeholder={t("contact.placeholder.email")}
                   />
                   {errors.email && (
                     <span id="email-error" className="text-xs font-normal text-red-500 dark:text-red-300">
@@ -213,7 +228,7 @@ export default function ContactPage() {
               </div>
 
               <label className="flex flex-col gap-2 text-sm font-semibold text-slate-800 dark:text-white/90">
-                הודעה
+                {t("contact.field.message")}
                 <textarea
                   name="message"
                   value={form.message}
@@ -230,7 +245,7 @@ export default function ContactPage() {
                       ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
                       : "border-slate-200 focus:border-amber-400 focus:ring-amber-300/60 dark:border-white/15"
                   }`}
-                  placeholder="ספרו לי על החלום, על הרעיון, או על מה שתרצו שנבנה יחד."
+                  placeholder={t("contact.placeholder.message")}
                 />
                 {errors.message && (
                   <span id="message-error" className="text-xs font-normal text-red-500 dark:text-red-300">
@@ -241,15 +256,15 @@ export default function ContactPage() {
 
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div className="text-xs text-slate-700 dark:text-white/70">
-                  <div>מענה אישי, בלי בוטים.</div>
-                  <div>אנו עונים לרוב תוך יום עסקים.</div>
+                  <div>{t("contact.meta.personal")}</div>
+                  <div>{t("contact.meta.sla")}</div>
                 </div>
                 <button
                   type="submit"
                   disabled={submitting}
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-amber-500 to-rose-500 px-7 py-3 text-base font-semibold text-black shadow-xl transition hover:scale-[1.01] hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-amber-200 disabled:cursor-not-allowed disabled:opacity-75"
                 >
-                  {submitting ? "שולח..." : "שלחו הודעה"}
+                  {submitting ? t("contact.sending") : t("contact.cta")}
                 </button>
               </div>
             </form>
@@ -262,7 +277,7 @@ export default function ContactPage() {
               )}
               {sent && (
                 <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-100">
-                  תודה! ההודעה נשלחה, ונחזור אליכם בקרוב.
+                  {messages.success}
                 </div>
               )}
             </div>
