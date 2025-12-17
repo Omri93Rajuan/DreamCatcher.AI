@@ -4,10 +4,12 @@ import { motion } from "framer-motion";
 import { TrendingUp, AlertTriangle } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import FlipDreamCard, { PopularRowForFlip, } from "@/components/dreams/FlipDreamCard";
+import { useTranslation } from "react-i18next";
 type WindowKind = 7 | 30 | 365;
 export default function PopularDreams() {
+    const { t, i18n } = useTranslation();
     const [windowKind, setWindowKind] = React.useState<WindowKind>(30);
-    const windowLabel = React.useMemo(() => (windowKind === 7 ? "שבוע" : windowKind === 30 ? "חודש" : "שנה"), [windowKind]);
+    const windowLabel = React.useMemo(() => (windowKind === 7 ? t("popular.period.week") : windowKind === 30 ? t("popular.period.month") : t("popular.period.year")), [windowKind, t]);
     const { data = [], isLoading, isFetching, error, } = useQuery<PopularRowForFlip[] | any[]>({
         queryKey: ["popular", windowKind],
         queryFn: () => DreamsApi.getPopular(windowKind),
@@ -21,7 +23,7 @@ export default function PopularDreams() {
         return {
             rank: Number(raw?.rank ?? idx + 1),
             dreamId,
-            title: String(raw?.title ?? "חלום"),
+            title: String(raw?.title ?? t("dreams.untitled")),
             isShared: Boolean(raw?.isShared ?? true),
             views: Number(raw?.views ?? 0),
             likes: Number(raw?.likes ?? 0),
@@ -33,12 +35,12 @@ export default function PopularDreams() {
         };
     })
         .filter((r) => !!r.dreamId);
-    return (<section className="max-w-7xl mx-auto px-4 mb-20" dir="rtl">
+    return (<section className="max-w-7xl mx-auto px-4 mb-20" dir={i18n.dir()}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <TrendingUp className="w-8 h-8 text-amber-500"/>
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
-            החלומות הפופולריים ביותר
+            {t("popular.title")}
           </h2>
         </div>
 
@@ -52,7 +54,7 @@ export default function PopularDreams() {
                     ? "bg-amber-400 text-slate-900"
                     : "text-slate-700 hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/10",
             ].join(" ")}>
-              {n === 7 ? "שבוע" : n === 30 ? "חודש" : "שנה"}
+              {n === 7 ? t("popular.period.week") : n === 30 ? t("popular.period.month") : t("popular.period.year")}
             </button>))}
         </div>
       </div>
@@ -62,11 +64,11 @@ export default function PopularDreams() {
                         dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-500/30">
           <AlertTriangle className="w-5 h-5"/>
           <div>
-            <div className="font-semibold">שגיאה בטעינת פופולרים</div>
+            <div className="font-semibold">{t("popular.errorTitle")}</div>
             <div className="text-sm opacity-75">{(error as Error).message}</div>
           </div>
         </div>) : safeRows.length === 0 ? (<div className="text-slate-700 dark:text-white/70">
-          אין נתונים לתקופה הזו עדיין.
+          {t("popular.empty")}
         </div>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {safeRows.map((row, i) => (<motion.div key={`${row.dreamId}-${row.rank}-${i}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: i * 0.06 }}>
               <FlipDreamCard row={row} windowDaysLabel={windowLabel}/>
@@ -74,7 +76,7 @@ export default function PopularDreams() {
         </div>)}
 
       {isFetching && !isLoading && (<div className="mt-3 text-xs text-slate-600 dark:text-white/60">
-          מרענן נתונים…
+          {t("popular.refreshing")}
         </div>)}
     </section>);
 }

@@ -2,14 +2,15 @@ import React from "react";
 import { Link, NavLink } from "react-router-dom";
 import Logo from "../logo/Logo";
 import { useAuthStore } from "@/stores/useAuthStore";
-
-const NAV_LINKS = [
-    { to: "/", label: "בית" },
-    { to: "/articles", label: "מאמרים" },
-    { to: "/contact", label: "צור קשר" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function NavBar() {
+    const { t } = useTranslation();
+    const NAV_LINKS = [
+        { to: "/", label: t("layout.nav.home") },
+        { to: "/articles", label: t("layout.nav.articles") },
+        { to: "/contact", label: t("layout.nav.contact") },
+    ];
     const { user, logout } = useAuthStore();
     const handleLogout = async () => {
         await logout();
@@ -37,17 +38,17 @@ export default function NavBar() {
         <div className="flex items-center gap-3">
           {!user ? (<>
               <Link to="/login" className="rounded-lg border border-black/10 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-black/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10">
-                התחברות
+                {t("layout.nav.login")}
               </Link>
               <Link to="/register" className="rounded-lg bg-gradient-to-l from-amber-500 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-amber-500/20 transition hover:opacity-90">
-                הרשמה
+                {t("layout.nav.register")}
               </Link>
             </>) : (<>
               <span className="text-sm font-medium text-slate-600 dark:text-white/80">
-                שלום, {user.firstName || user.email}
+                {t("userMenu.greeting", { name: user.firstName || user.email })}
               </span>
               <button onClick={handleLogout} className="rounded-lg border border-black/10 px-3 py-2 text-sm font-semibold text-slate-900 transition hover:bg-black/5 dark:border-white/20 dark:text-white dark:hover:bg-white/10">
-                יציאה
+                {t("layout.nav.logout")}
               </button>
             </>)}
         </div>

@@ -3,6 +3,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import type { User, UpdateUserDTO } from "@/lib/api/types";
 import { UsersApi } from "@/lib/api/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,21 +15,31 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
 import { toProxiedImage } from "@/lib/images";
 
-const schema = z.object({
-  firstName: z.string().min(1, "נדרש שם פרטי"),
-  lastName: z.string().min(1, "נדרש שם משפחה"),
-  image: z
-    .string()
-    .trim()
-    .refine((v) => v === "" || /^https?:\/\/.+/i.test(v) || /^\/api\/images\//i.test(v), {
-      message: "כתובת תמונה לא תקינה",
-    })
-    .optional(),
-});
-
-type FormValues = z.infer<typeof schema>;
+type FormValues = {
+  firstName: string;
+  lastName: string;
+  image?: string;
+};
 
 export default function UserProfileForm({ user }: { user: User }) {
+  const { t, i18n } = useTranslation();
+  const schema = React.useMemo(
+    () =>
+      z.object({
+        firstName: z.string().min(1, t("account.profile.errors.firstName")),
+        lastName: z.string().min(1, t("account.profile.errors.lastName")),
+        image: z
+          .string()
+          .trim()
+          .refine(
+            (v) => v === "" || /^https?:\/\/.+/i.test(v) || /^\/api\/images\//i.test(v),
+            { message: t("account.profile.errors.image") }
+          )
+          .optional(),
+      }),
+    [t]
+  );
+
   const qc = useQueryClient();
   const patchUser = useAuthStore((s) => s.patchUser);
   const setUser = useAuthStore((s) => s.setUser);
@@ -129,13 +140,13 @@ export default function UserProfileForm({ user }: { user: User }) {
       } else {
         setUser(updated);
       }
-      toast.success("הפרטים נשמרו בהצלחה");
+      toast.success(t("account.profile.toastSaved"));
     },
     onError: (e: any) => {
       toast.error(
         e?.response?.data?.error?.message ??
           e?.message ??
-          "שמירה נכשלה, נסה שוב"
+          t("account.profile.toastError")
       );
     },
   });
@@ -151,7 +162,7 @@ export default function UserProfileForm({ user }: { user: User }) {
           contentLength: selectedFile.size,
         });
         if (selectedFile.size > presign.maxBytes) {
-          toast.error("x\"xxx`x x'x\"xxo xzx\"xT");
+          toast.error(t("account.profile.errors.fileTooLarge"));
           return;
         }
         const putRes = await fetch(presign.uploadUrl, {
@@ -166,7 +177,7 @@ export default function UserProfileForm({ user }: { user: User }) {
           toProxiedImage(presign.proxyUrl || presign.publicUrl) ||
           presign.publicUrl;
       } catch (err: any) {
-        toast.error(err?.message || "x\"x›xox?x\" xÿx>xcxox\"");
+        toast.error(err?.message || t("account.profile.toastUpload"));
         return;
       } finally {
         setUploading(false);
@@ -188,7 +199,7 @@ export default function UserProfileForm({ user }: { user: User }) {
     <div className="relative rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur shadow-[0_12px_40px_-20px_rgba(0,0,0,.35)]">
       <div className="h-1.5 w-full bg-gradient-to-r from-fuchsia-500 via-purple-600 to-amber-400 rounded-t-2xl" />
 
-      <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6 sm:p-8" dir="rtl">
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6 sm:p-8" dir={i18n.dir()}>
         <div className="flex items-start gap-4 mb-6">
           <div className="relative shrink-0">
             <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-amber-400">
@@ -211,7 +222,7 @@ export default function UserProfileForm({ user }: { user: User }) {
               type="button"
               className="absolute -bottom-1 -left-1 p-2 rounded-full bg-black/5 hover:bg-black/10 border border-black/10 dark:bg-white/10 dark:hover:bg-white/15 dark:border-white/15"
               onClick={() => fileInputRef.current?.click()}
-              title="צלם/העלה"
+              title={t("account.profile.camera")}
             >
               <Camera className="w-4 h-4" />
             </button>
@@ -219,10 +230,10 @@ export default function UserProfileForm({ user }: { user: User }) {
 
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-amber-500 dark:from-purple-300 dark:to-amber-200">
-              פרטי חשבון
+              {t("account.profile.title")}
             </h2>
             <p className="text-sm text-slate-600 dark:text-white/70">
-              עדכון שם ותמונת פרופיל. לחץ על המצלמה כדי לבחור קובץ או הדבק כתובת תמונה.
+              {t("account.profile.subtitle")}
             </p>
           </div>
         </div>
@@ -230,12 +241,12 @@ export default function UserProfileForm({ user }: { user: User }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm mb-1 text-slate-700 dark:text-white/80">
-              שם פרטי
+              {t("signup.firstName")}
             </label>
             <Input
               {...register("firstName")}
               className="dark:bg-white/10 dark:border-white/15 dark:text-white"
-              placeholder="לדוגמה: יוסי"
+              placeholder={t("signup.firstNamePlaceholder")}
             />
             {errors.firstName && (
               <p className="mt-1 text-xs text-rose-500">
@@ -246,12 +257,12 @@ export default function UserProfileForm({ user }: { user: User }) {
 
           <div>
             <label className="block text-sm mb-1 text-slate-700 dark:text-white/80">
-              שם משפחה
+              {t("signup.lastName")}
             </label>
             <Input
               {...register("lastName")}
               className="dark:bg-white/10 dark:border-white/15 dark:text-white"
-              placeholder="לדוגמה: כהן"
+              placeholder={t("signup.lastNamePlaceholder")}
             />
             {errors.lastName && (
               <p className="mt-1 text-xs text-rose-500">
@@ -262,7 +273,7 @@ export default function UserProfileForm({ user }: { user: User }) {
 
           <div className="md:col-span-2">
             <label className="block text-sm mb-1 text-slate-700 dark:text-white/80">
-              כתובת תמונה (URL) או העלאה
+              {t("account.profile.imageLabel")}
             </label>
             <div className="flex gap-2 flex-wrap">
               <Input
@@ -279,11 +290,11 @@ export default function UserProfileForm({ user }: { user: User }) {
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" /> מעלה...
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" /> {t("signup.uploading")}
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4 mr-1" /> העלה קובץ
+                    <Upload className="w-4 h-4 mr-1" /> {t("account.profile.upload")}
                   </>
                 )}
               </Button>
@@ -297,13 +308,16 @@ export default function UserProfileForm({ user }: { user: User }) {
                   e.target.value = "";
                   if (!file) return;
                   if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-                    toast.error("פורמט לא נתמך (PNG/JPEG/WebP)");
+                    toast.error(t("account.profile.errors.format"));
                     return;
                   }
                   const objectUrl = URL.createObjectURL(file);
                   setLocalFile(file);
                   setPreviewUrl(objectUrl);
-                  setValue("image", watch("image") ?? "", { shouldDirty: true, shouldTouch: true });
+                  setValue("image", watch("image") ?? "", {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                  });
                 }}
               />
             </div>
@@ -330,7 +344,7 @@ export default function UserProfileForm({ user }: { user: User }) {
             }}
             className="border-black/15 dark:border-white/20 dark:text-white"
           >
-            איפוס
+            {t("account.profile.reset")}
           </Button>
 
           <Button
@@ -340,10 +354,10 @@ export default function UserProfileForm({ user }: { user: User }) {
           >
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 ml-2 animate-spin" /> שומר...
+                <Loader2 className="w-4 h-4 ml-2 animate-spin" /> {t("account.profile.saving")}
               </>
             ) : (
-              "שמור פרטים"
+              t("account.profile.save")
             )}
           </Button>
         </div>

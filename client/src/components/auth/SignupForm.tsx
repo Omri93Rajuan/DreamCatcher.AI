@@ -9,6 +9,7 @@ import googleLogo from "@/assets/logoGoogle.png";
 import { UploadsApi } from "@/lib/api/uploads";
 import { toast } from "react-toastify";
 import { toProxiedImage } from "@/lib/images";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   onSuccess?: () => void;
@@ -34,8 +35,6 @@ const initialState: FormState = {
   confirmPassword: "",
 };
 
-const FALLBACK_MESSAGE = "משהו השתבש, נסה שוב.";
-
 const AVATARS = [
   "/avatars/avatar-1.svg",
   "/avatars/avatar-2.svg",
@@ -52,6 +51,7 @@ const AVATARS = [
 ];
 
 export default function SignupForm({ onSuccess }: Props) {
+  const { t, i18n } = useTranslation();
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -104,23 +104,23 @@ export default function SignupForm({ onSuccess }: Props) {
 
   const validate = () => {
     const next: Errors = {};
-    if (!form.firstName.trim()) next.firstName = "נדרש שם פרטי";
-    if (!form.lastName.trim()) next.lastName = "נדרש שם משפחה";
+    if (!form.firstName.trim()) next.firstName = t("signup.errors.firstName");
+    if (!form.lastName.trim()) next.lastName = t("signup.errors.lastName");
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim().toLowerCase())
     ) {
-      next.email = "אימייל לא תקין";
+      next.email = t("signup.errors.email");
     }
     if (!form.password) {
-      next.password = "נדרשת סיסמה";
+      next.password = t("signup.errors.passwordRequired");
     } else if (form.password.length < 8) {
-      next.password = "סיסמה חייבת להיות לפחות 8 תווים";
+      next.password = t("signup.errors.passwordLength");
     }
     if (form.password !== form.confirmPassword) {
-      next.confirmPassword = "הסיסמאות לא תואמות";
+      next.confirmPassword = t("signup.errors.passwordMismatch");
     }
-    if (!selectedAvatar) next.avatar = "בחר אווטאר";
-    if (!acceptedTerms) next.terms = "חובה לאשר תנאי שימוש";
+    if (!selectedAvatar) next.avatar = t("signup.errors.avatar");
+    if (!acceptedTerms) next.terms = t("signup.errors.terms");
     const isValid = Object.keys(next).length === 0;
     setErrors(next);
     if (!isValid && next.terms) {
@@ -151,7 +151,7 @@ export default function SignupForm({ onSuccess }: Props) {
             contentLength: avatarFile.size,
           });
           if (avatarFile.size > presign.maxBytes) {
-            throw new Error("הקובץ גדול מדי");
+            throw new Error(t("signup.errors.fileTooLarge"));
           }
           const putRes = await fetch(presign.uploadUrl, {
             method: "PUT",
@@ -165,7 +165,7 @@ export default function SignupForm({ onSuccess }: Props) {
             toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
           setAvatarUploadCache({ fingerprint, url: imageUrl });
         } catch (err: any) {
-          toast.error(err?.message || "העלאת אווטאר נכשלה");
+          toast.error(err?.message || t("signup.errors.avatarUpload"));
           setSubmitting(false);
           setUploadingAvatar(false);
           return;
@@ -205,14 +205,14 @@ export default function SignupForm({ onSuccess }: Props) {
         onSuccess?.();
         return;
       }
-      setErrors({ general: "לא הצלחנו ליצור משתמש, נסו שוב." });
+      setErrors({ general: t("signup.errors.genericCreate") });
     } catch (error: any) {
       const status = error?.response?.status;
       const message =
-        error?.response?.data?.message || error?.message || FALLBACK_MESSAGE;
+        error?.response?.data?.message || error?.message || t("auth.signupErrors.generic");
       if (status === 409) {
         setErrors({
-          email: "האימייל כבר רשום. נסו להתחבר או לאפס סיסמה.",
+          email: t("signup.errors.emailExists"),
         });
       } else {
         setErrors({ general: message });
@@ -224,7 +224,7 @@ export default function SignupForm({ onSuccess }: Props) {
 
   const handleAvatarFileSelect = (file: File) => {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-      toast.error("פורמט לא נתמך (PNG/JPEG/WebP)");
+      toast.error(t("account.profile.errors.format"));
       return;
     }
     setAvatarFile(file);
@@ -237,16 +237,16 @@ export default function SignupForm({ onSuccess }: Props) {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6" dir="rtl" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-6" dir={i18n.dir()} noValidate>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-white/80">
-            שם פרטי
+            {t("signup.firstName")}
             <input
               name="firstName"
               value={form.firstName}
               onChange={handleChange}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-white/15 dark:bg-white/10 dark:text-white"
-              placeholder="לדוגמה: יוסי"
+              placeholder={t("signup.firstNamePlaceholder")}
               autoComplete="given-name"
               required
             />
@@ -255,13 +255,13 @@ export default function SignupForm({ onSuccess }: Props) {
             )}
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-white/80">
-            שם משפחה
+            {t("signup.lastName")}
             <input
               name="lastName"
               value={form.lastName}
               onChange={handleChange}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-white/15 dark:bg-white/10 dark:text-white"
-              placeholder="לדוגמה: כהן"
+              placeholder={t("signup.lastNamePlaceholder")}
               autoComplete="family-name"
               required
             />
@@ -273,7 +273,7 @@ export default function SignupForm({ onSuccess }: Props) {
 
         <div className="space-y-2">
           <p className="text-sm font-semibold text-slate-700 dark:text-white/80">
-            בחר אווטאר
+            {t("signup.avatarTitle")}
           </p>
           <div
             className={[
@@ -311,9 +311,9 @@ export default function SignupForm({ onSuccess }: Props) {
                     <>
                       <div className="absolute inset-0 rounded-full ring-2 ring-white/80 blur-[1px] pointer-events-none" />
                       <div className="absolute inset-[-6px] rounded-full bg-amber-300/15 blur-md pointer-events-none" />
-                      <span className="absolute top-1 right-1">
+                     <span className="absolute top-1 right-1">
                         <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500 text-white text-[10px] shadow">
-                          ✓ נבחר
+                          {t("signup.selected")}
                         </span>
                       </span>
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 h-6 w-6 rounded-full bg-white text-amber-500 border border-amber-300 shadow flex items-center justify-center text-xs font-black dark:bg-slate-900 dark:text-amber-200 dark:border-amber-300">
@@ -332,7 +332,7 @@ export default function SignupForm({ onSuccess }: Props) {
                 onClick={() => setShowAllAvatars(true)}
                 className="text-xs px-3 py-2 rounded-full border border-amber-400 text-amber-700 bg-amber-50 hover:bg-amber-100 transition dark:border-amber-300 dark:text-amber-100 dark:bg-amber-500/15 dark:hover:bg-amber-500/25"
               >
-                {`הצג עוד ${AVATARS.length - 4} אווטרים`}
+                {t("signup.showMoreAvatars", { count: AVATARS.length - 4 })}
               </button>
             )}
             {showAllAvatars && (
@@ -341,7 +341,7 @@ export default function SignupForm({ onSuccess }: Props) {
                 onClick={() => setShowAllAvatars(false)}
                 className="text-xs px-3 py-2 rounded-full border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 transition dark:border-white/20 dark:text-white dark:bg-slate-800 dark:hover:bg-slate-700"
               >
-                הצג פחות
+                {t("signup.showLessAvatars")}
               </button>
             )}
             <button
@@ -350,7 +350,7 @@ export default function SignupForm({ onSuccess }: Props) {
               disabled={uploadingAvatar}
               className="text-xs px-3 py-2 rounded-full border border-blue-300 text-blue-700 bg-white hover:bg-blue-50 transition dark:border-white/20 dark:text-white dark:bg-slate-800 dark:hover:bg-slate-700"
             >
-              {uploadingAvatar ? "מעלה..." : "העלה אווטאר משלך"}
+              {uploadingAvatar ? t("signup.uploading") : t("signup.uploadOwn")}
             </button>
             <input
               ref={fileInputRef}
@@ -371,7 +371,7 @@ export default function SignupForm({ onSuccess }: Props) {
         </div>
 
         <label className="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-white/80">
-          אימייל
+          {t("signup.email")}
           <input
             name="email"
             type="email"
@@ -389,14 +389,14 @@ export default function SignupForm({ onSuccess }: Props) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-white/80">
-            סיסמה
+            {t("signup.password")}
             <input
               name="password"
               type="password"
               value={form.password}
               onChange={handleChange}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-white/15 dark:bg-white/10 dark:text-white"
-              placeholder="לפחות 8 תווים"
+              placeholder={t("signup.passwordPlaceholder")}
               autoComplete="new-password"
               required
             />
@@ -405,14 +405,14 @@ export default function SignupForm({ onSuccess }: Props) {
             )}
           </label>
           <label className="flex flex-col gap-1.5 text-sm font-semibold text-slate-700 dark:text-white/80">
-            אימות סיסמה
+            {t("signup.passwordConfirm")}
             <input
               name="confirmPassword"
               type="password"
               value={form.confirmPassword}
               onChange={handleChange}
               className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 shadow-sm focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200 dark:border-white/15 dark:bg-white/10 dark:text-white"
-              placeholder="הקלד שוב את הסיסמה"
+              placeholder={t("signup.passwordConfirmPlaceholder")}
               autoComplete="new-password"
               required
             />
@@ -432,7 +432,7 @@ export default function SignupForm({ onSuccess }: Props) {
             />
           </div>
           <p className="text-xs text-slate-500 dark:text-white/60">
-            סיסמה חזקה יותר כוללת אותיות גדולות/קטנות ומספרים.
+            {t("signup.passwordHint")}
           </p>
         </div>
 
@@ -440,10 +440,10 @@ export default function SignupForm({ onSuccess }: Props) {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-800 dark:text-white">
-                תנאי שימוש
+                {t("signup.termsTitle")}
               </p>
               <p className="text-xs text-slate-500 dark:text-white/60">
-                יש לקרוא ולאשר את תנאי השימוש לפני יצירת חשבון.
+                {t("signup.termsSubtitle")}
               </p>
             </div>
             <button
@@ -451,13 +451,13 @@ export default function SignupForm({ onSuccess }: Props) {
               onClick={() => setShowTerms(true)}
               className="inline-flex items-center justify-center rounded-full border border-amber-500 px-4 py-2 text-xs font-semibold text-amber-700 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300 dark:border-amber-300 dark:text-amber-200 dark:hover:bg-white/10"
             >
-              הצג תנאים
+              {t("signup.showTerms")}
             </button>
           </div>
           <div className="mt-3 text-xs font-semibold">
             {acceptedTerms ? (
               <span className="text-emerald-600 dark:text-emerald-300">
-                אישרת תנאי שימוש
+                {t("signup.termsAccepted")}
               </span>
             ) : null}
           </div>
@@ -466,7 +466,7 @@ export default function SignupForm({ onSuccess }: Props) {
           )}
         </div>
 
-        {errors.general && (
+          {errors.general && (
           <div className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 ring-1 ring-red-200 dark:bg-red-500/10 dark:text-red-200 dark:ring-red-400/30">
             {errors.general}
           </div>
@@ -477,11 +477,11 @@ export default function SignupForm({ onSuccess }: Props) {
           disabled={submitting}
           className="inline-flex w-full items-center justify-center rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 text-base font-semibold text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-amber-300 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {submitting ? "נרשם..." : "צור חשבון"}
+          {submitting ? t("signup.submitting") : t("signup.submit")}
         </button>
 
         <div className="text-center text-xs text-slate-400 dark:text-white/60">
-          --- או ---
+          --- {t("signup.or")} ---
         </div>
 
         <button
@@ -490,7 +490,7 @@ export default function SignupForm({ onSuccess }: Props) {
           disabled={googleAuth.loading}
           onClick={() => {
             if (!acceptedTerms) {
-              toast.error("חובה לאשר תנאי שימוש");
+              toast.error(t("signup.errors.terms"));
               return;
             }
             googleAuth.start({
@@ -508,7 +508,7 @@ export default function SignupForm({ onSuccess }: Props) {
           }`}
         >
           {googleAuth.loading ? (
-            "מכין קישור..."
+            t("signup.googlePreparing")
           ) : (
             <img
               src={googleLogo}

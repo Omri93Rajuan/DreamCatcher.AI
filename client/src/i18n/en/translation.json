@@ -1,0 +1,544 @@
+{
+  "layout": {
+    "brandTagline": "Dreamers, awake, interpret - together.",
+    "nav": {
+      "home": "Home",
+      "articles": "Articles",
+      "contact": "Contact",
+      "login": "Log in",
+      "register": "Sign up",
+      "logout": "Log out",
+      "account": "My profile",
+      "myDreams": "My dreams",
+      "menuOpen": "Open menu",
+      "menuClose": "Close user menu",
+      "logoLabel": "Home",
+      "languageToggle": "Change language"
+    },
+    "footer": {
+      "tagline": "Dreamers, awake, interpret - together.",
+      "allRights": "All rights reserved."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "notFound": "Not found",
+    "errorGeneric": "Something went wrong",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "save": "Save",
+    "close": "Close",
+    "backHome": "Back to home",
+    "readMore": "Read more",
+    "haveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?"
+  },
+  "userMenu": {
+    "label": "User menu",
+    "verified": "Verified account",
+    "greeting": "Hello, {{name}}",
+    "profile": "My profile",
+    "myDreams": "My dreams",
+    "logout": "Log out",
+    "fallbackName": "User"
+  },
+  "home": {
+    "heroTitle": "Discover what your dreams mean",
+    "heroSubtitle": "Interpret your dreams with advanced AI",
+    "statsError": "Failed to load statistics: {{message}}",
+    "allDreams": "All dreams"
+  },
+  "interpret": {
+    "placeholder": "Describe your dream... (paste works too)",
+    "cta": "Interpret my dream",
+    "thinking": "Thinking...",
+    "heading": "Dream insight",
+    "share": "Share with everyone",
+    "shared": "Shared successfully!",
+    "openMine": "Open my dreams",
+    "sharedNotice": "The dream is now public for everyone to see.",
+    "toastLogin": "Please log in to interpret a dream",
+    "titlePlaceholder": "Title (optional)",
+    "submitting": "Interpreting and saving..."
+  },
+  "stats": {
+    "aria": "Key metrics",
+    "total": "Total dreams",
+    "newSince": "New in {{days}} days",
+    "publishedSince": "Published in {{days}} days",
+    "period": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    }
+  },
+  "popular": {
+    "title": "Most popular dreams",
+    "period": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "errorTitle": "Failed to load popular dreams",
+    "empty": "No data for this period yet.",
+    "refreshing": "Refreshing data..."
+  },
+  "terms": {
+    "badge": "Terms of use & privacy",
+    "title": "DreamCatcher.AI – Terms of use",
+    "intro": "We want you to feel safe. Here’s a short explanation of what is allowed, how sharing works, and user responsibility.",
+    "sections": [
+      {
+        "title": "1. Fair use",
+        "body": "The service is only for managing dreams and personal interpretations. Do not use it commercially or share other users’ content without consent."
+      },
+      {
+        "title": "2. Privacy",
+        "body": "We protect the personal data users share, but avoid posting identifying information or very sensitive content."
+      },
+      {
+        "title": "3. Personal responsibility",
+        "body": "DreamCatcher.AI does not replace professional advice. Every decision made following an interpretation is solely the user’s responsibility."
+      },
+      {
+        "title": "4. Terms updates",
+        "body": "We will update these terms from time to time. We’ll notify in advance, and continued use counts as agreement to the updated version."
+      }
+    ],
+    "footer": "Using the service means you agree to all terms, including data retention, notifications, and removal of harmful content.",
+    "ctaPrivacy": "Read the privacy policy",
+    "ctaHome": "Back to home",
+    "accept": "I agree to the terms"
+  },
+  "loginPage": {
+    "badge": "Welcome back 👋",
+    "title": "Log in to continue your dream journey",
+    "subtitle": "Quick access to your saved dreams, personal notes, and messages waiting for the next moment.",
+    "highlights": [
+      "Access all dreams and saved interpretations",
+      "Exclusive articles and content to open heart and mind",
+      "Control tools to manage your long-term dream journey"
+    ],
+    "formTitle": "Log in to DreamCatcher.AI",
+    "formSubtitle": "Enter details to continue exploring your dreams and insights."
+  },
+  "registerPage": {
+    "badge": "Over 25,000 dreamers on DreamCatcher.AI",
+    "title": "Create a new account and get emotional support through your dreams",
+    "subtitle": "DreamCatcher.AI combines daily journaling, AI, and calming content to help you understand the messages hidden in your dreams and turn them into growth.",
+    "benefits": [
+      "Smart dream interpretation with AI that speaks your language.",
+      "Personal dream journal that detects emotional patterns and returns practical insights.",
+      "Short calming tools, meditations, and breathing for gentle sleep."
+    ],
+    "formTitle": "Short, focused signup",
+    "formSubtitle": "Fill in your details; we'll guide you to calm and deeper insights.",
+    "termsNote": "By clicking “Sign up” you agree to the terms of use and privacy policy."
+  },
+  "signup": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "firstNamePlaceholder": "e.g., John",
+    "lastNamePlaceholder": "e.g., Doe",
+    "avatarTitle": "Choose an avatar",
+    "selected": "Selected",
+    "showMoreAvatars": "Show {{count}} more avatars",
+    "showLessAvatars": "Show less",
+    "uploadOwn": "Upload your own avatar",
+    "uploading": "Uploading...",
+    "email": "Email",
+    "password": "Password",
+    "passwordPlaceholder": "At least 8 characters",
+    "passwordConfirm": "Confirm password",
+    "passwordConfirmPlaceholder": "Re-enter password",
+    "passwordHint": "Stronger passwords include upper/lowercase letters and numbers.",
+    "termsTitle": "Terms of use",
+    "termsSubtitle": "You must read and accept the terms before creating an account.",
+    "showTerms": "Show terms",
+    "termsAccepted": "Terms accepted",
+    "submit": "Create account",
+    "submitting": "Signing up...",
+    "or": "or",
+    "googlePreparing": "Preparing link...",
+    "errors": {
+      "firstName": "First name is required",
+      "lastName": "Last name is required",
+      "email": "Invalid email",
+      "passwordRequired": "Password is required",
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordMismatch": "Passwords do not match",
+      "avatar": "Select an avatar",
+      "terms": "You must accept the terms",
+      "fileTooLarge": "File is too large",
+      "avatarUpload": "Avatar upload failed",
+      "genericCreate": "Could not create user, please try again.",
+      "emailExists": "Email already registered. Try logging in or resetting password."
+    }
+  },
+  "myDreams": {
+    "title": "My dreams",
+    "search": "Search",
+    "searchTitle": "Search (Enter)",
+    "searchPlaceholder": "Search by text/title…  (/)",
+    "clearSearch": "Clear search",
+    "empty": "No dreams to show yet.",
+    "pageLabel": "Page {{page}} of {{pages}}",
+    "more": "More...",
+    "flip": "Flip to view",
+    "flipBack": "Flip back",
+    "shared": "Shared",
+    "private": "Private",
+    "shareEnable": "Share",
+    "shareDisable": "Stop sharing",
+    "delete": "Delete dream",
+    "deleteTitle": "Delete this dream?",
+    "deleteWarning": "This action cannot be undone.",
+    "deleteConfirm": "Delete",
+    "flipAria": "Flip card"
+  },
+  "search": {
+    "placeholder": "Search dreams...",
+    "clear": "Clear search",
+    "aria": "Search dreams"
+  },
+  "reactions": {
+    "like": "Like",
+    "dislike": "Dislike",
+    "views": "Views"
+  },
+  "googleCallback": {
+    "connecting": "Connecting to Google account...",
+    "errorTitle": "Something went wrong in the login flow",
+    "backLogin": "Back to login",
+    "goRegister": "Go to sign up",
+    "failed": "Could not verify the account. Please try again or sign up.",
+    "verifyFailed": "Could not verify the account. Try logging in again or sign up.",
+    "genericError": "Login failed. Please try again or sign up."
+  },
+  "privacy": {
+    "badge": "Privacy policy",
+    "title": "How we protect your data",
+    "intro": "Privacy matters to us. You decide what to share about your dreams, and we will not share anything beyond what you approve.",
+    "sections": [
+      {
+        "title": "1. Data we collect",
+        "body": "We collect only what’s needed to run the platform: username, email, dreams you choose to share, and anonymous usage data to improve performance. Data is stored securely and encrypted."
+      },
+      {
+        "title": "2. Choice, sharing, and removal",
+        "body": "You can choose not to share private dreams, delete interpretations, or cancel your account at any time. Requests to access, correct, or delete data are handled within a reasonable time."
+      },
+      {
+        "title": "3. Storage and security",
+        "body": "Alongside internal access limits, we only provide information that aligns with the law. Even after closing an account we keep only essential data for security and compliance."
+      }
+    ],
+    "ctaTerms": "Read the terms of use",
+    "ctaHome": "Back to home"
+  },
+  "account": {
+    "title": "My details",
+    "subtitle": "Update your name and image; the email is read-only.",
+    "profile": {
+      "title": "Account details",
+      "subtitle": "Update your name and profile image. Click the camera to upload a file or paste an image URL.",
+      "imageLabel": "Image URL or upload",
+      "upload": "Upload file",
+      "reset": "Reset",
+      "save": "Save details",
+      "saving": "Saving...",
+      "toastSaved": "Details saved successfully",
+      "toastError": "Save failed, please try again",
+      "toastUpload": "Upload failed, please try again",
+      "camera": "Capture/upload",
+      "errors": {
+        "firstName": "First name is required",
+        "lastName": "Last name is required",
+        "image": "Invalid image URL",
+        "fileTooLarge": "File is too large",
+        "format": "Unsupported format (PNG/JPEG/WebP)"
+      }
+    },
+    "security": {
+      "title": "Security & password",
+      "subtitle": "Reset password via secure email link.",
+      "sent": "If the email exists, we sent a reset link.",
+      "rateLimit": "You can send one reset request per day. Try again tomorrow.",
+      "error": "Something went wrong. Try again later.",
+      "sending": "Sending...",
+      "cta": "Send reset link",
+      "hint": "You can send one reset request",
+      "dailyLimit": "once per day",
+      "spam": "If you do not get an email, check spam."
+    },
+    "delete": {
+      "cta": "Delete account",
+      "title": "Delete account",
+      "description": "Final action: all data linked to your account will be deleted permanently. This cannot be undone.",
+      "confirmText": "I confirm deleting the account permanently.",
+      "confirmCta": "Delete account",
+      "success": "Account deleted successfully. See you again if you choose!",
+      "error": "Error deleting account. Please try again later.",
+      "noId": "User id not found."
+    }
+  },
+  "dreamDetails": {
+    "dream": "The dream:",
+    "interpretation": "Interpretation:"
+  },
+  "accessibility": {
+    "trigger": "Accessibility menu",
+    "dialogLabel": "Accessibility options",
+    "activeHeading": "Active adjustments",
+    "close": "Close accessibility menu",
+    "textSize": "Text size",
+    "textSizeDecrease": "Decrease text",
+    "textSizeIncrease": "Increase text",
+    "colorAdjustments": "Color adjustments",
+    "reset": "Reset preferences",
+    "profiles": {
+      "default": {
+        "label": "Default",
+        "description": "Respect the current theme"
+      },
+      "bright": {
+        "label": "Bright contrast",
+        "description": "Brighten backgrounds with dark text"
+      },
+      "dim": {
+        "label": "Dim contrast",
+        "description": "Darken backgrounds for bright text"
+      },
+      "mono": {
+        "label": "Monochrome",
+        "description": "Gray scale across the site"
+      },
+      "invert": {
+        "label": "Invert colors",
+        "description": "Full inversion + hue rotate"
+      }
+    },
+    "toggles": {
+      "highContrast": {
+        "label": "High contrast",
+        "description": "Boost backgrounds and borders"
+      },
+      "highlightLinks": {
+        "label": "Highlight links",
+        "description": "Underline and outline links"
+      },
+      "dyslexicFont": {
+        "label": "Dyslexia-friendly font",
+        "description": "Use OpenDyslexic"
+      },
+      "reduceMotion": {
+        "label": "Reduce motion",
+        "description": "Disable transitions"
+      },
+      "focusRing": {
+        "label": "Focus highlight",
+        "description": "Thick outline for focusable elements"
+      },
+      "textSpacing": {
+        "label": "Text spacing",
+        "description": "Extra line/letter spacing"
+      },
+      "readerMode": {
+        "label": "Reader mode",
+        "description": "Remove backgrounds, keep text"
+      },
+      "bigCursor": {
+        "label": "Large cursor",
+        "description": "Increase pointer size"
+      }
+    }
+  },
+  "categories": {
+    "flying": "Flying",
+    "falling": "Falling",
+    "being_chased": "Being chased",
+    "teeth": "Teeth",
+    "exam": "Exam",
+    "late": "Running late",
+    "death": "Loss & grief",
+    "romance": "Romance",
+    "work": "Work",
+    "school": "School",
+    "family": "Family",
+    "animals": "Animals",
+    "water": "Water",
+    "house": "Home",
+    "vehicle": "Vehicles",
+    "travel": "Travel",
+    "lost": "Feeling lost",
+    "monster": "Monsters & fears",
+    "paralysis": "Sleep paralysis",
+    "lucid": "Lucid dream"
+  },
+  "dreams": {
+    "categoriesAll": "All",
+    "categoriesMore": "More...",
+    "categoriesLess": "Less...",
+    "untitled": "Untitled dream",
+    "shareTooltip": "Share dream",
+    "shareAction": "Share",
+    "moreTags": "And {{count}} more tags",
+    "card": {
+      "dream": "The dream",
+      "ai": "AI interpretation",
+      "readMore": "Read more \u2190",
+      "fullDream": "Full dream",
+      "fullAi": "Full AI interpretation",
+      "change": "Change vs previous period",
+      "score": "Score"
+    },
+    "refreshing": "Refreshing data...",
+    "recentTitle": "Recent dreams"
+  },
+  "articles": {
+    "readMore": "Read more",
+    "readMoreAria": "Read more about: {{title}}",
+    "listAria": "Articles list",
+    "recommended": "Recommended articles",
+    "count": "{{count}} articles",
+    "backToList": "Back to list",
+    "backAria": "Back to articles",
+    "readingTime": "~{{minutes}} min read"
+  },
+  "contact": {
+    "title": "Contact us, let your dream arrive",
+    "subtitle": "Have an idea, a question, or a late-night spark? Leave details and I'll get back with a reply that keeps the dream going.",
+    "tagFastSupport": "Fast support",
+    "tagAi": "AI inspirations",
+    "tagDreams": "Dream questions",
+    "field": {
+      "name": "Full name",
+      "email": "Email to reply",
+      "message": "Message"
+    },
+    "placeholder": {
+      "name": "Your full name",
+      "email": "you@dreams.com",
+      "message": "Tell me about the dream, the idea, or what you'd like us to build together."
+    },
+    "cta": "Send message",
+    "sending": "Sending...",
+    "success": "Thanks! Your message was sent; we'll get back to you soon.",
+    "meta": {
+      "personal": "Human response, no bots.",
+      "sla": "We typically reply within one business day."
+    },
+    "errors": {
+      "nameMin": "Name must be at least {{min}} characters",
+      "emailInvalid": "Invalid email",
+      "messageMin": "Message must be at least {{min}} characters",
+      "generalInvalid": "Fix the highlighted fields.",
+      "general400Empty": "One of the fields is invalid.",
+      "fieldInvalid": "Invalid value",
+      "fallback": "Something went wrong. Please try again later."
+    }
+  },
+  "auth": {
+    "dialog": {
+      "title": "Dream Gate",
+      "subtitle": "To react and like, you need to “fall asleep” and join us 😴",
+      "ctaSignup": "Sign up and drift ✨",
+      "ctaLogin": "Enter the dreams 🌙",
+      "haveAccount": "Already have an account?",
+      "noAccount": "Don't have an account?",
+      "switchLogin": "Log in here",
+      "switchSignup": "Sign up"
+    },
+    "gate": {
+      "headline": "Want to contribute and interpret dreams? Sign up free",
+      "tabSignup": "Sign up",
+      "tabLogin": "Log in",
+      "footnote": "You can close anytime. Background is blocked while signing up."
+    },
+    "loginForm": {
+      "email": "Email",
+      "password": "Password",
+      "show": "Show",
+      "hide": "Hide",
+      "submit": "Log in",
+      "submitting": "Logging in...",
+      "or": "--- or ---",
+      "googleAria": "Log in with Google",
+      "googleLoading": "Connecting...",
+      "forgotPrompt": "Forgot password?",
+      "forgotCta": "Send reset link",
+      "registerPrompt": "Don't have an account?",
+      "registerCta": "Sign up",
+      "emailPlaceholder": "name@example.com",
+      "passwordPlaceholder": "At least 8 characters"
+    },
+    "loginErrors": {
+      "fallback": "Login failed. Please try again.",
+      "invalid": "Email or password is incorrect. Try again or reset.",
+      "invalidPassword": "Password does not match. Check again or reset.",
+      "missing": "Missing details. Please fill email and password.",
+      "tooMany": "Too many attempts. Please wait a minute and try again.",
+      "serverBusy": "Server is busy. Try again in a moment.",
+      "verifyFailed": "Could not verify login details. Try again."
+    },
+    "signupErrors": {
+      "notVerified": "Account created but not verified.",
+      "generic": "Signup failed. Please try again."
+    },
+    "forgot": {
+      "title": "Forgot password",
+      "emailLabel": "Email",
+      "emailInvalid": "Invalid email",
+      "emptyEmail": "Enter an email to reset",
+      "sending": "Sending...",
+      "sendCta": "Send reset link",
+      "sent": "If the email exists, we sent a reset link.",
+      "hint": "We'll email you if an account exists with this address. Check spam too."
+    },
+    "reset": {
+      "title": "Reset password",
+      "newPasswordLabel": "New password",
+      "confirmLabel": "Confirm password",
+      "saveCta": "Update password",
+      "saving": "Updating...",
+      "noToken": "Reset link is invalid or expired. Please request a new link.",
+      "success": "Password updated. Please log in again.",
+      "tokenInvalid": "Reset link is invalid or expired. Please request a new link.",
+      "genericError": "Reset failed. Please try again later.",
+      "rules": {
+        "min8": "At least 8 characters",
+        "digit": "Include a digit",
+        "upper": "Include an uppercase letter",
+        "mismatch": "Passwords do not match"
+      }
+    },
+    "google": {
+      "termsRequired": "Please accept the terms before signing up with Google.",
+      "noRedirect": "No redirect target found for Google OAuth.",
+      "unavailable": "Google OAuth is unavailable right now."
+    }
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "titleLight": "Switch to light mode",
+    "titleDark": "Switch to dark mode"
+  },
+  "sharePrompt": {
+    "title": "Dream saved! Share it with others?",
+    "body": "We already saved your dream as private. You can share it so others can see it in the feed and react.",
+    "keepPrivate": "Keep private",
+    "shareNow": "Share now",
+    "footer": "You can change sharing later from the dream card."
+  }
+}
+
+
+
+
+

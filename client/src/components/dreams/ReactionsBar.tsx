@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { DreamsApi } from "@/lib/api/dreams";
 import { ThumbsUp, ThumbsDown, Eye } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -23,6 +24,7 @@ export default function ReactionsBar({
   disabled?: boolean;
   className?: string;
 }) {
+  const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const { isAuthenticated } = useAuthStore();
   const [authOpen, setAuthOpen] = React.useState(false);
@@ -106,14 +108,14 @@ export default function ReactionsBar({
     <>
       <div
         className={`flex items-center gap-4 text-sm ${className || ""}`}
-        dir="rtl"
+        dir={i18n.dir()}
       >
         <button
           type="button"
           onClick={() => handleReact("like")}
           disabled={disabled}
           aria-pressed={myReaction === "like"}
-          title="לייק"
+          title={t("reactions.like")}
         >
           <ThumbsUp className="w-4 h-4 inline-block" /> {likes}
         </button>
@@ -123,12 +125,15 @@ export default function ReactionsBar({
           onClick={() => handleReact("dislike")}
           disabled={disabled}
           aria-pressed={myReaction === "dislike"}
-          title="דיסלייק"
+          title={t("reactions.dislike")}
         >
           <ThumbsDown className="w-4 h-4 inline-block" /> {dislikes}
         </button>
 
-        <span title="צפיות" aria-label={`צפיות: ${viewsTotal}`}>
+        <span
+          title={t("reactions.views")}
+          aria-label={`${t("reactions.views")}: ${viewsTotal}`}
+        >
           <Eye className="w-4 h-4 inline-block" /> {viewsTotal}
         </span>
       </div>

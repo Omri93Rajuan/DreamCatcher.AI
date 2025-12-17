@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 type Props = {
     page: number;
     pages: number;
@@ -15,6 +16,7 @@ function getPageWindow(page: number, pages: number, size = 5) {
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
 export default function Pagination({ page, pages, onChange, disabled }: Props) {
+    const { t, i18n } = useTranslation();
     if (pages <= 1)
         return null;
     const windowPages = getPageWindow(page, pages);
@@ -26,9 +28,9 @@ export default function Pagination({ page, pages, onChange, disabled }: Props) {
     const activeBtn = "bg-[var(--brand)] text-[color:var(--brand-fg)] shadow-[0_0_14px_rgba(201,162,58,0.35)] hover:brightness-105";
     const prev = () => page > 1 && onChange(page - 1);
     const next = () => page < pages && onChange(page + 1);
-    return (<div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3" dir="rtl">
+    return (<div className="mt-10 flex flex-wrap items-center justify-center gap-2 sm:gap-3" dir={i18n.dir()}>
       <Button onClick={prev} className={`${baseBtn} ${outlineBtn} ${page <= 1 ? "opacity-50 pointer-events-none" : ""}`}>
-        הקודם
+        {t("pagination.prev")}
       </Button>
 
       {windowPages.map((p) => (<Button key={p} onClick={() => onChange(p)} className={`${baseBtn} ${p === page ? activeBtn : outlineBtn}`} aria-current={p === page ? "page" : undefined}>
@@ -36,7 +38,7 @@ export default function Pagination({ page, pages, onChange, disabled }: Props) {
         </Button>))}
 
       <Button onClick={next} className={`${baseBtn} ${outlineBtn} ${page >= pages ? "opacity-50 pointer-events-none" : ""}`}>
-        הבא
+        {t("pagination.next")}
       </Button>
     </div>);
 }

@@ -12,10 +12,10 @@ export function calcReadingTime(text: string) {
     const wpm = 220;
     return Math.max(1, Math.round(words / wpm));
 }
-export function fmtDate(iso: string) {
+export function fmtDate(iso: string, locale = "he-IL") {
     try {
         const d = new Date(iso);
-        return d.toLocaleDateString("he-IL", {
+        return d.toLocaleDateString(locale, {
             year: "numeric",
             month: "long",
             day: "numeric",

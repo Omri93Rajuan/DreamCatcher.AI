@@ -1,6 +1,7 @@
-export const enableRTL = () => {
-    if (typeof document !== "undefined") {
-        document.documentElement.setAttribute("dir", "rtl");
-        document.documentElement.setAttribute("lang", "he");
-    }
+export const setDocumentDirection = (language: string) => {
+  if (typeof document === "undefined") return;
+  const dir = language === "he" ? "rtl" : "ltr";
+  document.documentElement.setAttribute("dir", dir);
+  document.documentElement.setAttribute("lang", language);
+  document.body?.setAttribute("dir", dir);
 };
