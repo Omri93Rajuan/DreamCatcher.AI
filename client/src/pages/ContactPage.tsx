@@ -42,6 +42,7 @@ export default function ContactPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (error) setError(null);
     const fieldError = validateField(name as keyof FormState, value);
     setErrors((prev) => {
       const next = { ...prev };
@@ -127,7 +128,10 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="relative mt-10 overflow-hidden rounded-3xl border border-white/80 bg-white/80 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
+        <div
+          id="contact-section"
+          className="relative mt-10 overflow-hidden rounded-3xl border border-white/80 bg-white/80 shadow-2xl backdrop-blur-xl dark:border-white/10 dark:bg-white/5"
+        >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.6),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(255,196,64,0.25),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(99,102,241,0.15),transparent_35%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,196,64,0.12),transparent_35%)]" />
           <div className="relative p-8 md:p-10">
             <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
@@ -156,7 +160,7 @@ export default function ContactPage() {
                         ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
                         : "border-slate-200 focus:border-amber-400 focus:ring-amber-300/60 dark:border-white/15"
                     }`}
-                    placeholder="כמו שמופיע בתעודה"
+                    placeholder="השם המלא שלך"
                   />
                   {errors.name && <span className="text-xs font-normal text-red-500 dark:text-red-300">{errors.name}</span>}
                 </label>
