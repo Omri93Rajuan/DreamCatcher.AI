@@ -1,22 +1,24 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api/apiClient";
 
 type FormState = { name: string; email: string; message: string };
 type FormErrors = Partial<FormState>;
 
 const initialForm: FormState = { name: "", email: "", message: "" };
+const MIN_NAME = 2;
+const MIN_MESSAGE = 10;
 
 function validateField(key: keyof FormState, value: string): string | undefined {
   const trimmed = value.trim();
   switch (key) {
     case "name":
-      if (trimmed.length < 2) return "שם חייב להכיל לפחות 2 תווים";
+      if (trimmed.length < MIN_NAME) return `שם חייב להכיל לפחות ${MIN_NAME} תווים`;
       return;
     case "email":
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) return "אימייל לא תקין";
       return;
     case "message":
-      if (trimmed.length < 10) return "הודעה חייבת להיות לפחות 10 תווים";
+      if (trimmed.length < MIN_MESSAGE) return `הודעה חייבת להיות לפחות ${MIN_MESSAGE} תווים`;
       return;
     default:
       return;
@@ -38,6 +40,14 @@ export default function ContactPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
+  const firstErrorRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    if (!firstErrorRef.current) return;
+    firstErrorRef.current.focus({ preventScroll: false });
+  }, [errors]);
+
+  const hasError = useMemo(() => Object.keys(errors).length > 0 || !!error, [errors, error]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -134,7 +144,7 @@ export default function ContactPage() {
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.6),transparent_32%),radial-gradient(circle_at_80%_0%,rgba(255,196,64,0.25),transparent_32%),radial-gradient(circle_at_50%_80%,rgba(99,102,241,0.15),transparent_35%)] dark:bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(255,196,64,0.12),transparent_35%)]" />
           <div className="relative p-8 md:p-10">
-            <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
+            <form onSubmit={handleSubmit} className="space-y-6" dir="rtl" noValidate>
               {/* Honeypot anti-bot field (should stay empty) */}
               <input
                 type="text"
@@ -155,6 +165,11 @@ export default function ContactPage() {
                     value={form.name}
                     onChange={handleChange}
                     required
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? "name-error" : undefined}
+                    ref={(el) => {
+                      if (errors.name && !firstErrorRef.current) firstErrorRef.current = el;
+                    }}
                     className={`rounded-2xl border bg-white/90 px-4 py-3 text-base text-slate-900 shadow-inner transition focus:outline-none focus:ring-2 dark:bg-white/10 dark:text-white ${
                       errors.name
                         ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
@@ -162,7 +177,11 @@ export default function ContactPage() {
                     }`}
                     placeholder="השם המלא שלך"
                   />
-                  {errors.name && <span className="text-xs font-normal text-red-500 dark:text-red-300">{errors.name}</span>}
+                  {errors.name && (
+                    <span id="name-error" className="text-xs font-normal text-red-500 dark:text-red-300">
+                      {errors.name}
+                    </span>
+                  )}
                 </label>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-slate-800 dark:text-white/90">
@@ -173,6 +192,11 @@ export default function ContactPage() {
                     value={form.email}
                     onChange={handleChange}
                     required
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? "email-error" : undefined}
+                    ref={(el) => {
+                      if (errors.email && !firstErrorRef.current) firstErrorRef.current = el;
+                    }}
                     className={`rounded-2xl border bg-white/90 px-4 py-3 text-base text-slate-900 shadow-inner transition focus:outline-none focus:ring-2 dark:bg-white/10 dark:text-white ${
                       errors.email
                         ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
@@ -181,7 +205,9 @@ export default function ContactPage() {
                     placeholder="you@dreams.com"
                   />
                   {errors.email && (
-                    <span className="text-xs font-normal text-red-500 dark:text-red-300">{errors.email}</span>
+                    <span id="email-error" className="text-xs font-normal text-red-500 dark:text-red-300">
+                      {errors.email}
+                    </span>
                   )}
                 </label>
               </div>
@@ -194,6 +220,11 @@ export default function ContactPage() {
                   onChange={handleChange}
                   rows={6}
                   required
+                  aria-invalid={!!errors.message}
+                  aria-describedby={errors.message ? "message-error" : undefined}
+                  ref={(el) => {
+                    if (errors.message && !firstErrorRef.current) firstErrorRef.current = el;
+                  }}
                   className={`rounded-2xl border bg-white/90 px-4 py-3 text-base text-slate-900 shadow-inner transition focus:outline-none focus:ring-2 dark:bg-white/10 dark:text-white ${
                     errors.message
                       ? "border-red-400 focus:border-red-400 focus:ring-red-300/50 dark:border-red-400/70"
@@ -202,7 +233,9 @@ export default function ContactPage() {
                   placeholder="ספרו לי על החלום, על הרעיון, או על מה שתרצו שנבנה יחד."
                 />
                 {errors.message && (
-                  <span className="text-xs font-normal text-red-500 dark:text-red-300">{errors.message}</span>
+                  <span id="message-error" className="text-xs font-normal text-red-500 dark:text-red-300">
+                    {errors.message}
+                  </span>
                 )}
               </label>
 
@@ -221,16 +254,18 @@ export default function ContactPage() {
               </div>
             </form>
 
-            {error && (
-              <div className="mt-6 rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/50 dark:bg-red-500/10 dark:text-red-100">
-                {error}
-              </div>
-            )}
-            {sent && (
-              <div className="mt-6 rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-100">
-                תודה! ההודעה נשלחה, ונחזור אליכם בקרוב.
-              </div>
-            )}
+            <div aria-live="polite" className="mt-4 space-y-3">
+              {error && (
+                <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-400/50 dark:bg-red-500/10 dark:text-red-100">
+                  {error}
+                </div>
+              )}
+              {sent && (
+                <div className="rounded-2xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/10 dark:text-emerald-100">
+                  תודה! ההודעה נשלחה, ונחזור אליכם בקרוב.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
