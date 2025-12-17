@@ -1,11 +1,28 @@
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import { createAvatarUploadUrl } from "../services/upload.service";
 
+const SECRET_KEY = process.env.JWT_ACCESS_SECRET || "fallback_secret_key";
+
+function resolveUserId(req: Request): string {
+  const token = (req as any).cookies?.["auth_token"];
+  if (token) {
+    try {
+      const decoded: any = jwt.verify(token, SECRET_KEY);
+      if (decoded?.id) return String(decoded.id);
+    } catch {
+      // ignore invalid/expired tokens and fallback
+    }
+  }
+
+  if ((req as any).user?._id) return String((req as any).user._id);
+  if ((req as any).userId) return String((req as any).userId);
+
+  return "public";
+}
+
 export async function getAvatarUploadUrl(req: Request, res: Response) {
-  const userId =
-    (req as any).user?._id ||
-    (req as any).userId ||
-    "public";
+  const userId = resolveUserId(req);
   const { contentType, contentLength } = req.body || {};
 
   try {

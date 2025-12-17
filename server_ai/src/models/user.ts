@@ -1,9 +1,9 @@
-import { Schema, model, models, HydratedDocument } from "mongoose";
+import { HydratedDocument, Schema, model, models } from "mongoose";
 import {
   IUser,
-  UserRole,
-  SubscriptionType,
   IUserDoc,
+  SubscriptionType,
+  UserRole,
 } from "../types/users.interface";
 
 const userSchema = new Schema<IUserDoc>(

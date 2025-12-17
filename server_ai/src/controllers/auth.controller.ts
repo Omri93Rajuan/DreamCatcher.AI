@@ -1,22 +1,16 @@
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { hashPassword } from "../helpers/bcrypt";
+import { buildPasswordResetEmail } from "../helpers/emailTemplates";
+import { sendMail } from "../helpers/mailer";
+import User from "../models/user";
 import {
   getMe,
   login as loginSvc,
   logout as logoutSvc,
   register as registerSvc,
 } from "../services/auth.service";
-import { handleError } from "../utils/ErrorHandle";
-import { sendMail } from "../helpers/mailer";
-import { buildPasswordResetEmail } from "../helpers/emailTemplates";
-import { hashPassword } from "../helpers/bcrypt";
-import User from "../models/user";
-import {
-  canRequestPasswordReset,
-  createResetToken,
-  stampPasswordReset,
-  verifyAndConsumeResetToken,
-} from "../services/password.service";
+import type { GoogleStatePayload } from "../services/googleAuth.service";
 import {
   buildGoogleAuthUrl,
   createGoogleStateToken,
@@ -28,7 +22,13 @@ import {
   sanitizeRedirectUrl,
   upsertGoogleUser,
 } from "../services/googleAuth.service";
-import type { GoogleStatePayload } from "../services/googleAuth.service";
+import {
+  canRequestPasswordReset,
+  createResetToken,
+  stampPasswordReset,
+  verifyAndConsumeResetToken,
+} from "../services/password.service";
+import { handleError } from "../utils/ErrorHandle";
 const ACCESS_SECRET =
   process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || "supersecret";
 const REFRESH_SECRET =
@@ -363,9 +363,14 @@ export async function requestPasswordReset(req: Request, res: Response) {
     const template = buildPasswordResetEmail(link, expires);
     await sendMail(user.email, template.subject, template.html);
     return res.json({ ok: true });
-  } catch (e) {
+  } catch (e: any) {
     console.warn("[PasswordReset] error:", e);
-    return res.json({ ok: true });
+    const status = e?.status || 500;
+    return handleError(
+      res,
+      status,
+      e?.message || "Failed to send password reset email"
+    );
   }
 }
 export async function consumeResetToken(req: Request, res: Response) {

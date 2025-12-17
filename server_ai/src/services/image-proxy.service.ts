@@ -1,14 +1,23 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { Readable } from "stream";
 
 const S3_ENDPOINT = (process.env.S3_ENDPOINT || "").replace(/\/+$/, "");
 const S3_BUCKET = process.env.S3_BUCKET || "";
 const S3_REGION = process.env.S3_REGION || "auto";
-const IMAGE_PROXY_CACHE_SECONDS = Number(process.env.IMAGE_PROXY_CACHE_SECONDS || 3600);
+const IMAGE_PROXY_CACHE_SECONDS = Number(
+  process.env.IMAGE_PROXY_CACHE_SECONDS || 3600
+);
 
 function ensureEnv() {
-  if (!S3_ENDPOINT || !S3_BUCKET || !process.env.S3_ACCESS_KEY_ID || !process.env.S3_SECRET_ACCESS_KEY) {
-    throw new Error("S3 configuration missing (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)");
+  if (
+    !S3_ENDPOINT ||
+    !S3_BUCKET ||
+    !process.env.S3_ACCESS_KEY_ID ||
+    !process.env.S3_SECRET_ACCESS_KEY
+  ) {
+    throw new Error(
+      "S3 configuration missing (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)"
+    );
   }
 }
 
@@ -48,7 +57,8 @@ export async function getImageObject(key: string): Promise<ImageObject> {
   return {
     stream: res.Body as unknown as Readable,
     contentType: res.ContentType,
-    contentLength: typeof res.ContentLength === "number" ? res.ContentLength : undefined,
+    contentLength:
+      typeof res.ContentLength === "number" ? res.ContentLength : undefined,
     lastModified: res.LastModified,
     etag: res.ETag || undefined,
     cacheSeconds: IMAGE_PROXY_CACHE_SECONDS,

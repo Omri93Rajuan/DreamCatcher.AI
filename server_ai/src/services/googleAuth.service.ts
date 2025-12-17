@@ -1,8 +1,8 @@
+import { randomBytes } from "crypto";
 import jwt from "jsonwebtoken";
 import fetch, { Response } from "node-fetch";
-import { randomBytes } from "crypto";
-import User from "../models/user";
 import { hashPassword } from "../helpers/bcrypt";
+import User from "../models/user";
 
 const DEFAULT_APP_URL = (
   process.env.APP_URL || "http://localhost:5173"
