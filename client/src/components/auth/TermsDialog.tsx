@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { TERMS_FOOTER, TERMS_SECTIONS } from "@/constants/terms";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   open: boolean;
@@ -10,30 +10,36 @@ type Props = {
 };
 
 export default function TermsDialog({ open, onClose, onAccept }: Props) {
+  const { t, i18n } = useTranslation();
+  const sections = t("terms.sections", { returnObjects: true }) as Array<{
+    title: string;
+    body: string;
+  }>;
+
   if (!open) return null;
 
   const dialog = (
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center px-4"
-      dir="rtl"
+      dir={i18n.dir()}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl dark:bg-[#131020]">
         <header className="flex items-center justify-between border-b border-black/5 px-6 py-4 dark:border-white/10">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            תנאי שימוש ומדיניות פרטיות
+            {t("terms.badge")}
           </h3>
           <button
             onClick={onClose}
             className="text-sm text-slate-500 transition hover:text-slate-700 dark:text-white/60 dark:hover:text-white"
-            aria-label="סגירת חלון תנאים"
+            aria-label={t("accessibility.close")}
           >
             ✕
           </button>
         </header>
 
         <div className="max-h-[60vh] space-y-4 overflow-auto px-6 py-5 text-sm leading-6 text-slate-700 dark:text-white/70">
-          {TERMS_SECTIONS.map((section) => (
+          {sections?.map((section) => (
             <div key={section.title}>
               <h4 className="font-semibold text-slate-900 dark:text-white">
                 {section.title}
@@ -42,7 +48,7 @@ export default function TermsDialog({ open, onClose, onAccept }: Props) {
             </div>
           ))}
           <p className="text-xs text-slate-500 dark:text-white/60">
-            {TERMS_FOOTER}
+            {t("terms.footer")}
           </p>
         </div>
 
@@ -51,13 +57,13 @@ export default function TermsDialog({ open, onClose, onAccept }: Props) {
             onClick={onClose}
             className="rounded-full border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 dark:border-white/20 dark:text-white/70 dark:hover:bg-white/10"
           >
-            דחייה
+            {t("common.cancel")}
           </button>
           <button
             onClick={onAccept}
             className="rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-amber-300"
           >
-            אני מסכים/ה לתנאים
+            {t("terms.accept")}
           </button>
         </footer>
       </div>

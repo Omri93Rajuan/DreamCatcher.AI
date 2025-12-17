@@ -7,7 +7,9 @@ import { DreamsApi, DreamsListResult } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
 import DreamFlipCardMini from "@/components/dreams/DreamFlipCardMini";
+import { useTranslation } from "react-i18next";
 export default function MyDreams() {
+    const { t, i18n } = useTranslation();
     const qc = useQueryClient();
     const { user } = useAuthStore();
     const userId: string | undefined = (user as any)?._id ?? (user as any)?.id ?? undefined;
@@ -65,7 +67,7 @@ export default function MyDreams() {
         },
         onError: (_e, _v, ctx) => {
             ctx?.prev && qc.setQueryData(queryKey, ctx.prev);
-            alert("מחיקה נכשלה");
+            alert(t("common.errorGeneric"));
         },
         onSettled: () => qc.invalidateQueries({ queryKey }),
     });
@@ -74,29 +76,29 @@ export default function MyDreams() {
         qc.invalidateQueries({ queryKey });
     };
     if (!isReady) {
-        return (<section dir="rtl" className="max-w-7xl mx-auto px-4 mb-20">
+        return (<section dir={i18n.dir()} className="max-w-7xl mx-auto px-4 mb-20">
         <Header q={q} setQ={setQ} onSearch={onSearch} isFetching/>
         <SkeletonGrid />
       </section>);
     }
-    return (<section dir="rtl" className="max-w-7xl mx-auto px-4 mb-20">
+    return (<section dir={i18n.dir()} className="max-w-7xl mx-auto px-4 mb-20">
       <Header q={q} setQ={setQ} onSearch={onSearch} isFetching={isFetching}/>
 
       {isLoading ? (<SkeletonGrid />) : dreams.length === 0 ? (<div className="text-black dark:text-white/70 text-center py-20">
-          אין חלומות להצגה כרגע.
+          {t("myDreams.empty")}
         </div>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dreams.map((d) => (<DreamFlipCardMini key={d?._id ?? Math.random().toString(36)} dream={d} onToggleShare={(next) => mToggleShare.mutate({ id: d._id, next })} onDelete={() => mRemove.mutate(d._id)} maxWordsFront={30} maxWordsBack={30}/>))}
         </div>)}
 
       {pages > 1 && (<div className="flex justify-center gap-2 mt-10">
           <Button variant="outline" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-            הקודם
+            {t("pagination.prev")}
           </Button>
           <span className="text-black/80 dark:text-white text-lg py-2">
-            עמוד {page} מתוך {pages}
+            {t("myDreams.pageLabel", { page, pages })}
           </span>
           <Button variant="outline" disabled={page === pages} onClick={() => setPage((p) => p + 1)}>
-            הבא
+            {t("pagination.next")}
           </Button>
         </div>)}
     </section>);
@@ -107,6 +109,7 @@ function Header({ q, setQ, onSearch, isFetching, }: {
     onSearch: () => void;
     isFetching: boolean;
 }) {
+    const { t, i18n } = useTranslation();
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     React.useEffect(() => {
         const onKey = (e: KeyboardEvent) => {
@@ -131,7 +134,7 @@ function Header({ q, setQ, onSearch, isFetching, }: {
           dark:drop-shadow-[0_1px_0_rgba(255,255,255,0.08)]
           mb-6
         ">
-        החלומות שלי
+        {t("layout.nav.myDreams")}
       </h2>
 
       <div className="flex items-center gap-3">
@@ -143,7 +146,7 @@ function Header({ q, setQ, onSearch, isFetching, }: {
               group-focus-within:text-purple-600
               dark:group-focus-within:text-purple-300
             "/>
-          <Input ref={inputRef} dir="rtl" placeholder="חיפוש לפי טקסט/כותרת…  (/)" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
+          <Input ref={inputRef} dir={i18n.dir()} placeholder={t("myDreams.searchPlaceholder")} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => {
             if (e.key === "Enter")
                 onSearch();
             if (e.key === "Escape" && q)
@@ -176,7 +179,7 @@ function Header({ q, setQ, onSearch, isFetching, }: {
                 w-6 h-6 rounded-md
                 text-slate-600 hover:text-slate-800 hover:bg-black/5
                 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10
-              " aria-label="נקה חיפוש" title="נקה">
+              " aria-label={t("myDreams.clearSearch")} title={t("myDreams.clearSearch")}>
               <XIcon className="w-4 h-4"/>
             </button>)}
 
@@ -194,8 +197,8 @@ function Header({ q, setQ, onSearch, isFetching, }: {
             disabled:opacity-70 disabled:cursor-not-allowed
             dark:from-purple-500 dark:to-amber-400
             dark:hover:from-purple-400 dark:hover:to-amber-300
-          " title="חפש (Enter)">
-          חפש
+          " title={t("myDreams.searchTitle")}>
+          {t("myDreams.search")}
         </Button>
       </div>
     </div>);

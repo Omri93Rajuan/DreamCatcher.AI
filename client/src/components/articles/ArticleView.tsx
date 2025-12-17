@@ -7,6 +7,7 @@ import CategoryTag from "./CategoryTag";
 import { resolveArticleCover } from "./coverImages";
 import logo from "@/assets/logo.png";
 import { Article } from "@/lib/api/types";
+import { useTranslation } from "react-i18next";
 
 export default function ArticleView({
   article,
@@ -15,22 +16,23 @@ export default function ArticleView({
   article: Article;
   onBack: () => void;
 }) {
+  const { t, i18n } = useTranslation();
   const readingMins = calcReadingTime(article.content);
   const coverSrc = resolveArticleCover(article.coverUrl);
   return (
-    <article className="rounded-3xl border border-black/10 bg-white/80 shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)] dark:border-white/10 dark:bg-white/[0.06]">
+    <article className="rounded-3xl border border-black/10 bg-white/80 shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)] dark:border-white/10 dark:bg-white/[0.06]" dir={i18n.dir()}>
       <header className="sticky top-0 z-10 border-b border-black/5 bg-white/85 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/75 dark:border-white/10 dark:bg-black/30 dark:supports-[backdrop-filter]:bg-black/30 sm:px-6">
         <div className="mx-auto flex max-w-3xl flex-col-reverse items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <button
             onClick={onBack}
             className="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-1.5 text-sm text-slate-700 transition hover:bg-white focus:ring-2 focus:ring-amber-300/40 dark:border-white/10 dark:bg-white/[0.06] dark:text-white sm:w-auto"
-            aria-label="חזרה לרשימת המאמרים"
+            aria-label={t("articles.backAria")}
           >
-            חזרה לרשימה
+            {t("articles.backToList")}
           </button>
           <div className="text-[11px] leading-5 text-slate-600 sm:text-xs dark:text-white/70">
-            {article.publishedAt ? `${fmtDate(article.publishedAt)} • ` : ""}
-            ~{readingMins} דקות קריאה
+            {article.publishedAt ? `${fmtDate(article.publishedAt, i18n.language)} • ` : ""}
+            {t("articles.readingTime", { minutes: readingMins })}
           </div>
         </div>
       </header>

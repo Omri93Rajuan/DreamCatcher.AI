@@ -11,8 +11,10 @@ import SearchInput from "@/components/dreams/SearchInput";
 import CategoryPills from "@/components/dreams/CategoryPills";
 import { DreamsApi } from "@/lib/api/dreams";
 import { GlobalDreamStats } from "@/lib/api/types";
+import { useTranslation } from "react-i18next";
 const PAGE_SIZE = 9;
 export default function HomePage() {
+    const { t, i18n } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
     const [page, setPage] = useState(1);
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -48,7 +50,7 @@ export default function HomePage() {
     return (<div className="min-h-screen pb-20">
       
       <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-20 text-center" dir="rtl">
+        <div className="max-w-6xl mx-auto px-4 py-20 text-center" dir={i18n.dir()}>
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
             <h1 className="
           font-extrabold leading-[1.1] tracking-tight
@@ -58,7 +60,7 @@ export default function HomePage() {
           dark:from-purple-300 dark:via-purple-200 dark:to-amber-200 /* Dark */
           mb-6
         ">
-              גלה את המשמעות של החלומות שלך
+              {t("home.heroTitle")}
             </h1>
 
             <p className="
@@ -67,7 +69,7 @@ export default function HomePage() {
           text-[#B87E40]       /* Light */
           dark:text-purple-200 /* Dark */
         ">
-              פענח את החלומות שלך באמצעות בינה מלאכותית מתקדמת
+              {t("home.heroSubtitle")}
             </p>
           </motion.div>
 
@@ -85,7 +87,7 @@ export default function HomePage() {
       
       <section className="max-w-7xl mx-auto px-4 mb-20">
         {statsError ? (<div className="text-sm text-red-400">
-            שגיאה בטעינת סטטיסטיקות: {statsError}
+            {t("home.statsError", { message: statsError })}
           </div>) : stats ? (<StatsPanel stats={stats}/>) : (<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (<div key={i} className="h-36 rounded-2xl bg-white/5 animate-pulse border border-white/10"/>))}
           </div>)}
@@ -103,8 +105,8 @@ export default function HomePage() {
       </section>
 
       
-      <section className="max-w-7xl mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-6">כל החלומות</h2>
+      <section className="max-w-7xl mx-auto px-4" dir={i18n.dir()}>
+        <h2 className="text-3xl font-bold mb-6">{t("home.allDreams")}</h2>
         <DreamsPaginated data={data} isLoading={isLoading} isFetching={isFetching} onPageChange={setPage}/>
       </section>
     </div>);

@@ -1,22 +1,14 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { AuthApi } from "@/lib/api/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { useTranslation } from "react-i18next";
 
-const FALLBACK_MESSAGE = "משהו השתבש בהתחברות. נסו שוב בעוד רגע.";
+const FALLBACK_KEY = "auth.loginErrors.fallback";
 
-const SERVER_MESSAGE_MAP: Array<{ pattern: RegExp; text: string }> = [
-  {
-    pattern: /could not find/i,
-    text: "האימייל או הסיסמה אינם נכונים. נסו שוב או אפסו סיסמה.",
-  },
-  {
-    pattern: /invalid password/i,
-    text: "הסיסמה שהוזנה אינה תואמת. בדקו שוב או אפסו אותה.",
-  },
-  {
-    pattern: /missing required/i,
-    text: "חסרים פרטים בטופס. ודאו שמילאתם אימייל וסיסמה.",
-  },
+const SERVER_MESSAGE_MAP: Array<{ pattern: RegExp; key: string }> = [
+  { pattern: /could not find/i, key: "auth.loginErrors.invalid" },
+  { pattern: /invalid password/i, key: "auth.loginErrors.invalidPassword" },
+  { pattern: /missing required/i, key: "auth.loginErrors.missing" },
 ];
 
 function toText(x: unknown): string | null {
@@ -59,13 +51,11 @@ function toText(x: unknown): string | null {
 
 function translateServerMessage(message: string | null): string | null {
   if (!message) return null;
-  const match = SERVER_MESSAGE_MAP.find((item) =>
-    item.pattern.test(message)
-  );
-  return match ? match.text : message;
+  const match = SERVER_MESSAGE_MAP.find((item) => item.pattern.test(message));
+  return match ? match.key : message;
 }
 
-function normalizeError(e: any, fallback = FALLBACK_MESSAGE): string {
+function normalizeError(e: any, fallback = FALLBACK_KEY): string {
   const axiosData = e?.response?.data;
   const axiosMsg =
     toText(axiosData) ??
@@ -83,17 +73,18 @@ function translateStatus(status?: number): string | null {
   switch (status) {
     case 401:
     case 404:
-      return "האימייל או הסיסמה אינם נכונים. נסו שוב או אפסו סיסמה.";
+      return "auth.loginErrors.invalid";
     case 429:
-      return "בוצעו יותר מדי ניסיונות. אנא המתינו דקה ונסו שוב.";
+      return "auth.loginErrors.tooMany";
     case 500:
-      return "השרת עסוק כרגע. נסו שוב בעוד מספר רגעים.";
+      return "auth.loginErrors.serverBusy";
     default:
       return null;
   }
 }
 
 export function useAuthLogin() {
+  const { t, i18n } = useTranslation();
   const { setUser } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,13 +106,19 @@ export function useAuthLogin() {
         return true;
       }
 
-      setError("לא הצלחנו לאמת את פרטי ההתחברות. נסו שוב.");
+      setError(t("auth.loginErrors.verifyFailed"));
       return false;
     } catch (e: any) {
       const status = e?.response?.status as number | undefined;
-      const fallback = normalizeError(e, FALLBACK_MESSAGE);
-      const message = translateStatus(status) ?? fallback ?? FALLBACK_MESSAGE;
-      setError(message);
+      const fallbackKey = normalizeError(e, FALLBACK_KEY);
+      const messageKey = translateStatus(status) ?? fallbackKey ?? FALLBACK_KEY;
+      const hasKey = typeof messageKey === "string" && i18n.exists(messageKey);
+      const translated = hasKey ? t(messageKey) : messageKey;
+      const finalError =
+        typeof translated === "string" && translated !== messageKey
+          ? translated
+          : t(FALLBACK_KEY);
+      setError(finalError);
       return false;
     } finally {
       setSubmitting(false);

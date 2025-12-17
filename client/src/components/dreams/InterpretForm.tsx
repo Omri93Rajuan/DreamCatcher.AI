@@ -8,6 +8,7 @@ import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.png";
+import { useTranslation } from "react-i18next";
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
     fullText: string;
     baseMs?: number;
@@ -73,7 +74,8 @@ function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef
 }
 const MY_DREAMS_PATH = "/me/dreams";
 export default function InterpretForm() {
-  const [text, setText] = useState("");
+    const [text, setText] = useState("");
+    const { t, i18n } = useTranslation();
     const [isInterpreting, setIsInterpreting] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
     const [dream, setDream] = useState<Dream | null>(null);
@@ -132,7 +134,7 @@ export default function InterpretForm() {
         <div className="relative">
           
           <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-purple-400"/>
-          <Textarea dir="rtl" value={text} onChange={(e) => setText(e.target.value)} placeholder="תאר/י את החלום שלך... (אפשר גם להדביק)" disabled={isInterpreting} className={[
+          <Textarea dir={i18n.dir()} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
             "pr-10 font-he min-h-[140px]",
             "bg-white text-black placeholder:text-slate-500",
             "border border-black/10",
@@ -153,9 +155,9 @@ export default function InterpretForm() {
         ].join(" ")}>
           {isInterpreting ? (<>
               <Loader2 className="w-5 h-5 ml-2 animate-spin"/>
-              חושב על זה...
+              {t("interpret.thinking")}
             </>) : (<>
-              <Send className="w-5 h-5 ml-2"/> פענח/י את החלום
+              <Send className="w-5 h-5 ml-2"/> {t("interpret.cta")}
             </>)}
         </Button>
       </div>
@@ -173,7 +175,7 @@ export default function InterpretForm() {
                 "text-slate-900",
                 "dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-purple-300 dark:to-amber-200",
             ].join(" ")}>
-                פתרון החלום
+                {t("interpret.heading")}
               </h4>
             </div>
 
@@ -183,7 +185,7 @@ export default function InterpretForm() {
               </div>)}
 
             
-            {(isStreaming || dream) && (<div ref={containerRef as any} className="whitespace-pre-wrap text-right font-he select-text max-h-[50vh] overflow-y-auto pr-1" dir="rtl" lang="he" style={{
+            {(isStreaming || dream) && (<div ref={containerRef as any} className="whitespace-pre-wrap text-right font-he select-text max-h-[50vh] overflow-y-auto pr-1" dir={i18n.dir()} lang={i18n.language} style={{
                     unicodeBidi: "plaintext" as any,
                     fontSize: "1.125rem",
                     lineHeight: 1.9,
@@ -205,18 +207,18 @@ export default function InterpretForm() {
                         "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
                         "dark:bg-amber-600 dark:hover:bg-amber-700 dark:text-white",
                     ].join(" ")}>
-                    שתף/י עם כולם
+                    {t("interpret.share")}
                   </Button>) : (<div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-300 text-sm">
                     <CheckCircle2 className="w-5 h-5"/>
-                    שותף בהצלחה!
+                    {t("interpret.shared")}
                   </div>)}
 
                 <button onClick={openMyDreams} className="text-sm underline underline-offset-4 text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white">
-                  פתח/י את החלומות שלי
+                  {t("interpret.openMine")}
                 </button>
 
                 {justShared && (<div className="text-emerald-700 dark:text-emerald-300 text-xs">
-                    החלום פורסם ויראה לכלל המשתמשים.
+                    {t("interpret.sharedNotice")}
                   </div>)}
               </div>)}
           </div>

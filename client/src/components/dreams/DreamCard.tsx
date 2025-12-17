@@ -4,6 +4,7 @@ import { Calendar, Share2, Moon, X, Sparkles, Plus } from "lucide-react";
 import type { Dream } from "@/lib/api/types";
 import ReactionsBar from "@/components/dreams/ReactionsBar";
 import { CATEGORY_META } from "@/lib/api/categoryIcons";
+import { useTranslation } from "react-i18next";
 type CategoryKey = keyof typeof CATEGORY_META;
 type Props = {
     dream: Dream & {
@@ -15,28 +16,25 @@ type Props = {
     compact?: boolean;
 };
 const safe = (v: unknown) => (typeof v === "string" ? v : "");
-const formatDate = (date: Date): string => {
-    const months = [
-        "ינואר",
-        "פברואר",
-        "מרץ",
-        "אפריל",
-        "מאי",
-        "יוני",
-        "יולי",
-        "אוגוסט",
-        "ספטמבר",
-        "אוקטובר",
-        "נובמבר",
-        "דצמבר",
-    ];
-    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`;
+const formatDate = (date: Date, locale: string): string => {
+    try {
+        return new Intl.DateTimeFormat(locale, {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        }).format(date);
+    }
+    catch {
+        return date.toISOString().slice(0, 10);
+    }
 };
 function TagPill({ k }: {
     k: CategoryKey;
 }) {
+    const { t } = useTranslation();
     const meta = CATEGORY_META[k];
     const Icon = meta.icon;
+    const label = t(meta.labelKey);
     return (<span className={[
             "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium",
             "bg-gradient-to-r",
@@ -44,9 +42,9 @@ function TagPill({ k }: {
             "text-white",
             "ring-1 ring-black/10 dark:ring-white/10",
             "shadow-sm",
-        ].join(" ")} title={meta.label}>
+        ].join(" ")} title={label}>
       <Icon className="w-3 h-3 opacity-90"/>
-      {meta.label}
+      {label}
     </span>);
 }
 function TagsRow({ categories, maxVisible, align = "left", }: {
@@ -54,24 +52,26 @@ function TagsRow({ categories, maxVisible, align = "left", }: {
     maxVisible: number;
     align?: "left" | "right";
 }) {
+    const { t, i18n } = useTranslation();
     if (!categories?.length)
         return null;
     const visible = categories.slice(0, maxVisible);
     const rest = categories.length - visible.length;
-    return (<div className={`flex flex-wrap items-center gap-1.5 ${align === "left" ? "justify-start" : "justify-end"}`} dir="rtl">
+    return (<div className={`flex flex-wrap items-center gap-1.5 ${align === "left" ? "justify-start" : "justify-end"}`} dir={i18n.dir()}>
       {visible.map((c) => (<TagPill key={c} k={c}/>))}
       {rest > 0 && (<span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium
             bg-black/5 text-slate-700 border border-black/10
-            dark:bg-white/10 dark:text-white/90 dark:border-white/15" title={`ועוד ${rest} תגיות`}>
+            dark:bg-white/10 dark:text-white/90 dark:border-white/15" title={t("dreams.moreTags", { count: rest })}>
           <Plus className="w-3 h-3"/>
           {`+${rest}`}
         </span>)}
     </div>);
 }
 export default function DreamCard({ dream, showDate = false, currentUserId, onShare, compact = true, }: Props) {
+    const { t, i18n } = useTranslation();
     const [showModal, setShowModal] = useState(false);
     const isOwner = !!currentUserId && dream.userId === currentUserId;
-    const title = safe(dream.title) || "חלום ללא כותרת";
+    const title = safe(dream.title) || t("dreams.untitled");
     const dreamText = safe(dream.userInput);
     const interpretation = safe((dream as any).aiResponse ?? (dream as any).interpretation);
     const created = dream.createdAt ? new Date(dream.createdAt) : null;
@@ -119,8 +119,8 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                                 bg-black/5 border border-black/10
                                 dark:bg-purple-500/10 dark:border-purple-400/20">
                   <Calendar className="w-3 h-3 text-slate-500 dark:text-purple-300"/>
-                  <span className="text-xs text-slate-700 dark:text-purple-200">
-                    {formatDate(created)}
+                    <span className="text-xs text-slate-700 dark:text-purple-200">
+                    {formatDate(created, i18n.language)}
                   </span>
                 </div>)}
 
@@ -130,7 +130,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
             }} className="p-1.5 rounded-md
                              bg-black/5 text-slate-700 border border-black/10 hover:bg-black/10
                              dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-400/20 dark:hover:bg-purple-500/20 dark:hover:text-purple-200
-                             transition-colors" title="שתף חלום">
+                             transition-colors" title={t("dreams.shareTooltip")}>
                   <Share2 className="w-3.5 h-3.5"/>
                 </button>)}
             </div>
@@ -144,7 +144,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
           
           {dreamText && (<div className="mb-3">
               <div className="text-xs font-medium text-slate-500 dark:text-purple-300 mb-1 opacity-70">
-                החלום
+                {t("dreams.card.dream")}
               </div>
               <p className="text-slate-800 dark:text-purple-100/90 text-sm leading-relaxed">
                 {dreamText.slice(0, dreamPreviewLength)}
@@ -157,7 +157,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               <div className="flex items-center gap-1 mb-1">
                 <Sparkles className="w-3 h-3 text-amber-500 dark:text-amber-400"/>
                 <div className="text-xs font-medium text-slate-600 dark:text-amber-300 opacity-70">
-                  פרשנות AI
+                  {t("dreams.card.ai")}
                 </div>
               </div>
               <div className="p-3 rounded-lg
@@ -174,7 +174,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
           {hasMore && (<button onClick={() => setShowModal(true)} className="w-full mt-2 py-2 px-3 rounded-lg text-sm transition-colors
                          border border-black/10 bg-black/5 text-slate-800 hover:bg-black/10
                          dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-400/20 dark:hover:bg-purple-500/20 dark:hover:text-purple-200">
-              קרא עוד ←
+              {t("dreams.card.readMore")}
             </button>)}
         </CardContent>
       </Card>
@@ -228,7 +228,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                                border border-black/10 bg-black/5 text-slate-800 hover:bg-black/10
                                dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-400/30 dark:hover:bg-purple-500/30 dark:hover:text-purple-200">
                     <Share2 className="w-4 h-4"/>
-                    <span className="text-sm">שתף</span>
+                    <span className="text-sm">{t("dreams.shareAction")}</span>
                   </button>)}
               </div>
 
@@ -237,7 +237,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               {dreamText && (<div>
                   <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-purple-200">
                     <div className="w-1 h-5 rounded-full bg-slate-400 dark:bg-gradient-to-b dark:from-purple-400 dark:to-pink-400"/>
-                    החלום המלא
+                    {t("dreams.card.fullDream")}
                   </h3>
                   <div className="text-slate-800 dark:text-purple-50 text-base leading-relaxed whitespace-pre-wrap">
                     {dreamText}
@@ -247,7 +247,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               {interpretation && (<div>
                   <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-700 dark:text-amber-300">
                     <Sparkles className="w-5 h-5"/>
-                    פרשנות AI מלאה
+                    {t("dreams.card.fullAi")}
                   </h3>
                   <div className="p-5 rounded-xl
                                   border border-black/10 bg-black/5

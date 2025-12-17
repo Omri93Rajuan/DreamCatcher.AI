@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { AuthApi, GoogleUrlParams } from "@/lib/api/auth";
 import { TERMS_VERSION } from "@/constants/legal";
 
@@ -15,13 +16,10 @@ const defaultRedirect = () =>
     ? `${window.location.origin}/auth/google/callback`
     : undefined;
 
-const TERMS_TOAST =
-  "יש לאשר את תנאי השימוש לפני הרשמה דרך Google.";
-const GENERIC_ERROR = "התחברות Google נתקלה בשגיאה, נסו שוב.";
-
 export function useGoogleAuth(defaults?: StartOptions) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t, i18n } = useTranslation();
 
   const start = useCallback(
     async (overrides?: StartOptions) => {
@@ -40,22 +38,23 @@ export function useGoogleAuth(defaults?: StartOptions) {
           redirectTo: opts.redirectTo || defaultRedirect(),
         };
         if (!params.redirectTo) {
-          throw new Error("לא נמצא יעד הפניה עבור Google OAuth.");
+          throw new Error(t("auth.google.noRedirect"));
         }
         if (mode === "signup") {
           if (!opts.termsAccepted) {
-            setError(TERMS_TOAST);
+            setError(t("auth.google.termsRequired"));
             return false;
           }
           params.termsAccepted = true;
           params.termsVersion = opts.termsVersion || TERMS_VERSION;
           if (opts.termsLocale) params.termsLocale = opts.termsLocale;
+          else params.termsLocale = i18n.language;
         } else if (opts.termsLocale) {
           params.termsLocale = opts.termsLocale;
         }
         const result = await AuthApi.googleUrl(params);
         if (!result?.url) {
-          throw new Error("Google OAuth אינו זמין כעת.");
+          throw new Error(t("auth.google.unavailable"));
         }
         window.location.assign(result.url);
         return true;
@@ -63,14 +62,14 @@ export function useGoogleAuth(defaults?: StartOptions) {
         const message =
           err?.response?.data?.error?.message ||
           err?.message ||
-          GENERIC_ERROR;
+          t("googleCallback.genericError");
         setError(message);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [defaults]
+    [defaults, i18n.language, t]
   );
 
   return { start, loading, error, setError };

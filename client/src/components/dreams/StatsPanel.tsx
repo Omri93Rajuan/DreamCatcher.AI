@@ -1,5 +1,6 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 export type GlobalDreamStats = {
     totalAll: number;
     newSince: number;
@@ -24,19 +25,20 @@ function PeriodToggle({ value, onChange, accent = "#F2C94C", }: {
     onChange?: (v: Period) => void;
     accent?: string;
 }) {
+    const { t, i18n } = useTranslation();
     const items: Array<{
         key: Period;
         label: string;
     }> = [
-        { key: "week", label: "שבוע" },
-        { key: "month", label: "חודש" },
-        { key: "year", label: "שנה" },
+        { key: "week", label: t("stats.period.week") },
+        { key: "month", label: t("stats.period.month") },
+        { key: "year", label: t("stats.period.year") },
     ];
     return (<div className="
         inline-flex gap-2 rounded-full p-1 border
         bg-white/80 border-black/10
         dark:bg-white/[0.06] dark:border-white/10
-      " dir="rtl">
+      " dir={i18n.dir()}>
       {items.map((it) => {
             const active = it.key === value;
             return (<button key={it.key} type="button" onClick={() => onChange?.(it.key)} className={[
@@ -79,20 +81,21 @@ function AnimatedNumber({ value, enabled = true, duration = 600, from = 0, }: {
     return <>{display.toLocaleString()}</>;
 }
 export default function StatsPanelUltraCompact({ stats, className, showPeriodToggle = false, period = "month", onPeriodChange, accent = "#F2C94C", numberGradient, animateFromZero = true, animationDurationMs = 700, }: Props) {
+    const { t, i18n } = useTranslation();
     const KPIs: Array<{
         value: number;
         caption: string;
     }> = [
-        { value: stats.totalAll, caption: 'סה"כ חלומות' },
-        { value: stats.newSince, caption: `חדשים ב-${stats.windowDays} ימים` },
+        { value: stats.totalAll, caption: t("stats.total") },
+        { value: stats.newSince, caption: t("stats.newSince", { days: stats.windowDays }) },
         {
             value: stats.publishedSince,
-            caption: `פורסמו ב-${stats.windowDays} ימים`,
+            caption: t("stats.publishedSince", { days: stats.windowDays }),
         },
     ];
     const numGradient = numberGradient ||
         "linear-gradient(180deg, #FFE08A 0%, #F5B948 55%, #F0941F 100%)";
-    return (<section dir="rtl" className={className} aria-label="מדדים עיקריים">
+    return (<section dir={i18n.dir()} className={className} aria-label={t("stats.aria")}>
       {showPeriodToggle && (<div className="mb-3">
           <PeriodToggle value={period} onChange={onPeriodChange} accent={accent}/>
         </div>)}

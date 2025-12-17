@@ -6,11 +6,13 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import AvatarChip from "./AvatarChip";
 import { toProxiedImage } from "@/lib/images";
+import { useTranslation } from "react-i18next";
 
 export default function UserMenu() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const clearUser = useAuthStore((s) => s.logout);
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const btnRef = React.useRef<HTMLButtonElement | null>(null);
   const popRef = React.useRef<HTMLDivElement | null>(null);
@@ -46,7 +48,7 @@ export default function UserMenu() {
     (user as any).name?.split(" ")?.[0] ||
     nameFromParts ||
     user.email?.split("@")[0] ||
-    "משתמש";
+    t("userMenu.fallbackName");
   const email = user.email || "";
 
   const handleLogout = async () => {
@@ -60,7 +62,7 @@ export default function UserMenu() {
   };
 
   return (
-    <div className="relative" dir="rtl">
+    <div className="relative" dir={i18n.dir()}>
       <span ref={btnRef as any}>
         <AvatarChip
           name={displayName}
@@ -74,7 +76,7 @@ export default function UserMenu() {
         <div
           ref={popRef}
           role="menu"
-          aria-label="תפריט משתמש"
+          aria-label={t("userMenu.label")}
           className="absolute top-full mt-2 right-0 z-50 w-[340px] max-w-[92vw] rounded-2xl overflow-hidden border border-black/10 dark:border-white/12 bg-white/95 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_30px_80px_-30px_rgba(139,92,246,.35)] animate-[menuIn_.18s_ease-out] text-slate-800 dark:text-white"
         >
           <style>{`
@@ -120,10 +122,10 @@ export default function UserMenu() {
 
               <span
                 className="ms-auto text-[11px] px-2 py-0.5 rounded-full border border-black/10 text-slate-700 bg-black/5 dark:border-white/15 dark:text-white/80 dark:bg-white/10"
-                title="חשבון מאומת"
+                title={t("userMenu.verified")}
               >
                 <ShieldCheck className="inline w-3 h-3 me-1" />
-                מאומת
+                {t("userMenu.verified")}
               </span>
             </div>
           </div>
@@ -135,7 +137,7 @@ export default function UserMenu() {
               className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium hover:bg-black/5 dark:hover:bg-white/10"
             >
               <User className="w-4.5 h-4.5 text-purple-600 dark:text-purple-300" />
-              <span>הפרופיל שלי</span>
+              <span>{t("userMenu.profile")}</span>
             </Link>
 
             <Link
@@ -144,7 +146,7 @@ export default function UserMenu() {
               className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium hover:bg-black/5 dark:hover:bg-white/10"
             >
               <NotebookPen className="w-4.5 h-4.5 text-amber-600 dark:text-amber-300" />
-              <span>החלומות שלי</span>
+              <span>{t("userMenu.myDreams")}</span>
             </Link>
 
             <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
@@ -154,7 +156,7 @@ export default function UserMenu() {
               className="w-full text-right flex items-center gap-3 px-4 py-3 text-[15px] font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20"
             >
               <LogOut className="w-4.5 h-4.5" />
-              התנתק
+              {t("userMenu.logout")}
             </button>
           </nav>
         </div>

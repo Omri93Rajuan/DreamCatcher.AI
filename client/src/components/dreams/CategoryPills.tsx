@@ -2,6 +2,7 @@ import * as React from "react";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { CATEGORY_META } from "@/lib/api/categoryIcons";
+import { useTranslation } from "react-i18next";
 type Props = {
     selected: string;
     onSelect: (c: string) => void;
@@ -10,6 +11,7 @@ type Props = {
     priorityOrder?: Array<keyof typeof CATEGORY_META>;
 };
 export default function CategoryPills({ selected, onSelect, showAll = true, initialVisible = 8, priorityOrder, }: Props) {
+    const { t, i18n } = useTranslation();
     const [expanded, setExpanded] = useState(false);
     const entries = useMemo(() => {
         const all = Object.entries(CATEGORY_META) as Array<[
@@ -33,9 +35,9 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
             const bi = pri.has(bk) ? (pri.get(bk) as number) : 999;
             if (ai !== bi)
                 return ai - bi;
-            return av.label.localeCompare(bv.label, "he");
+            return t(av.labelKey).localeCompare(t(bv.labelKey), i18n.language);
         });
-    }, [priorityOrder]);
+    }, [priorityOrder, t, i18n.language]);
     const top = entries.slice(0, initialVisible);
     const rest = entries.slice(initialVisible);
     const listVariants = {
@@ -46,7 +48,7 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
             transition: { duration: 0.35, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] },
         }),
     };
-    return (<div className="relative mb-6" dir="rtl">
+    return (<div className="relative mb-6" dir={i18n.dir()}>
       
       <div className="pointer-events-none absolute inset-0 rounded-[28px]
                       bg-[radial-gradient(1200px_400px_at_var(--mx,50%)_-10%,rgba(0,0,0,0.06),transparent_60%)]
@@ -58,23 +60,24 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
         
         <div className="flex flex-wrap gap-3 justify-center">
           {showAll && (<AnimatedPill i={0} active={selected === "all"} gradient="from-purple-500 to-pink-500" onClick={() => onSelect("all")}>
-              הכל
+              {t("dreams.categoriesAll")}
             </AnimatedPill>)}
 
           {top.map(([id, meta], i) => {
             const Icon = meta.icon as any;
+            const label = t(meta.labelKey);
             const active = selected === id;
             return (<AnimatedPill key={id} i={i + 1} active={active} gradient={meta.gradient} onClick={() => onSelect(id)}>
                 <Icon className="w-4 h-4"/>
-                <span>{meta.label}</span>
+                <span>{label}</span>
               </AnimatedPill>);
         })}
 
-          {rest.length > 0 && (<motion.button initial="hidden" animate="show" custom={top.length + 2} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95, y: 1 }} onClick={() => setExpanded((s) => !s)} className="relative px-5 py-2 rounded-2xl flex items-center gap-2 transition-all border
+              {rest.length > 0 && (<motion.button initial="hidden" animate="show" custom={top.length + 2} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95, y: 1 }} onClick={() => setExpanded((s) => !s)} className="relative px-5 py-2 rounded-2xl flex items-center gap-2 transition-all border
                          bg-white/80 text-slate-900 hover:bg-black/5 border-black/10
                          dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10 dark:border-white/15
                          shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" aria-expanded={expanded}>
-              {expanded ? "פחות…" : "עוד…"}
+              {expanded ? t("dreams.categoriesLess") : t("dreams.categoriesMore")}
             </motion.button>)}
         </div>
 
@@ -87,9 +90,10 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
               {rest.map(([id, meta], i) => {
                 const Icon = meta.icon as any;
                 const active = selected === id;
+                const label = t(meta.labelKey);
                 return (<AnimatedPill key={id} i={i} active={active} gradient={meta.gradient} onClick={() => onSelect(id)}>
                     <Icon className="w-4 h-4"/>
-                    <span>{meta.label}</span>
+                    <span>{label}</span>
                   </AnimatedPill>);
             })}
             </div>

@@ -7,6 +7,7 @@ import type { Dream } from "@/lib/api/types";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
 import ReactionsBar from "@/components/dreams/ReactionsBar";
+import { useTranslation } from "react-i18next";
 type Props = {
     dream: Dream;
     onToggleShare?: (next: boolean) => void;
@@ -26,10 +27,11 @@ const truncateWords = (text: string, maxWords: number) => {
     return words.slice(0, maxWords).join(" ") + "…";
 };
 export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, bodyHeight = 220, maxWordsFront = 55, maxWordsBack = 70, showReactions = true, reactionsVariant = "default", }: Props) {
+    const { t, i18n } = useTranslation();
     const [flipped, setFlipped] = React.useState(false);
     const [confirmOpen, setConfirmOpen] = React.useState(false);
     const [fullOpen, setFullOpen] = React.useState<null | "dream" | "solution">(null);
-    const title = (dream?.title ?? "חלום ללא כותרת") as string;
+    const title = (dream?.title ?? t("dreams.untitled")) as string;
     const dreamText = (dream as any)?.userInput ?? (dream as any)?.text ?? "";
     const solution = (dream as any)?.aiResponse ?? (dream as any)?.interpretation ?? "";
     const createdAt = dream?.createdAt ? new Date(dream.createdAt) : null;
@@ -57,7 +59,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
             perspective: 1200,
             transition: "transform .6s cubic-bezier(.22,.61,.36,1)",
             transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }} dir="rtl" onClick={() => setFlipped((f) => !f)} aria-label="הפוך כרטיס">
+        }} dir={i18n.dir()} onClick={() => setFlipped((f) => !f)} aria-label={t("myDreams.flipAria", { defaultValue: "Flip card" })}>
           
           <CardContent className="
               absolute inset-0 p-5
@@ -76,18 +78,20 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                 ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
                 : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
         ].join(" ")}>
-                {isShared ? "משותף" : "פרטי"}
+                {isShared ? t("myDreams.shared") : t("myDreams.private")}
               </span>
             </div>
 
             {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", { locale: he })}
+                {format(createdAt, "d MMMM yyyy", {
+            locale: i18n.language?.startsWith("he") ? he : undefined,
+        })}
               </div>)}
 
             <div className="mt-3 h-full">
               <h4 className="font-semibold mb-1 text-amber-800 dark:text-amber-300">
-                החלום:
+                {t("dreams.card.dream")}
               </h4>
               <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white">
                 {frontTrunc}
@@ -103,11 +107,11 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                   bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
                   dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
                 ">
-                עוד…
+                {t("myDreams.more")}
               </button>)}
 
             <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
-              הפוך להצגה
+              {t("myDreams.flip")}
             </div>
           </CardContent>
 
@@ -129,18 +133,20 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                 ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
                 : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
         ].join(" ")}>
-                {isShared ? "משותף" : "פרטי"}
+                {isShared ? t("myDreams.shared") : t("myDreams.private")}
               </span>
             </div>
 
             {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", { locale: he })}
+                {format(createdAt, "d MMMM yyyy", {
+            locale: i18n.language?.startsWith("he") ? he : undefined,
+        })}
               </div>)}
 
             <div className="mt-3 h-full">
               <h4 className="font-semibold mb-1 text-rose-800 dark:text-rose-300">
-                הפתרון:
+                {t("dreams.card.ai")}
               </h4>
               <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white/90">
                 {backTrunc || "—"}
@@ -156,11 +162,11 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                   bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
                   dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
                 ">
-                עוד…
+                {t("myDreams.more")}
               </button>)}
 
             <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
-              הפוך חזרה
+              {t("myDreams.flipBack")}
             </div>
           </CardContent>
         </div>
@@ -178,17 +184,17 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
 
           
           <div className="flex items-center gap-2">
-            {onToggleShare && (<Button onClick={() => onToggleShare(!isShared)} title={isShared ? "בטל שיתוף" : "שתף"} className="
+            {onToggleShare && (<Button onClick={() => onToggleShare(!isShared)} title={isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")} className="
                   inline-flex items-center gap-2
                   bg-black/10 hover:bg-black/15 text-slate-900
                   dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
                 " variant="ghost">
                 <Share2 className="w-4 h-4"/>
-                {isShared ? "בטל שיתוף" : "שתף"}
+                {isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")}
               </Button>)}
 
             {onDelete && (<>
-                <Button size="sm" onClick={() => setConfirmOpen(true)} title="מחק חלום" className="
+                <Button size="sm" onClick={() => setConfirmOpen(true)} title={t("myDreams.delete")} className="
                     bg-black/10 hover:bg-black/15 text-slate-900
                     dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
                   " variant="ghost">
@@ -202,23 +208,23 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                         dark:bg-white/[0.10] dark:text-white dark:border-rose-500/30
                       ">
                       <h2 className="text-xl font-bold mb-3 text-rose-700 dark:text-rose-300">
-                        למחוק את החלום הזה?
+                        {t("myDreams.deleteTitle")}
                       </h2>
                       <p className="text-slate-600 dark:text-white/70 mb-6 text-sm">
-                        אין דרך לשחזר לאחר המחיקה.
+                        {t("myDreams.deleteWarning")}
                       </p>
                       <div className="flex justify-end gap-3">
                         <Button variant="outline" onClick={() => setConfirmOpen(false)} className="
                             border-black/15 text-slate-800
                             dark:border-white/20 dark:text-white
                           ">
-                          ביטול
+                          {t("common.cancel")}
                         </Button>
                         <Button onClick={() => {
                     setConfirmOpen(false);
                     setTimeout(() => onDelete?.(), 100);
                 }} className="bg-rose-600 hover:bg-rose-700 text-white">
-                          מחק
+                          {t("myDreams.deleteConfirm")}
                         </Button>
                       </div>
                     </div>
@@ -236,12 +242,12 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
               dark:bg-white/[0.10] dark:border-white/15 dark:text-white
               selection:bg-amber-200 selection:text-slate-900
               dark:selection:bg-amber-300/30 dark:selection:text-white
-            " onClick={(e) => e.stopPropagation()} dir="rtl">
+            " onClick={(e) => e.stopPropagation()} dir={i18n.dir()}>
             <button onClick={() => setFullOpen(null)} className="
                 absolute left-3 top-3 p-1.5 rounded-md
                 bg-black/10 hover:bg-black/15 text-slate-900
                 dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
-              " aria-label="סגור">
+              " aria-label={t("common.close")}>
               <X className="w-4 h-4"/>
             </button>
 
@@ -254,13 +260,15 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
 
             {createdAt && (<div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/85">
                 <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", { locale: he })}
+                {format(createdAt, "d MMMM yyyy", {
+            locale: i18n.language?.startsWith("he") ? he : undefined,
+        })}
               </div>)}
 
             <div className="space-y-6">
               <section id="dreamFull">
                 <h4 className="font-semibold mb-2 text-amber-800 dark:text-amber-300">
-                  החלום:
+                  {t("dreams.card.dream")}
                 </h4>
                 <p className="leading-relaxed whitespace-pre-line">
                   {dreamText || "—"}
@@ -269,7 +277,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
 
               <section id="solutionFull">
                 <h4 className="font-semibold mb-2 text-rose-800 dark:text-rose-300">
-                  הפתרון:
+                  {t("dreams.card.ai")}
                 </h4>
                 <p className="leading-relaxed whitespace-pre-line">
                   {solution || "—"}
