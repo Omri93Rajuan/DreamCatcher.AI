@@ -5,6 +5,7 @@ import { LogOut, User, NotebookPen, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import AvatarChip from "./AvatarChip";
+import LanguageSwitcher from "./LanguageSwitcher";
 import { toProxiedImage } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 
@@ -128,6 +129,13 @@ export default function UserMenu() {
                 {t("userMenu.verified")}
               </span>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-black/8 bg-white/60 dark:border-white/10 dark:bg-white/[0.04]">
+            <span className="text-xs font-semibold text-slate-600 dark:text-white/70">
+              {t("layout.nav.languageToggle")}
+            </span>
+            <LanguageSwitcher compact className="ms-auto" />
           </div>
 
           <nav className="py-1">

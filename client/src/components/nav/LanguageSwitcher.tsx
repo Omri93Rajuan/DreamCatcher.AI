@@ -15,21 +15,35 @@ export default function LanguageSwitcher({ compact = false, className = "" }: { 
   };
 
   if (compact) {
-    const next = current === "he" ? "en" : "he";
     return (
-      <button
-        type="button"
-        onClick={() => changeLanguage(next)}
+      <div
         className={[
-          "rounded-full border px-3 py-1 text-xs font-semibold transition",
-          "border-slate-200 text-slate-700 hover:bg-slate-100",
-          "dark:border-white/20 dark:text-white/80 dark:hover:bg-white/10",
+          "inline-flex items-center gap-1 text-[13px] font-semibold text-slate-500 dark:text-white/70",
           className,
         ].join(" ")}
+        role="group"
         aria-label={t("layout.nav.languageToggle")}
+        title={t("layout.nav.languageToggle")}
       >
-        {LANGUAGES.find((l) => l.code === next)?.short}
-      </button>
+        {LANGUAGES.map((lang, idx) => (
+          <div key={lang.code} className="inline-flex items-center">
+            <button
+              type="button"
+              onClick={() => changeLanguage(lang.code)}
+              className={[
+                "px-1 py-0.5 transition rounded",
+                lang.code === current
+                  ? "text-slate-900 dark:text-white font-bold"
+                  : "hover:text-slate-700 dark:hover:text-white/90",
+              ].join(" ")}
+              aria-pressed={lang.code === current}
+            >
+              {lang.short}
+            </button>
+            {idx === 0 && <span className="px-1 text-slate-400 dark:text-white/40">|</span>}
+          </div>
+        ))}
+      </div>
     );
   }
 
