@@ -181,10 +181,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   >
                     {t("layout.nav.register")}
                   </Link>
+                  <LanguageSwitcher compact className="ms-2" />
                 </>
               )}
 
-              <LanguageSwitcher />
               <ThemeToggle />
             </nav>
 
@@ -233,7 +233,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <NavItem to="/me/dreams" onClick={() => setMobileOpen(false)}>
                     {t("layout.nav.myDreams")}
                   </NavItem>
-                  <div className="mt-1 flex items-center justify-between">
+                  <div className="mt-1 flex items-center justify-end">
                     <button
                       onClick={() => {
                         setMobileOpen(false);
@@ -246,10 +246,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     >
                       {t("layout.nav.logout")}
                     </button>
-                    <div className="flex items-center gap-2">
-                      <LanguageSwitcher compact />
-                      <ThemeToggle />
-                    </div>
                   </div>
                 </>
               ) : (
@@ -257,7 +253,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <NavItem to="/login" onClick={() => setMobileOpen(false)}>
                     {t("layout.nav.login")}
                   </NavItem>
-                  <div className="mt-1 flex items-center justify-between">
+                  <div className="mt-1 flex items-center justify-end">
                     <Link
                       to="/register"
                       onClick={() => setMobileOpen(false)}
@@ -270,10 +266,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     >
                       {t("layout.nav.register")}
                     </Link>
-                    <div className="flex items-center gap-2">
-                      <LanguageSwitcher compact />
-                      <ThemeToggle />
-                    </div>
+                    <LanguageSwitcher compact className="ms-3" />
                   </div>
                 </>
               )}
@@ -317,7 +310,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
         <p className="pb-6 text-xs text-slate-400 dark:text-white/50">
-          © {new Date().getFullYear()} DreamCatcher.AI. {t("layout.footer.allRights")}
+          Â© {new Date().getFullYear()} DreamCatcher.AI. {t("layout.footer.allRights")}
         </p>
       </footer>
     </div>
