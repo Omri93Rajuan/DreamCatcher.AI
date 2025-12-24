@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import Header from "./Header";
 import Footer from "./Footer";
+import CookieConsent from "./CookieConsent";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
@@ -79,6 +80,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <main className="relative flex-1">{children}</main>
 
       <Footer />
+      <CookieConsent />
     </div>
   );
 }
