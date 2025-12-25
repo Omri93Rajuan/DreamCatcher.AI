@@ -18,6 +18,13 @@
     "footer": {
       "tagline": "Dreamers, awake, interpret - together.",
       "allRights": "All rights reserved."
+    },
+    "cookies": {
+      "title": "Cookies & privacy",
+      "body": "We use cookies to improve performance, security, and analytics. We will not set optional cookies until you accept.",
+      "accept": "Accept all",
+      "decline": "Decline",
+      "manage": "Privacy policy"
     }
   },
   "common": {
