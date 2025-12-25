@@ -14,17 +14,18 @@ import { GlobalDreamStats } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
 const PAGE_SIZE = 9;
 export default function HomePage() {
-    const { t, i18n } = useTranslation();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [page, setPage] = useState(1);
-    const [selectedCategory, setSelectedCategory] = useState<string>("all");
-    const [currentInterpretation, setCurrentInterpretation] = useState<{
-        dream_text: string;
+  const { t, i18n } = useTranslation();
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [currentInterpretation, setCurrentInterpretation] = useState<{
+    dream_text: string;
         interpretation: string;
     } | null>(null);
     const categoriesParam = useMemo(() => (selectedCategory === "all" ? undefined : [selectedCategory]), [selectedCategory]);
-    const { data, isLoading, isFetching } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam);
-    const dreamsForCards = data?.dreams ?? [];
+  const { data, isLoading, isFetching } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam);
+  const dreamsForCards = data?.dreams ?? [];
     const [stats, setStats] = useState<GlobalDreamStats | null>(null);
     const [statsError, setStatsError] = useState<string | null>(null);
     useEffect(() => {
@@ -44,9 +45,16 @@ export default function HomePage() {
             mounted = false;
         };
     }, []);
-    useEffect(() => {
-        setPage(1);
-    }, [searchQuery, selectedCategory]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchQuery(searchInput.trim());
+    }, 1500); // debounce typing by 1.5s
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, selectedCategory]);
     return (<div className="min-h-screen pb-20">
       
       <section className="relative overflow-hidden">
@@ -95,10 +103,7 @@ export default function HomePage() {
 
       
       <PopularDreams />
-      <SearchInput value={searchQuery} onChange={(v) => {
-            setSearchQuery(v);
-            setPage(1);
-        }}/>
+      <SearchInput value={searchInput} onChange={setSearchInput} />
       
       <section className="max-w-6xl mx-auto px-4">
         <CategoryPills selected={selectedCategory} onSelect={(c) => setSelectedCategory(c)} showAll/>
