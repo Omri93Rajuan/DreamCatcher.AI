@@ -164,6 +164,14 @@ export default function Header({ user, onLogout }: HeaderProps) {
               {t("layout.nav.articles")}
             </NavItem>
 
+            <div
+              className="flex items-center justify-between px-1 text-sm font-semibold text-slate-600 dark:text-white/70"
+              dir={i18n.dir()}
+            >
+              <span>{t("layout.nav.languageToggle")}</span>
+              <LanguageSwitcher compact />
+            </div>
+
             {user ? (
               <>
                 <NavItem to="/account" onClick={() => setMobileOpen(false)}>
@@ -205,7 +213,6 @@ export default function Header({ user, onLogout }: HeaderProps) {
                   >
                     {t("layout.nav.register")}
                   </Link>
-                  <LanguageSwitcher compact className="ms-3" />
                 </div>
               </>
             )}
