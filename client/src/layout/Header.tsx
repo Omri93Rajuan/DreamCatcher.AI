@@ -164,13 +164,6 @@ export default function Header({ user, onLogout }: HeaderProps) {
               {t("layout.nav.articles")}
             </NavItem>
 
-            <div
-              className="flex items-center justify-end px-1"
-              dir={i18n.dir()}
-            >
-              <LanguageSwitcher compact />
-            </div>
-
             {user ? (
               <>
                 <NavItem to="/account" onClick={() => setMobileOpen(false)}>
@@ -179,7 +172,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 <NavItem to="/me/dreams" onClick={() => setMobileOpen(false)}>
                   {t("layout.nav.myDreams")}
                 </NavItem>
-                <div className="mt-1 flex items-center justify-end">
+                <div
+                  className="mt-1 flex items-center justify-between gap-3 px-1"
+                  dir={i18n.dir()}
+                >
+                  <LanguageSwitcher compact />
                   <button
                     onClick={async () => {
                       setMobileOpen(false);
@@ -199,7 +196,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 <NavItem to="/login" onClick={() => setMobileOpen(false)}>
                   {t("layout.nav.login")}
                 </NavItem>
-                <div className="mt-1 flex items-center justify-end">
+                <div
+                  className="mt-1 flex items-center justify-between gap-3 px-1"
+                  dir={i18n.dir()}
+                >
+                  <LanguageSwitcher compact />
                   <Link
                     to="/register"
                     onClick={() => setMobileOpen(false)}
