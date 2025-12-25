@@ -165,10 +165,9 @@ export default function Header({ user, onLogout }: HeaderProps) {
             </NavItem>
 
             <div
-              className="flex items-center justify-between px-1 text-sm font-semibold text-slate-600 dark:text-white/70"
+              className="flex items-center justify-end px-1"
               dir={i18n.dir()}
             >
-              <span>{t("layout.nav.languageToggle")}</span>
               <LanguageSwitcher compact />
             </div>
 
