@@ -11,7 +11,6 @@ import CategoryPills from "@/components/dreams/CategoryPills";
 import { DreamsApi } from "@/lib/api/dreams";
 import { GlobalDreamStats } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
-import { useInViewOnce } from "@/hooks/useInViewOnce";
 const PAGE_SIZE = 9;
 export default function HomePage() {
   const { t, i18n } = useTranslation();
@@ -23,13 +22,10 @@ export default function HomePage() {
     dream_text: string;
     interpretation: string;
   } | null>(null);
-  const { ref: dreamsRef, isInView: dreamsInView } = useInViewOnce<HTMLDivElement>({
-    rootMargin: "200px",
-  });
   const categoriesParam = useMemo(() => (selectedCategory === "all" ? undefined : [selectedCategory]), [selectedCategory]);
   const shouldLoadStats = true;
   const shouldLoadPopular = true;
-  const shouldLoadDreams = dreamsInView;
+  const shouldLoadDreams = true;
 
   const { data, isLoading, isFetching } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam, shouldLoadDreams);
   const isDreamsLoading = shouldLoadDreams && isLoading;
@@ -53,10 +49,12 @@ export default function HomePage() {
       mounted = false;
     };
   }, [shouldLoadStats, stats, statsError]);
+
+  // faster, lighter search debounce so results feel instant
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setSearchQuery(searchInput.trim());
-    }, 1500); // debounce typing by 1.5s
+    }, 350);
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
@@ -113,11 +111,11 @@ export default function HomePage() {
         ) : stats ? (
           <StatsPanel stats={stats} />
         ) : (
-          <StatsSkeleton />
+          null
         )}
       </section>
 
-      <PopularDreams />
+      {shouldLoadPopular && <PopularDreams />}
 
       <SearchInput value={searchInput} onChange={setSearchInput} />
 
@@ -125,43 +123,15 @@ export default function HomePage() {
         <CategoryPills selected={selectedCategory} onSelect={(c) => setSelectedCategory(c)} showAll />
       </section>
 
-      <section ref={dreamsRef} className="max-w-7xl mx-auto px-4" dir={i18n.dir()}>
+      <section className="max-w-7xl mx-auto px-4" dir={i18n.dir()}>
         <h2 className="text-3xl font-bold mb-6">{t("home.allDreams")}</h2>
-        {shouldLoadDreams ? (
-          <DreamsPaginated
-            data={data}
-            isLoading={isDreamsLoading}
-            isFetching={isFetching && shouldLoadDreams}
-            onPageChange={setPage}
-          />
-        ) : (
-          <DreamListSkeleton />
-        )}
+        <DreamsPaginated
+          data={data}
+          isLoading={isDreamsLoading}
+          isFetching={isFetching && shouldLoadDreams}
+          onPageChange={setPage}
+        />
       </section>
-    </div>
-  );
-}
-
-function StatsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="h-36 rounded-2xl bg-white/5 animate-pulse border border-white/10" />
-      ))}
-    </div>
-  );
-}
-
-function PopularSkeleton() {
-  return null;
-}
-
-function DreamListSkeleton() {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <div key={i} className="h-64 rounded-2xl bg-white/5 animate-pulse border border-white/10" />
-      ))}
     </div>
   );
 }

@@ -15,33 +15,6 @@ type ReactionData = {
   myReaction: ReactionType | null;
 };
 
-function useAnimatedNumber(value: number | null, duration = 450) {
-  const [display, setDisplay] = React.useState<number>(() => value ?? 0);
-  const prevRef = React.useRef<number>(value ?? 0);
-
-  React.useEffect(() => {
-    if (value === null || Number.isNaN(value)) return;
-    const from = prevRef.current;
-    const to = value;
-    if (from === to) return;
-    prevRef.current = to;
-    const start = performance.now();
-    let raf: number;
-
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3); // ease-out
-      setDisplay(Math.round(from + (to - from) * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-
-  return display;
-}
-
 export default function ReactionsBar({
   dreamId,
   disabled,
@@ -74,9 +47,6 @@ export default function ReactionsBar({
   const likes = hasData ? data?.likes ?? 0 : null;
   const dislikes = hasData ? data?.dislikes ?? 0 : null;
   const viewsTotal = hasData ? data?.viewsTotal ?? 0 : null;
-  const likesAnimated = useAnimatedNumber(likes);
-  const dislikesAnimated = useAnimatedNumber(dislikes);
-  const viewsAnimated = useAnimatedNumber(viewsTotal);
   const myReaction = data?.myReaction ?? null;
 
   const mutateReaction = useMutation({
@@ -159,7 +129,7 @@ export default function ReactionsBar({
           title={t("reactions.like")}
         >
           <ThumbsUp className="w-4 h-4 inline-block" />{" "}
-          {renderValue(likesAnimated)}
+          {renderValue(likes ?? 0)}
         </button>
 
         <button
@@ -171,7 +141,7 @@ export default function ReactionsBar({
           title={t("reactions.dislike")}
         >
           <ThumbsDown className="w-4 h-4 inline-block" />{" "}
-          {renderValue(dislikesAnimated)}
+          {renderValue(dislikes ?? 0)}
         </button>
 
         <span
@@ -182,7 +152,7 @@ export default function ReactionsBar({
           aria-busy={showPlaceholder}
         >
           <Eye className="w-4 h-4 inline-block" />{" "}
-          {renderValue(viewsAnimated)}
+          {renderValue(viewsTotal ?? 0)}
         </span>
       </div>
 
@@ -196,4 +166,5 @@ export default function ReactionsBar({
     </>
   );
 }
+
 
