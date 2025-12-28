@@ -26,20 +26,27 @@ export default function ReactionsBar({
 }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const nf = React.useMemo(
+    () => new Intl.NumberFormat(i18n.language === "he" ? "he-IL" : "en-US"),
+    [i18n.language]
+  );
   const { isAuthenticated } = useAuthStore();
   const [authOpen, setAuthOpen] = React.useState(false);
   const isProcessingRef = React.useRef(false);
 
-  const { data } = useQuery<ReactionData>({
+  const { data, isLoading, isFetching, error } = useQuery<ReactionData>({
     queryKey: ["reactions", dreamId],
     queryFn: () => DreamsApi.getReactions(dreamId),
     staleTime: 30000,
     refetchOnWindowFocus: false,
+    initialData: () => qc.getQueryData<ReactionData>(["reactions", dreamId]),
   });
 
-  const likes = data?.likes ?? 0;
-  const dislikes = data?.dislikes ?? 0;
-  const viewsTotal = data?.viewsTotal ?? 0;
+  const hasData = !!data && !error;
+  const showPlaceholder = !hasData && (isLoading || isFetching);
+  const likes = hasData ? data?.likes ?? 0 : null;
+  const dislikes = hasData ? data?.dislikes ?? 0 : null;
+  const viewsTotal = hasData ? data?.viewsTotal ?? 0 : null;
   const myReaction = data?.myReaction ?? null;
 
   const mutateReaction = useMutation({
@@ -104,6 +111,9 @@ export default function ReactionsBar({
     mutateReaction.mutate(type);
   };
 
+  const renderValue = (value: number) =>
+    showPlaceholder ? <span className="opacity-50">...</span> : nf.format(value);
+
   return (
     <>
       <div
@@ -115,9 +125,11 @@ export default function ReactionsBar({
           onClick={() => handleReact("like")}
           disabled={disabled}
           aria-pressed={myReaction === "like"}
+          aria-busy={showPlaceholder}
           title={t("reactions.like")}
         >
-          <ThumbsUp className="w-4 h-4 inline-block" /> {likes}
+          <ThumbsUp className="w-4 h-4 inline-block" />{" "}
+          {renderValue(likes ?? 0)}
         </button>
 
         <button
@@ -125,16 +137,22 @@ export default function ReactionsBar({
           onClick={() => handleReact("dislike")}
           disabled={disabled}
           aria-pressed={myReaction === "dislike"}
+          aria-busy={showPlaceholder}
           title={t("reactions.dislike")}
         >
-          <ThumbsDown className="w-4 h-4 inline-block" /> {dislikes}
+          <ThumbsDown className="w-4 h-4 inline-block" />{" "}
+          {renderValue(dislikes ?? 0)}
         </button>
 
         <span
           title={t("reactions.views")}
-          aria-label={`${t("reactions.views")}: ${viewsTotal}`}
+          aria-label={`${t("reactions.views")}: ${
+            viewsTotal === null ? t("common.loading") : viewsTotal
+          }`}
+          aria-busy={showPlaceholder}
         >
-          <Eye className="w-4 h-4 inline-block" /> {viewsTotal}
+          <Eye className="w-4 h-4 inline-block" />{" "}
+          {renderValue(viewsTotal ?? 0)}
         </span>
       </div>
 
@@ -148,3 +166,5 @@ export default function ReactionsBar({
     </>
   );
 }
+
+
