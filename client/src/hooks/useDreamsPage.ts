@@ -1,7 +1,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { DreamsPage } from "@/lib/api/types";
-export function useDreamsPage(page: number, limit: number, search: string, sortBy: string = "createdAt", order: "asc" | "desc" = "desc", categories?: string[]) {
+export function useDreamsPage(page: number, limit: number, search: string, sortBy: string = "createdAt", order: "asc" | "desc" = "desc", categories?: string[], enabled: boolean = true) {
     const trimmedSearch = (search ?? "").trim();
     const normalizedCategories = Array.isArray(categories) && categories.length
         ? [...categories].filter(Boolean).sort()
@@ -27,5 +27,6 @@ export function useDreamsPage(page: number, limit: number, search: string, sortB
             categories: normalizedCategories,
         }),
         placeholderData: keepPreviousData,
+        enabled,
     });
 }

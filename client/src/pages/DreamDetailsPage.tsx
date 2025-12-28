@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { DreamsApi } from "@/lib/api/dreams";
 import { useTranslation } from "react-i18next";
+import React from "react";
 export default function DreamDetailsPage() {
     const { t, i18n } = useTranslation();
     const { id } = useParams<{
@@ -12,6 +13,11 @@ export default function DreamDetailsPage() {
         queryFn: () => DreamsApi.getById(id!),
         enabled: !!id,
     });
+    React.useEffect(() => {
+        if (id) {
+            DreamsApi.recordActivity?.(id, "view").catch(() => {});
+        }
+    }, [id]);
     if (isLoading)
         return <div className="p-8">{t("common.loading")}</div>;
     if (error || !data)

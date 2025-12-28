@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import User from "../models/user";
 const ENVIRONMENT = process.env.NODE_ENV || "development";
 const GOOGLE_ID_INDEX_NAME = "googleId_1";
+
 const ensureGoogleIdIndex = async (): Promise<void> => {
   try {
     const indexes = await User.collection.indexes();

@@ -1,10 +1,11 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, Share2, Moon, X, Sparkles, Plus } from "lucide-react";
 import type { Dream } from "@/lib/api/types";
 import ReactionsBar from "@/components/dreams/ReactionsBar";
 import { CATEGORY_META } from "@/lib/api/categoryIcons";
 import { useTranslation } from "react-i18next";
+import { DreamsApi } from "@/lib/api/dreams";
 type CategoryKey = keyof typeof CATEGORY_META;
 type Props = {
     dream: Dream & {
@@ -70,6 +71,7 @@ function TagsRow({ categories, maxVisible, align = "left", }: {
 export default function DreamCard({ dream, showDate = false, currentUserId, onShare, compact = true, }: Props) {
     const { t, i18n } = useTranslation();
     const [showModal, setShowModal] = useState(false);
+    const viewSentRef = React.useRef(false);
     const isOwner = !!currentUserId && dream.userId === currentUserId;
     const title = safe(dream.title) || t("dreams.untitled");
     const dreamText = safe(dream.userInput);
@@ -84,10 +86,18 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
     }, [dream]);
     const dreamPreviewLength = compact ? 100 : 200;
     const interpretationPreviewLength = compact ? 120 : 180;
-    const dreamNeedsMore = dreamText.length > dreamPreviewLength;
-    const interpretationNeedsMore = interpretation.length > interpretationPreviewLength;
-    const hasMore = dreamNeedsMore || interpretationNeedsMore;
-    return (<>
+  const dreamNeedsMore = dreamText.length > dreamPreviewLength;
+  const interpretationNeedsMore = interpretation.length > interpretationPreviewLength;
+  const hasMore = dreamNeedsMore || interpretationNeedsMore;
+
+  useEffect(() => {
+    if (showModal && !viewSentRef.current) {
+      viewSentRef.current = true;
+      DreamsApi.recordActivity?.(dream._id, "view").catch(() => {});
+    }
+  }, [showModal, dream._id]);
+
+  return (<>
       
       <Card className={[
             "relative rounded-xl overflow-hidden transition-all duration-300 group",

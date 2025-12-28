@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { createPageUrl } from "@/lib/utils/createPageUrl";
-import ThemeToggle from "@/components/ui/ThemeToggle";
+import ThemeToggle from "@/components/nav/ThemeToggle";
 import LanguageSwitcher from "@/components/nav/LanguageSwitcher";
 import logoMark from "@/assets/logo.png";
 import UserMenu from "@/components/nav/UserMenu";
@@ -133,7 +133,9 @@ export default function Header({ user, onLogout }: HeaderProps) {
                        border-black/10 hover:bg-black/5
                        dark:border-white/15 dark:hover:bg-white/10
                        transition"
-            aria-label={mobileOpen ? t("layout.nav.menuClose") : t("layout.nav.menuOpen")}
+            aria-label={
+              mobileOpen ? t("layout.nav.menuClose") : t("layout.nav.menuOpen")
+            }
             aria-expanded={mobileOpen}
           >
             <div
