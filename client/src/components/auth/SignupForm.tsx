@@ -8,7 +8,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import googleLogo from "@/assets/logoGoogle.webp";
 import { UploadsApi } from "@/lib/api/uploads";
 import { toast } from "react-toastify";
-import { toProxiedImage } from "@/lib/images";
+import { convertFileToWebp, toProxiedImage } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -222,14 +222,15 @@ export default function SignupForm({ onSuccess }: Props) {
     }
   };
 
-  const handleAvatarFileSelect = (file: File) => {
+  const handleAvatarFileSelect = async (file: File) => {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
       toast.error(t("account.profile.errors.format"));
       return;
     }
-    setAvatarFile(file);
+    const webpFile = await convertFileToWebp(file);
+    setAvatarFile(webpFile);
     setAvatarUploadCache(null);
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(webpFile);
     setAvatarPreview(url);
     setSelectedAvatar(url);
     setShowAllAvatars(false);
@@ -361,7 +362,7 @@ export default function SignupForm({ onSuccess }: Props) {
                 const file = e.target.files?.[0];
                 e.target.value = "";
                 if (!file) return;
-                handleAvatarFileSelect(file);
+                await handleAvatarFileSelect(file);
               }}
             />
           </div>
