@@ -3,7 +3,7 @@ import * as React from "react";
 import MetaRow from "./MetaRow";
 import CategoryTag from "./CategoryTag";
 import { resolveArticleCover } from "./coverImages";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 import { Article } from "@/lib/api/types";
 import { clampText, stripHtml } from "@/lib/utils/articlesUtils";
 import { useTranslation } from "react-i18next";

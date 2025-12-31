@@ -5,7 +5,7 @@ import MetaRow from "./MetaRow";
 import ArticleBody from "./ArticleBody";
 import CategoryTag from "./CategoryTag";
 import { resolveArticleCover } from "./coverImages";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 import { Article } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
 

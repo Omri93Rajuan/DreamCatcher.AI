@@ -41,7 +41,7 @@ export default function UserMenu() {
 
   const avatarSrc =
     toProxiedImage(user.image || (user as any).avatar) ||
-    "/avatar-placeholder.svg";
+    "/avatar-placeholder.webp";
 
   const nameFromParts = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
   const displayName =
@@ -102,7 +102,7 @@ export default function UserMenu() {
                     const img = e.currentTarget as HTMLImageElement;
                     if (!img.dataset.fallback) {
                       img.dataset.fallback = "true";
-                      img.src = "/avatar-placeholder.svg";
+                      img.src = "/avatar-placeholder.webp";
                     }
                   }}
                   alt={displayName}

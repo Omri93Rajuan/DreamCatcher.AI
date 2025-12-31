@@ -205,14 +205,14 @@ export default function UserProfileForm({ user }: { user: User }) {
             <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-amber-400">
               <div className="w-full h-full rounded-full overflow-hidden border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/10">
                 <img
-                  src={preview || "/avatar-placeholder.svg"}
+                  src={preview || "/avatar-placeholder.webp"}
                   alt={user.firstName || "avatar"}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
                     if (!img.dataset.fallback) {
                       img.dataset.fallback = "true";
-                      img.src = "/avatar-placeholder.svg";
+                      img.src = "/avatar-placeholder.webp";
                     }
                   }}
                 />

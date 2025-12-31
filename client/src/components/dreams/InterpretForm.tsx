@@ -7,7 +7,7 @@ import type { Dream } from "@/lib/api/types";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
-import Logo from "@/assets/logo.png";
+import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
     fullText: string;
