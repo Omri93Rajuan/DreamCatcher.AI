@@ -5,10 +5,10 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import TermsDialog from "./TermsDialog";
 import { TERMS_VERSION } from "@/constants/legal";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import googleLogo from "@/assets/logoGoogle.png";
+import googleLogo from "@/assets/logoGoogle.webp";
 import { UploadsApi } from "@/lib/api/uploads";
 import { toast } from "react-toastify";
-import { toProxiedImage } from "@/lib/images";
+import { convertFileToWebp, toProxiedImage } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -36,18 +36,18 @@ const initialState: FormState = {
 };
 
 const AVATARS = [
-  "/avatars/avatar-1.svg",
-  "/avatars/avatar-2.svg",
-  "/avatars/avatar-3.svg",
-  "/avatars/avatar-4.svg",
-  "/avatars/avatar-5.svg",
-  "/avatars/avatar-6.svg",
-  "/avatars/avatar-7.svg",
-  "/avatars/avatar-8.svg",
-  "/avatars/avatar-9.svg",
-  "/avatars/avatar-10.svg",
-  "/avatars/avatar-11.svg",
-  "/avatars/avatar-12.svg",
+  "/avatars/avatar-1.webp",
+  "/avatars/avatar-2.webp",
+  "/avatars/avatar-3.webp",
+  "/avatars/avatar-4.webp",
+  "/avatars/avatar-5.webp",
+  "/avatars/avatar-6.webp",
+  "/avatars/avatar-7.webp",
+  "/avatars/avatar-8.webp",
+  "/avatars/avatar-9.webp",
+  "/avatars/avatar-10.webp",
+  "/avatars/avatar-11.webp",
+  "/avatars/avatar-12.webp",
 ];
 
 export default function SignupForm({ onSuccess }: Props) {
@@ -222,14 +222,15 @@ export default function SignupForm({ onSuccess }: Props) {
     }
   };
 
-  const handleAvatarFileSelect = (file: File) => {
+  const handleAvatarFileSelect = async (file: File) => {
     if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
       toast.error(t("account.profile.errors.format"));
       return;
     }
-    setAvatarFile(file);
+    const webpFile = await convertFileToWebp(file);
+    setAvatarFile(webpFile);
     setAvatarUploadCache(null);
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(webpFile);
     setAvatarPreview(url);
     setSelectedAvatar(url);
     setShowAllAvatars(false);
@@ -361,7 +362,7 @@ export default function SignupForm({ onSuccess }: Props) {
                 const file = e.target.files?.[0];
                 e.target.value = "";
                 if (!file) return;
-                handleAvatarFileSelect(file);
+                await handleAvatarFileSelect(file);
               }}
             />
           </div>

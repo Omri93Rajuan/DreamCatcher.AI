@@ -13,7 +13,7 @@ import { Loader2, Upload, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
-import { toProxiedImage } from "@/lib/images";
+import { convertFileToWebp, toProxiedImage } from "@/lib/images";
 
 type FormValues = {
   firstName: string;
@@ -205,14 +205,14 @@ export default function UserProfileForm({ user }: { user: User }) {
             <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-amber-400">
               <div className="w-full h-full rounded-full overflow-hidden border border-black/10 dark:border-white/15 bg-black/5 dark:bg-white/10">
                 <img
-                  src={preview || "/avatar-placeholder.svg"}
+                  src={preview || "/avatar-placeholder.webp"}
                   alt={user.firstName || "avatar"}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const img = e.currentTarget as HTMLImageElement;
                     if (!img.dataset.fallback) {
                       img.dataset.fallback = "true";
-                      img.src = "/avatar-placeholder.svg";
+                      img.src = "/avatar-placeholder.webp";
                     }
                   }}
                 />
@@ -303,7 +303,7 @@ export default function UserProfileForm({ user }: { user: User }) {
                 type="file"
                 accept="image/png,image/jpeg,image/webp"
                 hidden
-                onChange={(e) => {
+                onChange={async (e) => {
                   const file = e.target.files?.[0];
                   e.target.value = "";
                   if (!file) return;
@@ -311,8 +311,9 @@ export default function UserProfileForm({ user }: { user: User }) {
                     toast.error(t("account.profile.errors.format"));
                     return;
                   }
-                  const objectUrl = URL.createObjectURL(file);
-                  setLocalFile(file);
+                  const processed = await convertFileToWebp(file);
+                  const objectUrl = URL.createObjectURL(processed);
+                  setLocalFile(processed);
                   setPreviewUrl(objectUrl);
                   setValue("image", watch("image") ?? "", {
                     shouldDirty: true,

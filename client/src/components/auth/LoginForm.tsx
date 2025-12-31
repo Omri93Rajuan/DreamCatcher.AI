@@ -3,7 +3,7 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { useAuthLogin } from "@/hooks/useAuthLogin";
 import { useGoogleAuth } from "@/hooks/useGoogleAuth";
-import googleLogo from "@/assets/logoGoogle.png";
+import googleLogo from "@/assets/logoGoogle.webp";
 import { useTranslation } from "react-i18next";
 
 type Props = {

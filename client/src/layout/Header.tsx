@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { createPageUrl } from "@/lib/utils/createPageUrl";
 import ThemeToggle from "@/components/nav/ThemeToggle";
 import LanguageSwitcher from "@/components/nav/LanguageSwitcher";
-import logoMark from "@/assets/logo.png";
+import logoMark from "@/assets/logo.webp";
 import UserMenu from "@/components/nav/UserMenu";
 
 type HeaderProps = {
