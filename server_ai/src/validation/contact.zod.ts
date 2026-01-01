@@ -1,12 +1,6 @@
 import { z } from "zod";
 
-const required = (msg: string) =>
-  z
-    .string({
-      required_error: msg,
-      invalid_type_error: msg,
-    })
-    .trim();
+const required = (msg: string) => z.string().trim().min(1, { message: msg });
 
 export const contactRequestSchema = z.object({
   body: z.object({
