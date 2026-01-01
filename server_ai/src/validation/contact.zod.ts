@@ -1,24 +1,27 @@
 import { z } from "zod";
 
 const required = (msg: string) =>
-  z.string({
-    error: (iss) => (iss.input === undefined ? msg : "ערך לא תקין"),
-  });
+  z
+    .string({
+      required_error: msg,
+      invalid_type_error: msg,
+    })
+    .trim();
 
 export const contactRequestSchema = z.object({
   body: z.object({
-    name: required("חסר שם מלא")
-      .min(2, { error: "שם חייב להכיל לפחות 2 תווים" })
-      .max(120, { error: "שם ארוך מדי" }),
+    name: required("Name is required")
+      .min(2, { message: "Name must be at least 2 characters" })
+      .max(120, { message: "Name must be at most 120 characters" }),
 
-    email: required("חסר אימייל")
-      .min(1, { error: "חסר אימייל" })
-      .email({ error: "אימייל לא תקין" }),
+    email: required("Email is required").email({
+      message: "Email must be valid",
+    }),
 
-    message: required("חסרה הודעה")
-      .min(10, { error: "הודעה חייבת להיות לפחות 10 תווים" })
-      .max(2000, { error: "הודעה ארוכה מדי" }),
+    message: required("Message is required")
+      .min(10, { message: "Message must be at least 10 characters" })
+      .max(2000, { message: "Message must be at most 2000 characters" }),
 
-    website: z.string().max(0, { error: "Invalid submission" }).optional(), // honeypot
+    website: z.string().max(0, { message: "Invalid submission" }).optional(), // honeypot
   }),
 });

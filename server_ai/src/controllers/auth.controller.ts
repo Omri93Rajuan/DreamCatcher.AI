@@ -29,12 +29,22 @@ import {
   verifyAndConsumeResetToken,
 } from "../services/password.service";
 import { handleError } from "../utils/ErrorHandle";
-const ACCESS_SECRET =
-  process.env.JWT_ACCESS_SECRET || process.env.JWT_SECRET || "supersecret";
+
+const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET =
-  process.env.JWT_REFRESH_SECRET ||
-  process.env.REFRESH_SECRET ||
-  "refreshsecret";
+  process.env.JWT_REFRESH_SECRET || process.env.REFRESH_SECRET;
+const RESET_SESSION_SECRET = process.env.JWT_SECRET || ACCESS_SECRET;
+
+if (!ACCESS_SECRET) {
+  throw new Error("JWT_ACCESS_SECRET is not configured");
+}
+if (!REFRESH_SECRET) {
+  throw new Error("JWT_REFRESH_SECRET is not configured");
+}
+if (!RESET_SESSION_SECRET) {
+  throw new Error("JWT_SECRET is not configured for reset sessions");
+}
+
 const resolvedAppUrl = (process.env.APP_URL || "").toLowerCase();
 const apiBaseUrl = (
   process.env.API_URL || `http://localhost:${process.env.PORT || 1000}`
@@ -42,7 +52,6 @@ const apiBaseUrl = (
 const appUrl = resolvedAppUrl;
 const isProd = process.env.NODE_ENV === "production";
 const RESET_COOKIE = "pw_reset";
-const RESET_SESSION_SECRET = process.env.JWT_SECRET || "supersecret";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
 const SERVER_GOOGLE_REDIRECT = `${apiBaseUrl}/api/auth/google/callback`;

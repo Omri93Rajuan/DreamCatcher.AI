@@ -5,7 +5,11 @@ interface TokenPayload {
   id: string;
   isAdmin: boolean;
 }
-const SECRET_KEY = process.env.JWT_ACCESS_SECRET || "fallback_secret_key";
+const SECRET_KEY = process.env.JWT_ACCESS_SECRET;
+
+if (!SECRET_KEY) {
+  throw new Error("JWT_ACCESS_SECRET is not configured");
+}
 const generateAuthToken = (user: { _id: any; role: UserRole }): string => {
   return jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, {
     expiresIn: "1h",
