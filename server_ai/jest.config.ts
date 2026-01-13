@@ -3,14 +3,14 @@ import type { Config } from "jest";
 const config: Config = {
   preset: "ts-jest",
   testEnvironment: "node",
-  roots: ["<rootDir>/src"],
+  roots: ["<rootDir>/tests"],
   testMatch: ["**/?(*.)+(spec|test).ts"],
   moduleFileExtensions: ["ts", "js", "json"],
-  setupFiles: ["<rootDir>/src/test/setup.ts"],
+  setupFiles: ["<rootDir>/tests/support/setup.ts"],
   extensionsToTreatAsEsm: [],
   clearMocks: true,
   moduleNameMapper: {
-    "^node-fetch$": "<rootDir>/src/test/mocks/node-fetch.ts",
+    "^node-fetch$": "<rootDir>/tests/mocks/node-fetch.ts",
   },
 };
 

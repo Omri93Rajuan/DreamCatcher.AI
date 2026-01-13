@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from "express";
 import { UserRole } from "../types/users.interface";
 interface TokenPayload {
   id: string;
-  isAdmin: boolean;
+  role?: string;
+  isAdmin?: boolean;
 }
 const SECRET_KEY = process.env.JWT_ACCESS_SECRET;
 
@@ -16,7 +17,10 @@ const generateAuthToken = (user: { _id: any; role: UserRole }): string => {
   });
 };
 const verifyUser = (req: Request, res: Response, next: NextFunction): void => {
-  const token = req.cookies?.["auth_token"];
+  const bearer = req.headers.authorization;
+  const headerToken =
+    bearer && bearer.startsWith("Bearer ") ? bearer.slice(7) : undefined;
+  const token = req.cookies?.["auth_token"] || headerToken;
   if (!token) {
     res.status(401).json({
       status: "error",
@@ -55,7 +59,8 @@ const verifyUser = (req: Request, res: Response, next: NextFunction): void => {
 const verifyAdmin = (req: Request, res: Response, next: NextFunction): void => {
   verifyUser(req, res, () => {
     const user = (req as any).user;
-    if (!user || !user.isAdmin) {
+    const isAdmin = user?.isAdmin || user?.role === "admin";
+    if (!user || !isAdmin) {
       res.status(403).json({
         status: "error",
         message: "Access denied. Admin privileges required.",

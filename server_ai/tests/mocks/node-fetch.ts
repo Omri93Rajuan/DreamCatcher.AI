@@ -6,3 +6,6 @@ const fetchMock = jest.fn(async () => ({
 export const Response = class MockResponse {};
 
 export default fetchMock;
+
+
+

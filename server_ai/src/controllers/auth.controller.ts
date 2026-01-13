@@ -301,11 +301,23 @@ export const refreshToken = (req: Request, res: Response): void => {
   try {
     const rt = req.cookies?.refresh_token as string | undefined;
     if (!rt) return handleError(res, 401, "No refresh token provided");
-    jwt.verify(rt, REFRESH_SECRET, (err: any, decoded: any) => {
+    jwt.verify(rt, REFRESH_SECRET, async (err: any, decoded: any) => {
       if (err || !decoded)
         return handleError(res, 401, "Invalid refresh token");
+      const user = await User.findById(decoded._id).select(
+        "_id role isActive passwordChangedAt"
+      );
+      if (!user || user.isActive === false) {
+        return handleError(res, 401, "Invalid refresh token");
+      }
+      if (user.passwordChangedAt && decoded.iat) {
+        const issuedAtMs = decoded.iat * 1000;
+        if (issuedAtMs < user.passwordChangedAt.getTime()) {
+          return handleError(res, 401, "Invalid refresh token");
+        }
+      }
       const newAccess = jwt.sign(
-        { _id: decoded._id, role: decoded.role },
+        { _id: user._id, role: user.role },
         ACCESS_SECRET,
         { expiresIn: "15m" }
       );
@@ -345,7 +357,7 @@ export const getUserById = async (
       return void res.status(404).json({ message: "User not found" });
     res.status(200).json({ user: foundUser });
   } catch (error: any) {
-    handleError(res, 500, error.message);
+    handleError(res, error.status || 500, error.message);
   }
 };
 export async function requestPasswordReset(req: Request, res: Response) {

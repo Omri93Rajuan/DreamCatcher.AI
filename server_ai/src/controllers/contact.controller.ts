@@ -45,7 +45,9 @@ export async function submitContact(req: Request, res: Response) {
       <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
     `;
 
-    await sendMail(CONTACT_TO, CONTACT_SUBJECT, html);
+    if (process.env.NODE_ENV !== "test") {
+      await sendMail(CONTACT_TO, CONTACT_SUBJECT, html);
+    }
 
     return res.json({ success: true });
   } catch (error: any) {

@@ -14,6 +14,11 @@ const contactLimiter = rateLimit({
   message: { error: { message: "Too many requests, please try again later." } },
 });
 
-router.post("/", contactLimiter, validate(contactRequestSchema), submitContact);
+const limiter =
+  process.env.NODE_ENV === "test"
+    ? (_req: any, _res: any, next: any) => next()
+    : contactLimiter;
+
+router.post("/", limiter, validate(contactRequestSchema), submitContact);
 
 export default router;

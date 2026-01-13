@@ -27,9 +27,11 @@ function normalizeCategories(input: unknown): DreamCategory[] {
   for (const v of arr) {
     const s = String(v ?? "").trim();
     if (s && !allowedSet.has(s)) {
+      if (process.env.NODE_ENV !== "test") {
       console.warn(`[Dreams] Category "${s}" not in allowed list`, {
         allowed: Array.from(allowedSet),
       });
+      }
     }
     if (s && allowedSet.has(s) && !out.includes(s)) out.push(s);
   }

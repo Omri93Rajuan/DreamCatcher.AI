@@ -13,7 +13,9 @@ export const handleError = (
   });
 };
 export const handleBadRequest = (validator: string, error: any): never => {
-  console.error(`[${validator}]`, error);
+  if (process.env.NODE_ENV !== "test") {
+    console.error(`[${validator}]`, error);
+  }
   const message = mapMongoError(error);
   const err = new Error(message) as Error & {
     status?: number;

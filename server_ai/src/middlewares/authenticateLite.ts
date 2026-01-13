@@ -24,7 +24,9 @@ const authenticateSoft = (
       isAdmin: decoded.role === "admin",
     };
   } catch (err) {
-    console.log("[AUTH-SOFT] Invalid token, ignoring");
+    if (process.env.NODE_ENV !== "test") {
+      console.log("[AUTH-SOFT] Invalid token, ignoring");
+    }
   }
   next();
 };
