@@ -15,6 +15,7 @@ import ContactPage from "@/pages/ContactPage";
 import GoogleCallbackPage from "@/pages/GoogleCallbackPage";
 import TermsPage from "@/pages/TermsPage";
 import PrivacyPage from "@/pages/PrivacyPage";
+
 export const router = createBrowserRouter([
     {
         path: "/",
