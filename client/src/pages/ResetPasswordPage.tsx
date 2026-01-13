@@ -1,5 +1,4 @@
 import React from "react";
-import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,8 +25,6 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ResetPasswordPage() {
   const { t } = useTranslation();
-  const [params] = useSearchParams();
-  const token = params.get("token");
   const {
     register,
     handleSubmit,
@@ -35,16 +32,12 @@ export default function ResetPasswordPage() {
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   const onSubmit = async (values: FormValues) => {
-    if (!token) {
-      toast.error(t("auth.reset.noToken"));
-      return;
-    }
     try {
       await AuthApi.resetPasswordWithCookie(values.password);
       toast.success(t("auth.reset.success"));
     } catch (e: any) {
       const status = e?.response?.status;
-      if (status === 400 || status === 410) {
+      if (status === 400 || status === 401 || status === 410) {
         toast.error(t("auth.reset.tokenInvalid"));
       } else {
         toast.error(t("auth.reset.genericError"));

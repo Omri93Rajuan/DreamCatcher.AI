@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "strict": false,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node", "jest"]
   },
   "include": ["index.ts", "router.ts", "src/**/*.ts"],
   "exclude": [

@@ -1,28 +1,14 @@
-import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
+import { Response } from "express";
 import { createAvatarUploadUrl } from "../services/upload.service";
+import { AuthRequest } from "../types/auth.interface";
 
-const SECRET_KEY = process.env.JWT_ACCESS_SECRET || "fallback_secret_key";
-
-function resolveUserId(req: Request): string {
-  const token = (req as any).cookies?.["auth_token"];
-  if (token) {
-    try {
-      const decoded: any = jwt.verify(token, SECRET_KEY);
-      if (decoded?.id) return String(decoded.id);
-    } catch {
-      // ignore invalid/expired tokens and fallback
-    }
+export async function getAvatarUploadUrl(req: AuthRequest, res: Response) {
+  const userId = req.user?._id;
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ error: { message: "Unauthorized: missing user context" } });
   }
-
-  if ((req as any).user?._id) return String((req as any).user._id);
-  if ((req as any).userId) return String((req as any).userId);
-
-  return "public";
-}
-
-export async function getAvatarUploadUrl(req: Request, res: Response) {
-  const userId = resolveUserId(req);
   const { contentType, contentLength } = req.body || {};
 
   try {

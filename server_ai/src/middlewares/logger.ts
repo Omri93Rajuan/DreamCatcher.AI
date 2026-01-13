@@ -5,6 +5,7 @@ export const requestLogger = (
   res: Response,
   next: NextFunction
 ) => {
+  if (process.env.NODE_ENV === "test") return next();
   const start = Date.now();
   const originalSend = res.send;
   res.send = function (body?: any): Response {

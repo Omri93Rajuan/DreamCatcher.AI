@@ -12,7 +12,6 @@ const PasswordResetQuotaSchema = new Schema<PasswordResetQuotaDoc>(
       ref: "User",
       required: true,
       unique: true,
-      index: true,
     },
     lastRequestedAt: {
       type: Date,
@@ -22,7 +21,6 @@ const PasswordResetQuotaSchema = new Schema<PasswordResetQuotaDoc>(
   },
   { timestamps: true }
 );
-PasswordResetQuotaSchema.index({ userId: 1 }, { unique: true });
 const PasswordResetQuota =
   (mongoose.models
     .PasswordResetQuota as mongoose.Model<PasswordResetQuotaDoc>) ||

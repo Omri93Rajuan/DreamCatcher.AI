@@ -26,5 +26,8 @@ server.listen(PORT, () => {
     chalk.blue(`Listening on: ${process.env.SERVER_URL || `http://:${PORT}`}`)
   );
   connectToDb();
-  loadInitialData();
+  const shouldSeed = (process.env.SEED_ON_START || "").toLowerCase() === "true";
+  if (shouldSeed) {
+    loadInitialData();
+  }
 });

@@ -2,10 +2,20 @@ import { Request, Response } from "express";
 import { pipeline } from "stream";
 import { getImageObject } from "../services/image-proxy.service";
 
+const allowedPrefix =
+  process.env.IMAGE_PROXY_ALLOWED_PREFIX && process.env.IMAGE_PROXY_ALLOWED_PREFIX !== "*"
+    ? process.env.IMAGE_PROXY_ALLOWED_PREFIX
+    : "avatars/";
+
 export async function proxyImage(req: Request, res: Response) {
   const key = (req.params[0] || "").replace(/^\/+/, "");
   if (!key) {
     return res.status(400).json({ error: { message: "Missing image key" } });
+  }
+  if (allowedPrefix && !key.startsWith(allowedPrefix)) {
+    return res
+      .status(403)
+      .json({ error: { message: "Access to this path is not allowed" } });
   }
 
   try {
