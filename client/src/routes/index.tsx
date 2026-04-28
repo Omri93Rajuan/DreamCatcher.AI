@@ -1,112 +1,61 @@
+import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/layout/layout";
-import HomePage from "@/pages/HomePage";
-import LoginPage from "@/pages/LoginPage";
-import DreamDetailsPage from "@/pages/DreamDetailsPage";
 import { ProtectedRoute } from "./protected";
-import RegisterPage from "@/pages/RegisterPage";
-import MyDreamsPage from "@/pages/MyDreamsPage";
-import NotFoundPage from "@/pages/NotFoundPage";
-import AccountPage from "@/pages/AccountPage";
-import ResetPasswordPage from "@/pages/ResetPasswordPage";
-import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
-import ArticlesPage from "@/pages/ArticlesPage";
-import ContactPage from "@/pages/ContactPage";
-import GoogleCallbackPage from "@/pages/GoogleCallbackPage";
-import TermsPage from "@/pages/TermsPage";
-import PrivacyPage from "@/pages/PrivacyPage";
+
+const HomePage = lazy(() => import("@/pages/HomePage"));
+const LoginPage = lazy(() => import("@/pages/LoginPage"));
+const RegisterPage = lazy(() => import("@/pages/RegisterPage"));
+const GoogleCallbackPage = lazy(() => import("@/pages/GoogleCallbackPage"));
+const DreamDetailsPage = lazy(() => import("@/pages/DreamDetailsPage"));
+const AccountPage = lazy(() => import("@/pages/AccountPage"));
+const MyDreamsPage = lazy(() => import("@/pages/MyDreamsPage"));
+const ArticlesPage = lazy(() => import("@/pages/ArticlesPage"));
+const ContactPage = lazy(() => import("@/pages/ContactPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
+const TermsPage = lazy(() => import("@/pages/TermsPage"));
+const PrivacyPage = lazy(() => import("@/pages/PrivacyPage"));
+const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
+
+function PageShell({ children }: { children: ReactNode }) {
+  return (
+    <Layout>
+      <Suspense
+        fallback={
+          <div className="grid min-h-[45vh] place-items-center text-slate-600 dark:text-white/70">
+            Loading...
+          </div>
+        }
+      >
+        {children}
+      </Suspense>
+    </Layout>
+  );
+}
+
+function routeElement(Page: ComponentType, protectedRoute = false) {
+  const page = <Page />;
+  return (
+    <PageShell>
+      {protectedRoute ? <ProtectedRoute>{page}</ProtectedRoute> : page}
+    </PageShell>
+  );
+}
 
 export const router = createBrowserRouter([
-    {
-        path: "/",
-        element: (<Layout>
-        <HomePage />
-      </Layout>),
-    },
-    {
-        path: "/login",
-        element: (<Layout>
-        <LoginPage />
-      </Layout>),
-    },
-    {
-        path: "/register",
-        element: (<Layout>
-        <RegisterPage />
-      </Layout>),
-    },
-    {
-        path: "/auth/google/callback",
-        element: (<Layout>
-        <GoogleCallbackPage />
-      </Layout>),
-    },
-    {
-        path: "/dreams/:id",
-        element: (<Layout>
-        <ProtectedRoute>
-          <DreamDetailsPage />
-        </ProtectedRoute>
-      </Layout>),
-    },
-    {
-        path: "/account",
-        element: (<Layout>
-        <ProtectedRoute>
-          <AccountPage />
-        </ProtectedRoute>
-      </Layout>),
-    },
-    {
-        path: "/me/dreams",
-        element: (<Layout>
-        <ProtectedRoute>
-          <MyDreamsPage />
-        </ProtectedRoute>
-      </Layout>),
-    },
-    {
-        path: "/articles",
-        element: (<Layout>
-        <ArticlesPage />
-      </Layout>),
-    },
-    {
-        path: "/contact",
-        element: (<Layout>
-        <ContactPage />
-      </Layout>),
-    },
-    {
-        path: "/reset-password",
-        element: (<Layout>
-        <ResetPasswordPage />
-      </Layout>),
-    },
-    {
-        path: "/forgot-password",
-        element: (<Layout>
-        <ForgotPasswordPage />
-      </Layout>),
-    },
-    {
-        path: "/terms",
-        element: (<Layout>
-        <TermsPage />
-      </Layout>),
-    },
-    {
-        path: "/privacy",
-        element: (<Layout>
-        <PrivacyPage />
-      </Layout>),
-    },
-    {
-        path: "*",
-        element: (<Layout>
-        <NotFoundPage />
-      </Layout>),
-    },
+  { path: "/", element: routeElement(HomePage) },
+  { path: "/login", element: routeElement(LoginPage) },
+  { path: "/register", element: routeElement(RegisterPage) },
+  { path: "/auth/google/callback", element: routeElement(GoogleCallbackPage) },
+  { path: "/dreams/:id", element: routeElement(DreamDetailsPage, true) },
+  { path: "/account", element: routeElement(AccountPage, true) },
+  { path: "/me/dreams", element: routeElement(MyDreamsPage, true) },
+  { path: "/articles", element: routeElement(ArticlesPage) },
+  { path: "/contact", element: routeElement(ContactPage) },
+  { path: "/reset-password", element: routeElement(ResetPasswordPage) },
+  { path: "/forgot-password", element: routeElement(ForgotPasswordPage) },
+  { path: "/terms", element: routeElement(TermsPage) },
+  { path: "/privacy", element: routeElement(PrivacyPage) },
+  { path: "*", element: routeElement(NotFoundPage) },
 ]);
-
-

@@ -23,7 +23,8 @@ function classifyInterpretError(err: any) {
     return {
       status: 503,
       code: "ai_not_configured",
-      message,
+      message: "Dream interpretation is temporarily unavailable.",
+      logMessage: message,
       upstreamStatus,
     };
   }
@@ -33,6 +34,7 @@ function classifyInterpretError(err: any) {
       status: 504,
       code: "ai_timeout",
       message: "AI provider timed out. Please try again.",
+      logMessage: message,
       upstreamStatus,
     };
   }
@@ -41,7 +43,8 @@ function classifyInterpretError(err: any) {
     return {
       status: upstreamStatus === 429 ? 503 : 502,
       code: "ai_provider_error",
-      message,
+      message: "Dream interpretation is temporarily unavailable. Please try again later.",
+      logMessage: message,
       upstreamStatus,
     };
   }
@@ -49,7 +52,8 @@ function classifyInterpretError(err: any) {
   return {
     status: Number(err?.status) || 500,
     code: "interpret_failed",
-    message,
+    message: "Dream interpretation failed. Please try again.",
+    logMessage: message,
     upstreamStatus,
   };
 }
@@ -61,7 +65,7 @@ function sendInterpretError(res: Response, err: any, context: string) {
       code: failure.code,
       status: failure.status,
       upstreamStatus: failure.upstreamStatus,
-      message: failure.message,
+      message: failure.logMessage,
     });
   }
   res.status(failure.status).json({

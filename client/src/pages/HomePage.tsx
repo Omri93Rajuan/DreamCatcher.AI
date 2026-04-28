@@ -1,31 +1,34 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import InterpretForm from "@/components/dreams/InterpretForm";
-import PopularDreams from "@/components/dreams/PopularDreams";
-import DreamsPaginated from "@/components/dreams/DreamsPaginated";
-import StatsPanel from "@/components/dreams/StatsPanel";
-import DreamInterpretation from "@/components/dreams/DreamInterpretation";
 import { useDreamsPage } from "@/hooks/useDreamsPage";
 import SearchInput from "@/components/dreams/SearchInput";
-import CategoryPills from "@/components/dreams/CategoryPills";
 import { DreamsApi } from "@/lib/api/dreams";
 import { GlobalDreamStats } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
+import { useInViewOnce } from "@/hooks/useInViewOnce";
+
+const PopularDreams = lazy(() => import("@/components/dreams/PopularDreams"));
+const DreamsPaginated = lazy(() => import("@/components/dreams/DreamsPaginated"));
+const StatsPanel = lazy(() => import("@/components/dreams/StatsPanel"));
+const CategoryPills = lazy(() => import("@/components/dreams/CategoryPills"));
+
 const PAGE_SIZE = 9;
+const SectionFallback = () => (
+  <div className="py-8 text-center text-sm text-slate-500 dark:text-white/60" />
+);
+
 export default function HomePage() {
   const { t, i18n } = useTranslation();
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [currentInterpretation, setCurrentInterpretation] = useState<{
-    dream_text: string;
-    interpretation: string;
-  } | null>(null);
   const categoriesParam = useMemo(() => (selectedCategory === "all" ? undefined : [selectedCategory]), [selectedCategory]);
+  const popularSection = useInViewOnce<HTMLElement>({ rootMargin: "500px" });
+  const dreamsSection = useInViewOnce<HTMLElement>({ rootMargin: "500px" });
   const shouldLoadStats = true;
-  const shouldLoadPopular = true;
-  const shouldLoadDreams = true;
+  const shouldLoadPopular = popularSection.isInView;
+  const shouldLoadDreams = dreamsSection.isInView;
 
   const { data, isLoading, isFetching } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam, shouldLoadDreams);
   const isDreamsLoading = shouldLoadDreams && isLoading;
@@ -65,7 +68,7 @@ export default function HomePage() {
     <div className="min-h-screen pb-20">
       <section className="relative overflow-hidden">
         <div className="max-w-6xl mx-auto px-4 py-20 text-center" dir={i18n.dir()}>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
+          <div className="animate-[fadeIn_0.45s_ease-out]">
             <h1
               className="
           font-extrabold leading-[1.1] tracking-tight
@@ -89,19 +92,11 @@ export default function HomePage() {
             >
               {t("home.heroSubtitle")}
             </p>
-          </motion.div>
+          </div>
 
           <InterpretForm />
         </div>
       </section>
-
-      <AnimatePresence>
-        {currentInterpretation && (
-          <section className="max-w-6xl mx-auto px-4 mb-20">
-            <DreamInterpretation />
-          </section>
-        )}
-      </AnimatePresence>
 
       <section className="max-w-7xl mx-auto px-4 mb-20">
         {statsError ? (
@@ -109,28 +104,44 @@ export default function HomePage() {
             {t("home.statsError", { message: statsError })}
           </div>
         ) : stats ? (
-          <StatsPanel stats={stats} />
+          <Suspense fallback={<SectionFallback />}>
+            <StatsPanel stats={stats} />
+          </Suspense>
         ) : (
           null
         )}
       </section>
 
-      {shouldLoadPopular && <PopularDreams />}
+      <section ref={popularSection.ref} className="min-h-24">
+        {shouldLoadPopular && (
+          <Suspense fallback={<SectionFallback />}>
+            <PopularDreams />
+          </Suspense>
+        )}
+      </section>
 
       <SearchInput value={searchInput} onChange={setSearchInput} />
 
       <section className="max-w-6xl mx-auto px-4">
-        <CategoryPills selected={selectedCategory} onSelect={(c) => setSelectedCategory(c)} showAll />
+        <Suspense fallback={<SectionFallback />}>
+          <CategoryPills selected={selectedCategory} onSelect={(c) => setSelectedCategory(c)} showAll />
+        </Suspense>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4" dir={i18n.dir()}>
+      <section ref={dreamsSection.ref} className="max-w-7xl mx-auto px-4 min-h-48" dir={i18n.dir()}>
         <h2 className="text-3xl font-bold mb-6">{t("home.allDreams")}</h2>
-        <DreamsPaginated
-          data={data}
-          isLoading={isDreamsLoading}
-          isFetching={isFetching && shouldLoadDreams}
-          onPageChange={setPage}
-        />
+        {shouldLoadDreams ? (
+          <Suspense fallback={<SectionFallback />}>
+            <DreamsPaginated
+              data={data}
+              isLoading={isDreamsLoading}
+              isFetching={isFetching && shouldLoadDreams}
+              onPageChange={setPage}
+            />
+          </Suspense>
+        ) : (
+          <SectionFallback />
+        )}
       </section>
     </div>
   );
