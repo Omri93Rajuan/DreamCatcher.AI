@@ -6,7 +6,6 @@ import express from "express";
 import http from "http";
 import router from "./router";
 import connectToDb from "./src/db/dbService";
-import loadInitialData from "./src/seed/runSeeding";
 const app = express();
 const server = http.createServer(app);
 app.use(
@@ -28,6 +27,8 @@ server.listen(PORT, () => {
   connectToDb();
   const shouldSeed = (process.env.SEED_ON_START || "").toLowerCase() === "true";
   if (shouldSeed) {
-    loadInitialData();
+    import("./src/seed/runSeeding")
+      .then(({ default: loadInitialData }) => loadInitialData())
+      .catch((error) => console.error("Seeding failed:", error));
   }
 });
