@@ -1,4 +1,4 @@
-import type { RequestHandler } from "express";
+import type { RequestHandler, Response } from "express";
 import * as DreamService from "../services/dream.service";
 import type { AuthRequest } from "../types/auth.interface";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
@@ -11,6 +11,66 @@ const getAuth = (req: AuthRequest) => {
     typeof raw === "string" && raw.trim().length > 0 ? raw.trim() : null;
   return { userId: clean, isAdmin: !!req.user?.isAdmin };
 };
+
+function classifyInterpretError(err: any) {
+  const message = String(err?.message || "Dream interpretation failed");
+  const upstreamStatus = Number(err?.status) || undefined;
+
+  if (
+    message.includes("OPENROUTER_API_KEY") ||
+    message.includes("No models configured")
+  ) {
+    return {
+      status: 503,
+      code: "ai_not_configured",
+      message,
+      upstreamStatus,
+    };
+  }
+
+  if (err?.name === "AbortError") {
+    return {
+      status: 504,
+      code: "ai_timeout",
+      message: "AI provider timed out. Please try again.",
+      upstreamStatus,
+    };
+  }
+
+  if (message.startsWith("OpenRouter error:")) {
+    return {
+      status: upstreamStatus === 429 ? 503 : 502,
+      code: "ai_provider_error",
+      message,
+      upstreamStatus,
+    };
+  }
+
+  return {
+    status: Number(err?.status) || 500,
+    code: "interpret_failed",
+    message,
+    upstreamStatus,
+  };
+}
+
+function sendInterpretError(res: Response, err: any, context: string) {
+  const failure = classifyInterpretError(err);
+  if (process.env.NODE_ENV !== "test") {
+    console.error(`[Dreams] ${context} failed`, {
+      code: failure.code,
+      status: failure.status,
+      upstreamStatus: failure.upstreamStatus,
+      message: failure.message,
+    });
+  }
+  res.status(failure.status).json({
+    success: false,
+    error: failure.code,
+    message: failure.message,
+    upstreamStatus: failure.upstreamStatus,
+  });
+}
 
 const allowedSet = new Set<string>(DREAM_CATEGORIES);
 
@@ -139,7 +199,7 @@ export const createDream: RequestHandler = async (req, res): Promise<void> => {
         });
     res.status(201).json({ success: true, dream: saved });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    sendInterpretError(res, err, "create");
   }
 };
 
@@ -200,7 +260,7 @@ export const interpretDream: RequestHandler = async (
     );
     res.status(201).json({ success: true, dream: saved });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    sendInterpretError(res, err, "interpret");
   }
 };
 

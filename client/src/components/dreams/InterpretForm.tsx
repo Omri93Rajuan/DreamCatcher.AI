@@ -79,6 +79,7 @@ export default function InterpretForm() {
     const [isInterpreting, setIsInterpreting] = useState(false);
     const [authOpen, setAuthOpen] = useState(false);
     const [dream, setDream] = useState<Dream | null>(null);
+    const [interpretError, setInterpretError] = useState<string | null>(null);
     const [justShared, setJustShared] = useState(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const { isAuthenticated } = useAuthStore();
@@ -99,6 +100,7 @@ export default function InterpretForm() {
         }
         setIsInterpreting(true);
         setDream(null);
+        setInterpretError(null);
         setJustShared(false);
         try {
         const { dream: saved } = await DreamsApi.interpret({
@@ -111,6 +113,13 @@ export default function InterpretForm() {
         catch (e: any) {
             if (e?.response?.status === 401)
                 setAuthOpen(true);
+            const serverMessage =
+                e?.response?.data?.message ||
+                    e?.response?.data?.error?.message ||
+                    e?.response?.data?.error ||
+                    e?.message ||
+                    t("common.errorGeneric");
+            setInterpretError(String(serverMessage));
             console.error(e);
         }
         finally {
@@ -163,6 +172,10 @@ export default function InterpretForm() {
       </div>
 
       
+      {interpretError && (<div className="max-w-3xl mx-auto mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200" dir={i18n.dir()}>
+          {interpretError}
+        </div>)}
+
       {(dream || isInterpreting) && (<div className="max-w-3xl mx-auto mb-10">
           <div className={[
                 "relative rounded-3xl p-6 shadow-xl backdrop-blur",
