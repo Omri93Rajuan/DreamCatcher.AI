@@ -9,7 +9,11 @@ import {
   UserRole,
 } from "../types/users.interface";
 import { handleBadRequest } from "../utils/ErrorHandle";
-import { deleteUserAvatar } from "./upload.service";
+import {
+  deleteUserAvatar,
+  getAvatarKeyFromUrl,
+  normalizeStoredImageUrl,
+} from "./upload.service";
 const toPublic = (u: any): PublicUser => (u?.toJSON?.() ?? u) as PublicUser;
 export const getAllUsers = async (): Promise<PublicUser[]> => {
   try {
@@ -51,6 +55,7 @@ export const addUser = async (userData: CreateUserDTO): Promise<PublicUser> => {
     }
     const newUser = new User({
       ...userData,
+      image: normalizeStoredImageUrl(userData.image),
       role: UserRole.User,
       subscription: SubscriptionType.Free,
     });
@@ -77,16 +82,28 @@ export const updateUser = async (
       throw new Error("User not found");
     }
     const previousImage = existingUser.image;
+    const normalizedUpdateData = { ...updateData };
+    if ("image" in normalizedUpdateData) {
+      (normalizedUpdateData as any).image = normalizeStoredImageUrl(
+        (normalizedUpdateData as any).image
+      );
+    }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        ...updateData,
+        ...normalizedUpdateData,
         password: existingUser.password,
       },
       { new: true, runValidators: true }
     ).select("-password");
 
-    if (previousImage && previousImage !== (updatedUser as any)?.image) {
+    const previousAvatarKey = getAvatarKeyFromUrl(previousImage);
+    const nextAvatarKey = getAvatarKeyFromUrl((updatedUser as any)?.image);
+    if (
+      previousImage &&
+      previousImage !== (updatedUser as any)?.image &&
+      previousAvatarKey !== nextAvatarKey
+    ) {
       await deleteUserAvatar(userId, previousImage);
     }
 
@@ -108,16 +125,28 @@ export const adminUpdateUser = async (
       throw new Error("User not found");
     }
     const previousImage = existingUser.image;
+    const normalizedUpdateData = { ...updateData };
+    if ("image" in normalizedUpdateData) {
+      (normalizedUpdateData as any).image = normalizeStoredImageUrl(
+        (normalizedUpdateData as any).image
+      );
+    }
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
-        ...updateData,
+        ...normalizedUpdateData,
         password: existingUser.password,
       },
       { new: true, runValidators: true }
     ).select("-password");
 
-    if (previousImage && previousImage !== (updatedUser as any)?.image) {
+    const previousAvatarKey = getAvatarKeyFromUrl(previousImage);
+    const nextAvatarKey = getAvatarKeyFromUrl((updatedUser as any)?.image);
+    if (
+      previousImage &&
+      previousImage !== (updatedUser as any)?.image &&
+      previousAvatarKey !== nextAvatarKey
+    ) {
       await deleteUserAvatar(userId, previousImage);
     }
 

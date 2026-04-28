@@ -1,6 +1,7 @@
 import { comparePassword, hashPassword } from "../helpers/bcrypt";
 import Users from "../models/user";
 import type { IUser } from "../types/users.interface";
+import { normalizeStoredImageUrl } from "./upload.service";
 export interface LoginDTO {
   email: string;
   password: string;
@@ -109,7 +110,7 @@ export const register = async (data: RegisterDTO) => {
     lastName,
     email,
     password: hashed,
-    image,
+    image: normalizeStoredImageUrl(image),
     isActive: true,
     lastLogin: new Date(),
     termsAccepted: true,

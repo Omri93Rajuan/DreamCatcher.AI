@@ -8,7 +8,7 @@ import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import googleLogo from "@/assets/logoGoogle.webp";
 import { UploadsApi } from "@/lib/api/uploads";
 import { toast } from "react-toastify";
-import { convertFileToWebp, toProxiedImage } from "@/lib/images";
+import { convertFileToWebp, toStoredImageUrl } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 
 type Props = {
@@ -162,7 +162,9 @@ export default function SignupForm({ onSuccess }: Props) {
             throw new Error(`Upload failed (${putRes.status})`);
           }
           imageUrl =
-            toProxiedImage(presign.proxyUrl || presign.publicUrl) || presign.publicUrl;
+            toStoredImageUrl(presign.proxyUrl || presign.publicUrl) ||
+            presign.proxyUrl ||
+            presign.publicUrl;
           setAvatarUploadCache({ fingerprint, url: imageUrl });
         } catch (err: any) {
           toast.error(err?.message || t("signup.errors.avatarUpload"));

@@ -63,16 +63,20 @@ function extFromMime(mime: string): string {
   return "bin";
 }
 
+function cleanObjectKey(key: string): string {
+  return key.replace(/^[\/]+/, "").split(/[?#]/)[0];
+}
+
 function extractAvatarKeyFromUrl(url?: string | null): string | null {
   if (!url) return null;
 
   // Proxy path: /api/images/<key>
   const proxyMatch = url.match(/\/api\/images\/(.+)/i);
-  if (proxyMatch?.[1]) return proxyMatch[1];
+  if (proxyMatch?.[1]) return cleanObjectKey(proxyMatch[1]);
 
   // Direct public URL based on configured public base
   if (S3_PUBLIC_BASE && url.startsWith(S3_PUBLIC_BASE)) {
-    const key = url.slice(S3_PUBLIC_BASE.length).replace(/^\/+/, "");
+    const key = cleanObjectKey(url.slice(S3_PUBLIC_BASE.length));
     return key || null;
   }
 
@@ -83,12 +87,31 @@ function extractAvatarKeyFromUrl(url?: string | null): string | null {
       : `https://${S3_ENDPOINT}`;
     const prefix = `${endpoint}/${S3_BUCKET}/`;
     if (url.startsWith(prefix)) {
-      const key = url.slice(prefix.length);
+      const key = cleanObjectKey(url.slice(prefix.length));
       return key || null;
     }
   }
 
   return null;
+}
+
+export function getAvatarKeyFromUrl(url?: string | null): string | null {
+  return extractAvatarKeyFromUrl(url);
+}
+
+export function normalizeStoredImageUrl(url?: string | null) {
+  if (url === null) return null;
+  if (typeof url !== "string") return url;
+
+  const value = url.trim();
+  if (!value) return undefined;
+
+  const key = extractAvatarKeyFromUrl(value);
+  if (key?.startsWith("avatars/")) {
+    return `${IMAGE_PROXY_BASE}/${key}`;
+  }
+
+  return value;
 }
 
 export async function deleteUserAvatar(

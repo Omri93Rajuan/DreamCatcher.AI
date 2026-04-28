@@ -13,7 +13,7 @@ import { Loader2, Upload, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
-import { convertFileToWebp, toProxiedImage } from "@/lib/images";
+import { convertFileToWebp, toProxiedImage, toStoredImageUrl } from "@/lib/images";
 
 type FormValues = {
   firstName: string;
@@ -56,7 +56,7 @@ export default function UserProfileForm({ user }: { user: User }) {
     defaultValues: {
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
-      image: user.image ?? "",
+      image: toStoredImageUrl(user.image) ?? "",
     },
     mode: "onBlur",
   });
@@ -98,18 +98,16 @@ export default function UserProfileForm({ user }: { user: User }) {
   }, []);
 
   React.useEffect(() => {
+    const storedImage = toStoredImageUrl(user.image) ?? "";
     reset({
       firstName: user.firstName ?? "",
       lastName: user.lastName ?? "",
-      image: user.image ?? "",
+      image: storedImage,
     });
     const proxied = toProxiedImage(user.image) || undefined;
     setLocalFile(null);
     setPreviewUrl(proxied);
-    if (proxied && proxied !== user.image) {
-      setValue("image", proxied, { shouldDirty: false });
-    }
-  }, [user, reset, setValue, setPreviewUrl, setLocalFile]);
+  }, [user, reset, setPreviewUrl, setLocalFile]);
 
   React.useEffect(() => {
     const sub = watch((vals) => {
@@ -127,7 +125,7 @@ export default function UserProfileForm({ user }: { user: User }) {
       reset({
         firstName: updated.firstName ?? "",
         lastName: updated.lastName ?? "",
-        image: updated.image ?? "",
+        image: toStoredImageUrl(updated.image) ?? "",
       });
       setLocalFile(null);
       setPreviewUrl(toProxiedImage(updated.image) || undefined);
@@ -174,7 +172,8 @@ export default function UserProfileForm({ user }: { user: User }) {
           throw new Error(`Upload failed (${putRes.status})`);
         }
         imageUrl =
-          toProxiedImage(presign.proxyUrl || presign.publicUrl) ||
+          toStoredImageUrl(presign.proxyUrl || presign.publicUrl) ||
+          presign.proxyUrl ||
           presign.publicUrl;
       } catch (err: any) {
         toast.error(err?.message || t("account.profile.toastUpload"));
@@ -187,7 +186,7 @@ export default function UserProfileForm({ user }: { user: User }) {
     const payload: UpdateUserDTO = {
       firstName: values.firstName.trim(),
       lastName: values.lastName.trim(),
-      image: imageUrl,
+      image: toStoredImageUrl(imageUrl),
     };
     mUpdate.mutate(payload);
   };
@@ -338,7 +337,7 @@ export default function UserProfileForm({ user }: { user: User }) {
               reset({
                 firstName: user.firstName ?? "",
                 lastName: user.lastName ?? "",
-                image: user.image ?? "",
+                image: toStoredImageUrl(user.image) ?? "",
               });
               setLocalFile(null);
               setPreviewUrl(toProxiedImage(user.image) || undefined);

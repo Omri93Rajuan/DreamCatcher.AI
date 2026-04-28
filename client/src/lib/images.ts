@@ -14,30 +14,82 @@ function makeApiImage(key: string): string {
   return `${base}/${key}`;
 }
 
+function cleanImageKey(key: string): string {
+  return key.replace(/^\/+/, "").split(/[?#]/)[0];
+}
+
+function getApiImageKey(url: string): string | undefined {
+  const value = url.trim();
+  if (!value) return undefined;
+
+  if (value.startsWith("/api/images/")) {
+    return cleanImageKey(value.replace(/^\/api\/images\//, ""));
+  }
+
+  if (value.startsWith("api/images/")) {
+    return cleanImageKey(value.replace(/^api\/images\//, ""));
+  }
+
+  const imageBase = apiImagesBase();
+  if (imageBase && value.startsWith(`${imageBase}/`)) {
+    return cleanImageKey(value.slice(imageBase.length));
+  }
+
+  try {
+    const parsed = new URL(value);
+    const apiBase = API_BASE ? new URL(API_BASE) : undefined;
+    const isSameApiOrigin = apiBase && parsed.origin === apiBase.origin;
+    const apiPath = parsed.pathname.match(/\/api\/images\/(.+)$/i);
+    if (isSameApiOrigin && apiPath?.[1]) {
+      return cleanImageKey(apiPath[1]);
+    }
+  } catch {
+    // Relative values are handled above; invalid URLs are left unchanged.
+  }
+
+  return undefined;
+}
+
+function getPublicImageKey(url: string): string | undefined {
+  const value = url.trim();
+  if (!value) return undefined;
+
+  const matchIdrive = value.match(/^https?:\/\/[^/]*idrivee2\.com\/users-avatar\/(.+)/i);
+  if (matchIdrive?.[1]) return cleanImageKey(matchIdrive[1]);
+
+  if (PUBLIC_BASE && value.startsWith(`${PUBLIC_BASE}/`)) {
+    return cleanImageKey(value.slice(PUBLIC_BASE.length));
+  }
+
+  return undefined;
+}
+
+export function toStoredImageUrl(url?: string | null): string | undefined {
+  if (!url) return url ?? undefined;
+  const value = url.trim();
+  if (!value) return undefined;
+
+  const apiKey = getApiImageKey(value);
+  if (apiKey) return `/api/images/${apiKey}`;
+
+  const publicKey = getPublicImageKey(value);
+  if (publicKey) return `/api/images/${publicKey}`;
+
+  return value;
+}
+
 export function toProxiedImage(url?: string | null): string | undefined {
   if (!url) return url ?? undefined;
   // Normalize proxy path (even if user typed without a leading slash)
-  if (url.startsWith("/api/images/")) {
-    const key = url.replace(/^\/api\/images\//, "");
-    return makeApiImage(key);
-  }
-  if (url.startsWith("api/images/")) {
-    const key = url.replace(/^api\/images\//, "");
-    return makeApiImage(key);
+  const apiKey = getApiImageKey(url);
+  if (apiKey) {
+    return makeApiImage(apiKey);
   }
   if (url.startsWith("data:") || url.startsWith("blob:")) return url;
   if (url.startsWith("/")) return url;
-  const candidates = [PUBLIC_BASE].filter(Boolean);
-  // Common idrive path-style base as fallback
-  const matchIdrive = url.match(/^https?:\/\/[^/]*idrivee2\.com\/users-avatar\/(.+)/i);
-  if (matchIdrive) {
-    return makeApiImage(matchIdrive[1]);
-  }
-  for (const base of candidates) {
-    if (base && url.startsWith(base)) {
-      const key = url.slice(base.length).replace(/^\/+/, "");
-      return makeApiImage(key);
-    }
+  const publicKey = getPublicImageKey(url);
+  if (publicKey) {
+    return makeApiImage(publicKey);
   }
   return url;
 }
