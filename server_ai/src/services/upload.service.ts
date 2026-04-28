@@ -67,6 +67,20 @@ function cleanObjectKey(key: string): string {
   return key.replace(/^[\/]+/, "").split(/[?#]/)[0];
 }
 
+function normalizeLocalAvatarPath(url: string): string | undefined {
+  const normalized = url
+    .trim()
+    .split(/[?#]/)[0]
+    .replace(/\/+$/, "")
+    .replace(/^\/+/, "");
+
+  if (/^avatars\/[\w.-]+\.(webp|png|jpe?g)$/i.test(normalized)) {
+    return `/${normalized}`;
+  }
+
+  return undefined;
+}
+
 function extractAvatarKeyFromUrl(url?: string | null): string | null {
   if (!url) return null;
 
@@ -110,6 +124,9 @@ export function normalizeStoredImageUrl(url?: string | null) {
   if (key?.startsWith("avatars/")) {
     return `${IMAGE_PROXY_BASE}/${key}`;
   }
+
+  const localAvatar = normalizeLocalAvatarPath(value);
+  if (localAvatar) return localAvatar;
 
   return value;
 }

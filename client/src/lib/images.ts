@@ -18,6 +18,18 @@ function cleanImageKey(key: string): string {
   return key.replace(/^\/+/, "").split(/[?#]/)[0];
 }
 
+function getLocalAvatarPath(url: string): string | undefined {
+  const value = url.trim();
+  if (!value) return undefined;
+
+  const normalized = value.split(/[?#]/)[0].replace(/\/+$/, "").replace(/^\/+/, "");
+  if (/^avatars\/[\w.-]+\.(webp|png|jpe?g)$/i.test(normalized)) {
+    return `/${normalized}`;
+  }
+
+  return undefined;
+}
+
 function getApiImageKey(url: string): string | undefined {
   const value = url.trim();
   if (!value) return undefined;
@@ -75,6 +87,9 @@ export function toStoredImageUrl(url?: string | null): string | undefined {
   const publicKey = getPublicImageKey(value);
   if (publicKey) return `/api/images/${publicKey}`;
 
+  const localAvatar = getLocalAvatarPath(value);
+  if (localAvatar) return localAvatar;
+
   return value;
 }
 
@@ -85,6 +100,9 @@ export function toProxiedImage(url?: string | null): string | undefined {
   if (apiKey) {
     return makeApiImage(apiKey);
   }
+  const localAvatar = getLocalAvatarPath(url);
+  if (localAvatar) return localAvatar;
+
   if (url.startsWith("data:") || url.startsWith("blob:")) return url;
   if (url.startsWith("/")) return url;
   const publicKey = getPublicImageKey(url);
@@ -92,6 +110,17 @@ export function toProxiedImage(url?: string | null): string | undefined {
     return makeApiImage(publicKey);
   }
   return url;
+}
+
+export function isValidImageInput(url?: string | null): boolean {
+  const value = (url || "").trim();
+  if (!value) return true;
+
+  return (
+    /^https?:\/\/.+/i.test(value) ||
+    !!getApiImageKey(value) ||
+    !!getLocalAvatarPath(value)
+  );
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {

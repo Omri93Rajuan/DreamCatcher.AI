@@ -13,7 +13,12 @@ import { Loader2, Upload, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
-import { convertFileToWebp, toProxiedImage, toStoredImageUrl } from "@/lib/images";
+import {
+  convertFileToWebp,
+  isValidImageInput,
+  toProxiedImage,
+  toStoredImageUrl,
+} from "@/lib/images";
 
 type FormValues = {
   firstName: string;
@@ -31,10 +36,7 @@ export default function UserProfileForm({ user }: { user: User }) {
         image: z
           .string()
           .trim()
-          .refine(
-            (v) => v === "" || /^https?:\/\/.+/i.test(v) || /^\/api\/images\//i.test(v),
-            { message: t("account.profile.errors.image") }
-          )
+          .refine(isValidImageInput, { message: t("account.profile.errors.image") })
           .optional(),
       }),
     [t]
