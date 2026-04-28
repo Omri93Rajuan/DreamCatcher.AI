@@ -29,7 +29,7 @@ export const AuthApi = {
         .then((r) => r.data),
     logout: () => api.post("/auth/logout", { withCredentials: true }).then((r) => r.data),
     refresh: () => api
-        .post("/auth/refresh-token", null, { withCredentials: true })
+        .post("/auth/refresh", null, { withCredentials: true })
         .then((r) => r.data),
     verify: () => api
         .get("/auth/verify", { withCredentials: true })
