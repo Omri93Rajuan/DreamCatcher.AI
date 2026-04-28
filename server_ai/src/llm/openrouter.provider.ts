@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
 import { LLMOptions, LLMProvider, LLMResult } from "./llm.types";
 import { sleep, stripFences, tryParseJsonLike } from "./llm.utils";
