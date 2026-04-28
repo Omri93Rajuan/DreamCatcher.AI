@@ -9,10 +9,14 @@ import { UsersApi } from "@/lib/api/users";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Upload, Camera } from "lucide-react";
+import { Check, Link as LinkIcon, Loader2, Upload, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
+import {
+  BUILT_IN_AVATARS,
+  normalizeBuiltInAvatarPath,
+} from "@/constants/avatars";
 import {
   convertFileToWebp,
   isValidImageInput,
@@ -68,9 +72,12 @@ export default function UserProfileForm({ user }: { user: User }) {
   );
   const [uploading, setUploading] = React.useState(false);
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
+  const [advancedOpen, setAdvancedOpen] = React.useState(false);
   const selectedFileRef = React.useRef<File | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const objectUrlRef = React.useRef<string | null>(null);
+  const currentImage = watch("image") ?? "";
+  const activeAvatar = normalizeBuiltInAvatarPath(currentImage);
 
   const setLocalFile = React.useCallback((file: File | null) => {
     selectedFileRef.current = file;
@@ -109,6 +116,7 @@ export default function UserProfileForm({ user }: { user: User }) {
     const proxied = toProxiedImage(user.image) || undefined;
     setLocalFile(null);
     setPreviewUrl(proxied);
+    setAdvancedOpen(false);
   }, [user, reset, setPreviewUrl, setLocalFile]);
 
   React.useEffect(() => {
@@ -118,6 +126,12 @@ export default function UserProfileForm({ user }: { user: User }) {
     });
     return () => sub.unsubscribe();
   }, [watch, setPreviewUrl]);
+
+  React.useEffect(() => {
+    if (errors.image) {
+      setAdvancedOpen(true);
+    }
+  }, [errors.image]);
 
   const mUpdate = useMutation({
     mutationFn: (payload: UpdateUserDTO) => UsersApi.update(user._id, payload),
@@ -131,6 +145,7 @@ export default function UserProfileForm({ user }: { user: User }) {
       });
       setLocalFile(null);
       setPreviewUrl(toProxiedImage(updated.image) || undefined);
+      setAdvancedOpen(false);
       if (patchUser) {
         patchUser({
           firstName: updated.firstName,
@@ -195,12 +210,28 @@ export default function UserProfileForm({ user }: { user: User }) {
 
   const hasLocalFile = !!selectedFile;
   const isSaving = mUpdate.isPending || uploading;
+  const chooseBuiltInAvatar = React.useCallback(
+    (src: string) => {
+      const stored = toStoredImageUrl(src) || src;
+      setLocalFile(null);
+      setValue("image", stored, {
+        shouldDirty: true,
+        shouldTouch: true,
+        shouldValidate: true,
+      });
+      setPreviewUrl(toProxiedImage(stored) || src);
+      setAdvancedOpen(false);
+    },
+    [setLocalFile, setPreviewUrl, setValue]
+  );
 
   return (
     <div className="relative rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur shadow-[0_12px_40px_-20px_rgba(0,0,0,.35)]">
       <div className="h-1.5 w-full bg-gradient-to-r from-fuchsia-500 via-purple-600 to-amber-400 rounded-t-2xl" />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6 sm:p-8" dir={i18n.dir()}>
+        <input type="hidden" {...register("image")} />
+
         <div className="flex items-start gap-4 mb-6">
           <div className="relative shrink-0">
             <div className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-tr from-fuchsia-500 via-purple-500 to-amber-400">
@@ -272,16 +303,55 @@ export default function UserProfileForm({ user }: { user: User }) {
             )}
           </div>
 
-          <div className="md:col-span-2">
-            <label className="block text-sm mb-1 text-slate-700 dark:text-white/80">
-              {t("account.profile.imageLabel")}
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              <Input
-                {...register("image")}
-                className="dark:bg-white/10 dark:border-white/15 dark:text-white"
-                placeholder="https://example.com/avatar.jpg"
-              />
+          <div className="md:col-span-2 space-y-4">
+            <div>
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <label className="block text-sm font-medium text-slate-700 dark:text-white/80">
+                  {t("account.profile.avatarLabel")}
+                </label>
+                {hasLocalFile && (
+                  <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                    {t("account.profile.uploadReady")}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                {BUILT_IN_AVATARS.map((src) => {
+                  const active = !hasLocalFile && activeAvatar === src;
+                  return (
+                    <button
+                      key={src}
+                      type="button"
+                      onClick={() => chooseBuiltInAvatar(src)}
+                      className={[
+                        "relative aspect-square overflow-hidden rounded-full border transition",
+                        "bg-white/80 hover:border-amber-400 hover:shadow-sm",
+                        "dark:bg-white/10 dark:hover:border-amber-300",
+                        active
+                          ? "border-amber-400 ring-2 ring-amber-300"
+                          : "border-black/10 dark:border-white/15",
+                      ].join(" ")}
+                      aria-label={t("account.profile.chooseAvatar")}
+                    >
+                      <img
+                        src={src}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                      {active && (
+                        <span className="absolute inset-0 grid place-items-center bg-black/20 text-white">
+                          <Check className="h-5 w-5" />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -291,14 +361,27 @@ export default function UserProfileForm({ user }: { user: User }) {
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" /> {t("signup.uploading")}
+                    <Loader2 className="me-1 h-4 w-4 animate-spin" /> {t("signup.uploading")}
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4 mr-1" /> {t("account.profile.upload")}
+                    <Upload className="me-1 h-4 w-4" /> {t("account.profile.upload")}
                   </>
                 )}
               </Button>
+
+              <button
+                type="button"
+                onClick={() => setAdvancedOpen((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-lg border border-black/10 px-3 py-2 text-sm text-slate-700 transition hover:bg-black/5 dark:border-white/15 dark:text-white/80 dark:hover:bg-white/10"
+                aria-expanded={advancedOpen}
+              >
+                <LinkIcon className="h-4 w-4" />
+                {advancedOpen
+                  ? t("account.profile.advancedHide")
+                  : t("account.profile.advancedShow")}
+              </button>
+
               <input
                 ref={fileInputRef}
                 type="file"
@@ -316,17 +399,40 @@ export default function UserProfileForm({ user }: { user: User }) {
                   const objectUrl = URL.createObjectURL(processed);
                   setLocalFile(processed);
                   setPreviewUrl(objectUrl);
+                  setAdvancedOpen(false);
                   setValue("image", watch("image") ?? "", {
                     shouldDirty: true,
                     shouldTouch: true,
                   });
                 }}
               />
+
             </div>
-            {errors.image && (
-              <p className="mt-1 text-xs text-rose-500">
-                {errors.image.message}
-              </p>
+
+            {advancedOpen && (
+              <div className="rounded-xl border border-black/10 bg-black/[0.03] p-3 dark:border-white/10 dark:bg-white/[0.04]">
+                <label className="mb-1 block text-sm text-slate-700 dark:text-white/80">
+                  {t("account.profile.imageLabel")}
+                </label>
+                <Input
+                  value={currentImage}
+                  onChange={(e) => {
+                    setLocalFile(null);
+                    setValue("image", e.target.value, {
+                      shouldDirty: true,
+                      shouldTouch: true,
+                      shouldValidate: true,
+                    });
+                  }}
+                  className="dark:bg-white/10 dark:border-white/15 dark:text-white"
+                  placeholder="https://example.com/avatar.jpg"
+                />
+                {errors.image && (
+                  <p className="mt-1 text-xs text-rose-500">
+                    {errors.image.message}
+                  </p>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -343,6 +449,7 @@ export default function UserProfileForm({ user }: { user: User }) {
               });
               setLocalFile(null);
               setPreviewUrl(toProxiedImage(user.image) || undefined);
+              setAdvancedOpen(false);
             }}
             className="border-black/15 dark:border-white/20 dark:text-white"
           >
