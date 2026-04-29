@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import { convertFileToWebp, toStoredImageUrl } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
+import { BUILT_IN_AVATARS } from "@/constants/avatars";
 
 type Props = {
   onSuccess?: () => void;
@@ -36,21 +37,6 @@ const initialState: FormState = {
   confirmPassword: "",
 };
 
-const AVATARS = [
-  "/avatars/avatar-1.webp",
-  "/avatars/avatar-2.webp",
-  "/avatars/avatar-3.webp",
-  "/avatars/avatar-4.webp",
-  "/avatars/avatar-5.webp",
-  "/avatars/avatar-6.webp",
-  "/avatars/avatar-7.webp",
-  "/avatars/avatar-8.webp",
-  "/avatars/avatar-9.webp",
-  "/avatars/avatar-10.webp",
-  "/avatars/avatar-11.webp",
-  "/avatars/avatar-12.webp",
-];
-
 export default function SignupForm({ onSuccess }: Props) {
   const { t, i18n } = useTranslation();
   const [form, setForm] = useState(initialState);
@@ -58,7 +44,7 @@ export default function SignupForm({ onSuccess }: Props) {
   const [submitting, setSubmitting] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState<string>(AVATARS[0]);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>(BUILT_IN_AVATARS[0]);
   const [showAllAvatars, setShowAllAvatars] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -69,7 +55,7 @@ export default function SignupForm({ onSuccess }: Props) {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const primaryAvatars = AVATARS.slice(0, 4);
+  const primaryAvatars = BUILT_IN_AVATARS.slice(0, 4);
   const collapsedAvatars = React.useMemo(() => {
     const list: string[] = [];
     if (!primaryAvatars.includes(selectedAvatar)) {
@@ -283,7 +269,7 @@ export default function SignupForm({ onSuccess }: Props) {
               showAllAvatars ? "flex-wrap" : "flex-nowrap overflow-x-auto",
             ].join(" ")}
           >
-            {(showAllAvatars ? AVATARS : collapsedAvatars).map((src) => {
+            {(showAllAvatars ? BUILT_IN_AVATARS : collapsedAvatars).map((src) => {
               const active = src === selectedAvatar;
               return (
                 <button
@@ -334,7 +320,7 @@ export default function SignupForm({ onSuccess }: Props) {
                 onClick={() => setShowAllAvatars(true)}
                 className="text-xs px-3 py-2 rounded-full border border-amber-400 text-amber-700 bg-amber-50 hover:bg-amber-100 transition dark:border-amber-300 dark:text-amber-100 dark:bg-amber-500/15 dark:hover:bg-amber-500/25"
               >
-                {t("signup.showMoreAvatars", { count: AVATARS.length - 4 })}
+                {t("signup.showMoreAvatars", { count: BUILT_IN_AVATARS.length - 4 })}
               </button>
             )}
             {showAllAvatars && (
