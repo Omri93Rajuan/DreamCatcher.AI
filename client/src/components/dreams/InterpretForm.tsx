@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Send, Search, CheckCircle2, Loader2 } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
-import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
+const loadAuthGateDialog = () => import("@/components/auth/AuthGateDialog");
+const AuthGateDialog = React.lazy(loadAuthGateDialog);
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
     fullText: string;
     baseMs?: number;
@@ -91,10 +92,19 @@ export default function InterpretForm() {
         containerRef,
     });
     const isThinking = isInterpreting || isStreaming;
+    const warmAuthGate = () => {
+        if (!isAuthenticated)
+            void loadAuthGateDialog();
+    };
+    const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setText(event.target.value);
+        warmAuthGate();
+    };
     const handleInterpret = async () => {
         if (!text.trim())
             return;
         if (!isAuthenticated) {
+            void loadAuthGateDialog();
             setAuthOpen(true);
             return;
         }
@@ -143,7 +153,7 @@ export default function InterpretForm() {
         <div className="relative">
           
           <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-purple-400"/>
-          <Textarea dir={i18n.dir()} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
+          <Textarea dir={i18n.dir()} value={text} onChange={handleTextChange} onFocus={warmAuthGate} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
             "pr-10 font-he min-h-[140px]",
             "bg-white text-black placeholder:text-slate-500",
             "border border-black/10",
@@ -238,6 +248,8 @@ export default function InterpretForm() {
         </div>)}
 
       
-      <AuthGateDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" onSuccess={() => setAuthOpen(false)}/>
+      {authOpen && (<React.Suspense fallback={null}>
+          <AuthGateDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" onSuccess={() => setAuthOpen(false)}/>
+        </React.Suspense>)}
     </>);
 }
