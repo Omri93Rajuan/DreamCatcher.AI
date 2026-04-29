@@ -5,6 +5,7 @@ import { TrendingUp, AlertTriangle } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import FlipDreamCard, { PopularRowForFlip, } from "@/components/dreams/FlipDreamCard";
 import { useTranslation } from "react-i18next";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 type WindowKind = 7 | 30 | 365;
 export default function PopularDreams() {
     const { t, i18n } = useTranslation();
@@ -65,7 +66,7 @@ export default function PopularDreams() {
           <AlertTriangle className="w-5 h-5"/>
           <div>
             <div className="font-semibold">{t("popular.errorTitle")}</div>
-            <div className="text-sm opacity-75">{(error as Error).message}</div>
+            <div className="text-sm opacity-75">{getFriendlyErrorMessage(error, t, "popular")}</div>
           </div>
         </div>) : safeRows.length === 0 ? (<div className="text-slate-700 dark:text-white/70">
           {t("popular.empty")}

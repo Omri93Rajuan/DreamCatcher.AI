@@ -28,8 +28,17 @@ export async function getAvatarUploadUrl(req: AuthRequest, res: Response) {
     });
   } catch (err: any) {
     const status = err?.status || 500;
+    const message =
+      status === 413
+        ? "File is too large."
+        : status >= 500
+        ? "Could not prepare image upload."
+        : "Image upload is not available for this file.";
+    if (status >= 500) {
+      console.error("[uploads] avatar URL failed", err);
+    }
     return res.status(status).json({
-      error: { message: err?.message || "Failed to create upload URL" },
+      error: { message },
     });
   }
 }

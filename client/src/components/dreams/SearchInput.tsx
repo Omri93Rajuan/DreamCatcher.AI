@@ -25,19 +25,19 @@ export default function SearchInputBalancedGlow({
       <div className="relative group">
         <div
           className={[
-            "pointer-events-none absolute -inset-1 rounded-2xl blur-xl transition-all duration-300",
-            "bg-[radial-gradient(120%_120%_at_100%_0%,rgba(242,201,76,.30),rgba(91,31,166,.18)_45%,transparent_70%)]",
-            "dark:bg-[radial-gradient(120%_120%_at_100%_0%,rgba(242,201,76,.28),rgba(91,31,166,.22)_45%,transparent_70%)]",
-            focused ? "opacity-70 scale-[1.02]" : "opacity-35 scale-100",
+            "pointer-events-none absolute -inset-1 rounded-xl blur-lg transition-all duration-200",
+            "bg-[radial-gradient(120%_120%_at_100%_0%,rgba(224,179,74,.22),rgba(100,116,139,.10)_48%,transparent_72%)]",
+            "dark:bg-[radial-gradient(120%_120%_at_100%_0%,rgba(224,179,74,.18),rgba(255,255,255,.08)_48%,transparent_72%)]",
+            focused ? "opacity-70 scale-[1.01]" : "opacity-30 scale-100",
           ].join(" ")}
         />
 
         <div
           className={[
-            "relative flex items-center rounded-2xl transition-all duration-200",
+            "relative flex items-center rounded-xl transition-colors duration-200",
             "bg-white/80 border border-black/10 backdrop-blur-sm",
-            "dark:bg-white/[0.06] dark:border dark:border-white/12 dark:backdrop-blur-md",
-            focused ? "ring-2 ring-amber-400/30 dark:ring-amber-400/25" : "",
+            "dark:bg-white/[0.06] dark:border dark:border-white/15 dark:backdrop-blur-sm",
+            focused ? "ring-2 ring-[var(--brand)]/25 dark:ring-[var(--brand)]/25" : "",
           ].join(" ")}
         >
           <Search

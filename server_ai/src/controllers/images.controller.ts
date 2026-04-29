@@ -45,7 +45,7 @@ export async function proxyImage(req: Request, res: Response) {
     }
     console.error("[image-proxy]", err);
     return res.status(status >= 400 && status < 600 ? status : 500).json({
-      error: { message: err?.message || "Failed to fetch image" },
+      error: { message: "Image is temporarily unavailable" },
     });
   }
 }

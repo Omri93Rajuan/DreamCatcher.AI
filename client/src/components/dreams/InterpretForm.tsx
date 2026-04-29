@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Send, Search, CheckCircle2, Loader2 } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
-import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
+const loadAuthGateDialog = () => import("@/components/auth/AuthGateDialog");
+const AuthGateDialog = React.lazy(loadAuthGateDialog);
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
     fullText: string;
     baseMs?: number;
@@ -91,10 +93,19 @@ export default function InterpretForm() {
         containerRef,
     });
     const isThinking = isInterpreting || isStreaming;
+    const warmAuthGate = () => {
+        if (!isAuthenticated)
+            void loadAuthGateDialog();
+    };
+    const handleTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setText(event.target.value);
+        warmAuthGate();
+    };
     const handleInterpret = async () => {
         if (!text.trim())
             return;
         if (!isAuthenticated) {
+            void loadAuthGateDialog();
             setAuthOpen(true);
             return;
         }
@@ -113,14 +124,7 @@ export default function InterpretForm() {
         catch (e: any) {
             if (e?.response?.status === 401)
                 setAuthOpen(true);
-            const serverMessage =
-                e?.response?.data?.message ||
-                    e?.response?.data?.error?.message ||
-                    e?.response?.data?.error ||
-                    e?.message ||
-                    t("common.errorGeneric");
-            setInterpretError(String(serverMessage));
-            console.error(e);
+            setInterpretError(getFriendlyErrorMessage(e, t, "interpret"));
         }
         finally {
             setIsInterpreting(false);
@@ -142,8 +146,8 @@ export default function InterpretForm() {
       <div className="grid gap-3 max-w-3xl mx-auto mb-8">
         <div className="relative">
           
-          <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-purple-400"/>
-          <Textarea dir={i18n.dir()} value={text} onChange={(e) => setText(e.target.value)} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
+          <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-white/50"/>
+          <Textarea dir={i18n.dir()} value={text} onChange={handleTextChange} onFocus={warmAuthGate} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
             "pr-10 font-he min-h-[140px]",
             "bg-white text-black placeholder:text-slate-500",
             "border border-black/10",
@@ -151,16 +155,15 @@ export default function InterpretForm() {
             "dark:bg-white/10 dark:text-white",
             "dark:placeholder:text-white/50",
             "dark:border-white/15",
-            "dark:focus-visible:ring-2 dark:focus-visible:ring-purple-400/30",
-            "transition-all duration-300",
+            "dark:focus-visible:ring-2 dark:focus-visible:ring-[var(--brand)]/35",
+            "transition-colors duration-200",
         ].join(" ")}/>
         </div>
 
         
         <Button onClick={handleInterpret} disabled={!text.trim() || isInterpreting} className={[
-            "w-full font-bold py-3 rounded-xl",
+            "w-full font-bold py-3 rounded-lg",
             "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
-            "dark:bg-gradient-to-r dark:from-purple-600 dark:to-amber-600 dark:hover:from-purple-700 dark:hover:to-amber-700 dark:text-white",
         ].join(" ")}>
           {isInterpreting ? (<>
               <Loader2 className="w-5 h-5 ml-2 animate-spin"/>
@@ -178,15 +181,13 @@ export default function InterpretForm() {
 
       {(dream || isInterpreting) && (<div className="max-w-3xl mx-auto mb-10">
           <div className={[
-                "relative rounded-3xl p-6 shadow-xl backdrop-blur",
+                "relative rounded-2xl p-6 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.55)]",
                 "bg-white border border-black/10 text-slate-900",
-                "dark:border-white/15 dark:bg-white/5 dark:text-white",
+                "dark:border-white/15 dark:bg-white/[0.04] dark:text-white",
             ].join(" ")} aria-live="polite" aria-busy={isThinking}>
             <div className="flex items-center justify-between mb-3">
               <h4 className={[
-                "text-lg font-extrabold font-he",
-                "text-slate-900",
-                "dark:bg-clip-text dark:text-transparent dark:bg-gradient-to-r dark:from-purple-300 dark:to-amber-200",
+                "text-lg font-extrabold font-he text-slate-900 dark:text-white",
             ].join(" ")}>
                 {t("interpret.heading")}
               </h4>
@@ -208,7 +209,7 @@ export default function InterpretForm() {
                 <bdi className="text-slate-800 dark:text-white">
                   {isStreaming ? streamedText : dream?.aiResponse}
                 </bdi>
-                {isStreaming && (<span className="inline-block w-2 h-5 align-text-bottom animate-pulse">
+                {isStreaming && (<span className="inline-block w-2 h-5 align-text-bottom animate-pulse rounded-sm bg-current opacity-50 text-[0px]">
                     ‎
                   </span>)}
               </div>)}
@@ -216,9 +217,8 @@ export default function InterpretForm() {
             
             {dream && !isStreaming && (<div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 {!dream.isShared ? (<Button onClick={shareWithEveryone} className={[
-                        "px-4 py-2 rounded-xl",
+                        "px-4 py-2 rounded-lg",
                         "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
-                        "dark:bg-amber-600 dark:hover:bg-amber-700 dark:text-white",
                     ].join(" ")}>
                     {t("interpret.share")}
                   </Button>) : (<div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-300 text-sm">
@@ -238,6 +238,8 @@ export default function InterpretForm() {
         </div>)}
 
       
-      <AuthGateDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" onSuccess={() => setAuthOpen(false)}/>
+      {authOpen && (<React.Suspense fallback={null}>
+          <AuthGateDialog open={authOpen} onOpenChange={setAuthOpen} initialMode="signup" onSuccess={() => setAuthOpen(false)}/>
+        </React.Suspense>)}
     </>);
 }

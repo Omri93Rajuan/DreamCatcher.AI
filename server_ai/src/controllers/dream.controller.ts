@@ -76,6 +76,24 @@ function sendInterpretError(res: Response, err: any, context: string) {
   });
 }
 
+function sendDreamError(
+  res: Response,
+  status: number,
+  code: string,
+  message: string,
+  err?: any,
+  context?: string
+) {
+  if (err && process.env.NODE_ENV !== "test") {
+    console.error(`[Dreams] ${context || code} failed`, {
+      status,
+      code,
+      message: err?.message || err,
+    });
+  }
+  res.status(status).json({ success: false, error: code, message });
+}
+
 const allowedSet = new Set<string>(DREAM_CATEGORIES);
 
 function normalizeCategories(input: unknown): DreamCategory[] {
@@ -138,7 +156,7 @@ export const getAllDreams: RequestHandler = async (req, res): Promise<void> => {
     });
     res.json({ success: true, ...result });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    sendDreamError(res, 400, "dreams_list_failed", "Could not load dreams.", err, "list");
   }
 };
 
@@ -157,7 +175,7 @@ export const getDreamById: RequestHandler = async (req, res): Promise<void> => {
     }
     res.json({ success: true, dream });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    sendDreamError(res, 400, "dream_load_failed", "Could not load this dream.", err, "getById");
   }
 };
 
@@ -306,7 +324,7 @@ export const updateDream: RequestHandler = async (req, res): Promise<void> => {
     const updated = await DreamService.updateDream(req.params.id, patch);
     res.json({ success: true, dream: updated });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    sendDreamError(res, 400, "dream_update_failed", "Could not update this dream.", err, "update");
   }
 };
 
@@ -328,7 +346,7 @@ export const deleteDream: RequestHandler = async (req, res): Promise<void> => {
     await DreamService.deleteDream(req.params.id);
     res.json({ success: true, message: "Dream deleted successfully" });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    sendDreamError(res, 400, "dream_delete_failed", "Could not delete this dream.", err, "delete");
   }
 };
 
@@ -339,7 +357,7 @@ export const getDreamCategories: RequestHandler = async (
   try {
     res.json({ success: true, categories: DREAM_CATEGORIES });
   } catch (err: any) {
-    res.status(500).json({ success: false, error: err.message });
+    sendDreamError(res, 500, "categories_failed", "Could not load dream categories.", err, "categories");
   }
 };
 
@@ -355,6 +373,6 @@ export const getDreamStats: RequestHandler = async (
     const stats = await DreamService.getDreamStats({ windowDays });
     res.json({ success: true, ...stats });
   } catch (err: any) {
-    res.status(400).json({ success: false, error: err.message });
+    sendDreamError(res, 400, "stats_failed", "Could not load dream statistics.", err, "stats");
   }
 };

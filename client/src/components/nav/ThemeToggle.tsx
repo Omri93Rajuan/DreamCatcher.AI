@@ -11,7 +11,7 @@ export default function ThemeToggle() {
       <button
         type="button"
         onClick={toggle}
-        className="relative inline-flex h-9 w-[66px] items-center justify-start rounded-full border border-purple-200/70 bg-white/90 px-1 text-sm font-medium text-slate-800 shadow-inner transition hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-300/70 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/10"
+        className="relative inline-flex h-9 w-[66px] items-center justify-start rounded-full border border-slate-200 bg-white/90 px-1 text-sm font-medium text-slate-800 shadow-inner transition-colors hover:bg-black/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/10"
         title={dark ? t("theme.titleLight") : t("theme.titleDark")}
         aria-pressed={dark}
         aria-label={dark ? t("theme.titleLight") : t("theme.titleDark")}
@@ -26,7 +26,7 @@ export default function ThemeToggle() {
         />
         <span
           className={[
-            "relative z-[1] flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-purple-200/70 transition-transform duration-200",
+            "relative z-[1] flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-200 transition-transform duration-200",
             "dark:bg-white/90 dark:ring-white/25",
             dark ? "translate-x-6 rotate-12" : "translate-x-0 rotate-0",
           ].join(" ")}
@@ -34,7 +34,7 @@ export default function ThemeToggle() {
           {dark ? (
             <Sun className="h-4 w-4 text-amber-500" />
           ) : (
-            <Moon className="h-4 w-4 text-purple-700 dark:text-purple-200" />
+            <Moon className="h-4 w-4 text-slate-700 dark:text-white/80" />
           )}
         </span>
       </button>

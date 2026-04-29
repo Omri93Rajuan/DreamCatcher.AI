@@ -78,7 +78,7 @@ export default function UserMenu() {
           ref={popRef}
           role="menu"
           aria-label={t("userMenu.label")}
-          className="absolute top-full mt-2 right-0 z-50 w-[340px] max-w-[92vw] rounded-2xl overflow-hidden border border-black/10 dark:border-white/12 bg-white/95 dark:bg-slate-900/85 backdrop-blur-xl shadow-[0_30px_80px_-30px_rgba(139,92,246,.35)] animate-[menuIn_.18s_ease-out] text-slate-800 dark:text-white"
+          className="absolute top-full mt-2 right-0 z-50 w-[340px] max-w-[92vw] rounded-xl overflow-hidden border border-black/10 dark:border-white/15 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md shadow-[0_22px_60px_-34px_rgba(15,23,42,.8)] animate-[menuIn_.18s_ease-out] text-slate-800 dark:text-white"
         >
           <style>{`
             @keyframes menuIn {
@@ -90,11 +90,11 @@ export default function UserMenu() {
             }
           `}</style>
 
-          <div className="h-[3px] bg-gradient-to-r from-fuchsia-500 via-purple-500 to-amber-400" />
+          <div className="h-[3px] bg-[var(--brand)]" />
 
-          <div className="p-4 bg-gradient-to-l from-fuchsia-500/6 via-purple-600/6 to-amber-400/6 dark:from-fuchsia-500/10 dark:via-purple-600/10 dark:to-amber-400/10">
+          <div className="p-4 bg-slate-50/80 dark:bg-white/[0.04]">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-black/10 dark:border-white/15 shadow-[0_0_0_2px_rgba(139,92,246,.18)] bg-slate-100 dark:bg-white/10">
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-black/10 dark:border-white/15 shadow-[0_0_0_2px_rgba(185,130,19,.16)] bg-slate-100 dark:bg-white/10">
                 <img
                   src={avatarSrc}
                   referrerPolicy="no-referrer"
@@ -111,7 +111,7 @@ export default function UserMenu() {
               </div>
 
               <div className="min-w-0">
-                <div className="text-base font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-600 via-purple-600 to-amber-600 dark:from-fuchsia-300 dark:via-purple-200 dark:to-amber-200 truncate">
+                <div className="text-base font-extrabold text-slate-900 dark:text-white truncate">
                   {displayName}
                 </div>
                 {email && (
@@ -131,7 +131,7 @@ export default function UserMenu() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-black/8 bg-white/60 dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-black/10 bg-white/60 dark:border-white/10 dark:bg-white/[0.04]">
             <span className="text-xs font-semibold text-slate-600 dark:text-white/70">
               {t("layout.nav.languageToggle")}
             </span>
@@ -144,7 +144,7 @@ export default function UserMenu() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium hover:bg-black/5 dark:hover:bg-white/10"
             >
-              <User className="w-4.5 h-4.5 text-purple-600 dark:text-purple-300" />
+              <User className="w-[18px] h-[18px] text-slate-600 dark:text-white/65" />
               <span>{t("userMenu.profile")}</span>
             </Link>
 
@@ -153,7 +153,7 @@ export default function UserMenu() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium hover:bg-black/5 dark:hover:bg-white/10"
             >
-              <NotebookPen className="w-4.5 h-4.5 text-amber-600 dark:text-amber-300" />
+              <NotebookPen className="w-[18px] h-[18px] text-amber-600 dark:text-amber-300" />
               <span>{t("userMenu.myDreams")}</span>
             </Link>
 
@@ -163,7 +163,7 @@ export default function UserMenu() {
               onClick={handleLogout}
               className="w-full text-right flex items-center gap-3 px-4 py-3 text-[15px] font-semibold text-rose-700 hover:bg-rose-50 dark:text-rose-300 dark:hover:bg-rose-900/20"
             >
-              <LogOut className="w-4.5 h-4.5" />
+              <LogOut className="w-[18px] h-[18px]" />
               {t("userMenu.logout")}
             </button>
           </nav>

@@ -1,12 +1,12 @@
 import * as React from "react";
 import { clsx } from "clsx";
-export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (<div ref={ref} className={clsx("rounded-2xl border shadow-sm transition", "bg-white border-black/10 text-slate-900", "dark:border-purple-500/20 dark:bg-white/5 dark:text-white", className)} {...props}/>));
+export const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (<div ref={ref} className={clsx("rounded-xl border transition-colors shadow-[0_14px_34px_-28px_rgba(15,23,42,0.65)]", "bg-white border-black/10 text-slate-900", "dark:border-white/10 dark:bg-white/[0.04] dark:text-white", className)} {...props}/>));
 Card.displayName = "Card";
 export const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (<div ref={ref} className={clsx("p-4 md:p-6", className)} {...props}/>));
 CardHeader.displayName = "CardHeader";
 export const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTMLHeadingElement>>(({ className, ...props }, ref) => (<h3 ref={ref} className={clsx("text-lg font-semibold leading-none tracking-tight", className)} {...props}/>));
 CardTitle.displayName = "CardTitle";
-export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (<p ref={ref} className={clsx("text-sm text-slate-600 dark:text-purple-300", className)} {...props}/>));
+export const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(({ className, ...props }, ref) => (<p ref={ref} className={clsx("text-sm text-slate-600 dark:text-white/65", className)} {...props}/>));
 CardDescription.displayName = "CardDescription";
 export const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (<div ref={ref} className={clsx("p-4 md:p-6", className)} {...props}/>));
 CardContent.displayName = "CardContent";

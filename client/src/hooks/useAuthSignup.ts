@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthApi, RegisterDto } from "@/lib/api/auth";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 
 export function useAuthSignup() {
   const { setUser } = useAuthStore();
@@ -38,12 +39,7 @@ export function useAuthSignup() {
       setError(t("auth.signupErrors.notVerified"));
       return false;
     } catch (e: any) {
-      const msg =
-        e?.response?.data?.message ||
-        e?.response?.data?.error ||
-        e?.message ||
-        t("auth.signupErrors.generic");
-      setError(msg);
+      setError(getFriendlyErrorMessage(e, t, "generic"));
       return false;
     } finally {
       setSubmitting(false);

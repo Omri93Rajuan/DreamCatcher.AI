@@ -59,7 +59,7 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
         }}>
         
         <div className="flex flex-wrap gap-3 justify-center">
-          {showAll && (<AnimatedPill i={0} active={selected === "all"} gradient="from-purple-500 to-pink-500" onClick={() => onSelect("all")}>
+          {showAll && (<AnimatedPill i={0} active={selected === "all"} gradient="from-amber-500 to-amber-600" onClick={() => onSelect("all")}>
               {t("dreams.categoriesAll")}
             </AnimatedPill>)}
 
@@ -73,7 +73,7 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
               </AnimatedPill>);
         })}
 
-              {rest.length > 0 && (<motion.button initial="hidden" animate="show" custom={top.length + 2} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95, y: 1 }} onClick={() => setExpanded((s) => !s)} className="relative px-5 py-2 rounded-2xl flex items-center gap-2 transition-all border
+              {rest.length > 0 && (<motion.button initial="hidden" animate="show" custom={top.length + 2} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98, y: 1 }} onClick={() => setExpanded((s) => !s)} className="relative px-5 py-2 rounded-lg flex items-center gap-2 transition-colors border
                          bg-white/80 text-slate-900 hover:bg-black/5 border-black/10
                          dark:bg-white/[0.06] dark:text-white dark:hover:bg-white/10 dark:border-white/15
                          shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]" aria-expanded={expanded}>
@@ -82,10 +82,10 @@ export default function CategoryPills({ selected, onSelect, showAll = true, init
         </div>
 
         
-        {expanded && rest.length > 0 && (<motion.div initial={{ opacity: 0, y: -4, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="mx-auto w-full max-w-4xl rounded-3xl border p-4 backdrop-blur-md
+        {expanded && rest.length > 0 && (<motion.div initial={{ opacity: 0, y: -4, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="mx-auto w-full max-w-4xl rounded-xl border p-4 backdrop-blur-sm
                        bg-white/80 border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.08)]
                        dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))]
-                       dark:border-white/10 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)] dark:bg-purple-950">
+                       dark:border-white/10 dark:shadow-[0_8px_30px_rgba(0,0,0,0.25)]">
             <div className="flex flex-wrap gap-3 justify-center">
               {rest.map(([id, meta], i) => {
                 const Icon = meta.icon as any;
@@ -108,26 +108,22 @@ function AnimatedPill({ children, gradient, active, onClick, i = 0, }: {
     onClick?: () => void;
     i?: number;
 }) {
-    const base = "relative group px-5 py-2 rounded-2xl flex items-center gap-2 border backdrop-blur-md transition-all focus:outline-none";
-    return (<motion.button custom={i} initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.4, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }} whileHover={{ scale: 1.06, y: -1 }} whileTap={{ scale: 0.96, y: 1 }} onClick={onClick} aria-pressed={!!active} className={[
+    const base = "relative group px-5 py-2 rounded-lg flex items-center gap-2 border backdrop-blur-sm transition-colors focus:outline-none";
+    return (<motion.button custom={i} initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.35, delay: i * 0.03, ease: [0.22, 1, 0.36, 1] }} whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.98, y: 1 }} onClick={onClick} aria-pressed={!!active} className={[
             base,
             active
                 ?
                     `text-white border-white/30 bg-gradient-to-r ${gradient}
-             shadow-[0_10px_30px_rgba(0,0,0,0.18)] dark:shadow-[0_10px_30px_rgba(0,0,0,0.35)]
-             before:absolute before:inset-[-2px] before:rounded-[22px]
-             before:bg-[conic-gradient(from_180deg,rgba(255,255,255,0.35),rgba(255,255,255,0)_30%,rgba(255,255,255,0.35))]
-             before:opacity-30 before:blur-[8px] before:animate-[spin_6s_linear_infinite] before:content-['']`
+             shadow-sm`
                 :
                     `text-slate-800 bg-white/80 border-black/10 hover:bg-black/5
              dark:text-white/85 dark:bg-white/[0.06] dark:border-white/15 dark:hover:bg-white/10
              shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
-             after:pointer-events-none after:absolute after:inset-0 after:rounded-2xl
+             after:pointer-events-none after:absolute after:inset-0 after:rounded-lg
              after:opacity-0 group-hover:after:opacity-100 after:transition
              after:bg-[radial-gradient(250px_60px_at_center,rgba(0,0,0,0.06),transparent_70%)]
              dark:after:bg-[radial-gradient(250px_60px_at_center,rgba(255,255,255,0.10),transparent_70%)]`,
         ].join(" ")}>
-      {active && (<span className="pointer-events-none absolute -inset-0.5 rounded-[22px] blur-md opacity-40 bg-gradient-to-r from-white/50 to-white/20"/>)}
       <span className="relative z-10 flex items-center gap-2">{children}</span>
     </motion.button>);
 }
