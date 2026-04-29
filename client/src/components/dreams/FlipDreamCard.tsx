@@ -12,14 +12,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 
 export type SeriesPoint = {
   day: string;
@@ -41,17 +33,74 @@ export type PopularRowForFlip = {
   series?: SeriesPoint[];
 };
 
-const fmtLabel = (iso: string, locale: string) => {
-  const y = Number(iso.slice(0, 4));
-  const m = Number(iso.slice(5, 7) || "1") - 1;
-  const d = Number((iso[7] && iso.slice(8, 10)) || "1");
-  const dt = new Date(y, m, d);
-  const fallback = locale === "he" ? "he-IL" : "en-US";
-  return dt.toLocaleDateString(
-    fallback,
-    iso.length >= 10
-      ? { day: "2-digit", month: "2-digit" }
-      : { month: "2-digit", year: "2-digit" }
+const CHART_WIDTH = 320;
+const CHART_HEIGHT = 112;
+const CHART_PAD = 8;
+
+function SparklineChart({
+  series,
+  label,
+}: {
+  series: SeriesPoint[];
+  label: string;
+}) {
+  const chart = React.useMemo(() => {
+    const points = series
+      .map((point) => Number(point.score))
+      .filter((score) => Number.isFinite(score));
+
+    if (!points.length) return null;
+
+    const min = Math.min(...points);
+    const max = Math.max(...points);
+    const range = max - min || 1;
+    const usableWidth = CHART_WIDTH - CHART_PAD * 2;
+    const usableHeight = CHART_HEIGHT - CHART_PAD * 2;
+    const plotted = points.map((score, index) => {
+      const x =
+        CHART_PAD +
+        (points.length === 1 ? usableWidth / 2 : (index / (points.length - 1)) * usableWidth);
+      const y = CHART_PAD + (1 - (score - min) / range) * usableHeight;
+      return { x, y };
+    });
+
+    const linePath =
+      plotted.length === 1
+        ? `M ${plotted[0].x - 18} ${plotted[0].y} L ${plotted[0].x + 18} ${plotted[0].y}`
+        : plotted.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+    const areaPath =
+      plotted.length > 1
+        ? `M ${plotted[0].x} ${CHART_HEIGHT - CHART_PAD} ` +
+          plotted.map((point) => `L ${point.x} ${point.y}`).join(" ") +
+          ` L ${plotted[plotted.length - 1].x} ${CHART_HEIGHT - CHART_PAD} Z`
+        : "";
+
+    return { areaPath, linePath, first: plotted[0], last: plotted[plotted.length - 1] };
+  }, [series]);
+
+  if (!chart) return null;
+
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+      className="h-full w-full overflow-visible"
+      preserveAspectRatio="none"
+    >
+      {chart.areaPath && <path d={chart.areaPath} fill="currentColor" opacity={0.12} />}
+      <path
+        d={chart.linePath}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={chart.first.x} cy={chart.first.y} r="3" fill="currentColor" opacity={0.45} />
+      <circle cx={chart.last.x} cy={chart.last.y} r="4" fill="currentColor" />
+    </svg>
   );
 };
 
@@ -166,33 +215,7 @@ export default function FlipDreamCard({
 
           <div className="h-28 mt-3 rounded-md text-sky-600 dark:text-sky-300">
             {series.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={series} margin={{ left: 0, right: 0, top: 6, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id={`grad-${dreamId}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="currentColor" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="currentColor" stopOpacity={0.06} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="day" hide />
-                  <YAxis hide />
-                  <Tooltip
-                    formatter={(v: any) => [nf.format(Number(v)), t("dreams.card.score")]}
-                    labelFormatter={(label) =>
-                      typeof label === "string" ? fmtLabel(label, i18n.language) : ""
-                    }
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    fill={`url(#grad-${dreamId})`}
-                    dot={false}
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              <SparklineChart series={series} label={t("dreams.card.score")} />
             ) : hideChartIfEmpty ? null : (
               <div className="h-full w-full rounded-md bg-black/5 dark:bg-white/5" />
             )}
