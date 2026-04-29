@@ -102,8 +102,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
       <Card className={[
             "relative rounded-xl overflow-hidden transition-all duration-300 group",
             "bg-white border-black/10 text-slate-900 hover:border-black/20",
-            "dark:bg-gradient-to-br dark:from-purple-900/30 dark:via-purple-800/20 dark:to-purple-900/30",
-            "dark:border-purple-500/20 dark:hover:border-purple-400/40 dark:text-white",
+            "dark:bg-white/[0.04] dark:border-white/10 dark:hover:border-white/20 dark:text-white",
         ].join(" ")}>
         
         {categories.length > 0 && (<div className="absolute left-3 top-3 z-10 pointer-events-none">
@@ -118,7 +117,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
           
           <div className="flex items-start justify-between gap-3 mb-3">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Moon className="w-4 h-4 text-slate-500 dark:text-purple-300 flex-shrink-0"/>
+              <Moon className="w-4 h-4 text-slate-500 dark:text-white/60 flex-shrink-0"/>
               <h3 className="font-semibold text-lg truncate text-slate-900 dark:text-white">
                 {title}
               </h3>
@@ -127,9 +126,9 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
             <div className="flex items-center gap-2 flex-shrink-0">
               {showDate && created && (<div className="flex items-center gap-1 px-2 py-0.5 rounded-md
                                 bg-black/5 border border-black/10
-                                dark:bg-purple-500/10 dark:border-purple-400/20">
-                  <Calendar className="w-3 h-3 text-slate-500 dark:text-purple-300"/>
-                    <span className="text-xs text-slate-700 dark:text-purple-200">
+                                dark:bg-white/[0.06] dark:border-white/10">
+                  <Calendar className="w-3 h-3 text-slate-500 dark:text-white/60"/>
+                    <span className="text-xs text-slate-700 dark:text-white/70">
                     {formatDate(created, i18n.language)}
                   </span>
                 </div>)}
@@ -139,7 +138,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                 onShare(dream._id);
             }} className="p-1.5 rounded-md
                              bg-black/5 text-slate-700 border border-black/10 hover:bg-black/10
-                             dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-400/20 dark:hover:bg-purple-500/20 dark:hover:text-purple-200
+                             dark:bg-white/[0.06] dark:text-white/70 dark:border-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white
                              transition-colors" title={t("dreams.shareTooltip")}>
                   <Share2 className="w-3.5 h-3.5"/>
                 </button>)}
@@ -153,10 +152,10 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
 
           
           {dreamText && (<div className="mb-3">
-              <div className="text-xs font-medium text-slate-500 dark:text-purple-300 mb-1 opacity-70">
+              <div className="text-xs font-medium text-slate-500 dark:text-white/55 mb-1">
                 {t("dreams.card.dream")}
               </div>
-              <p className="text-slate-800 dark:text-purple-100/90 text-sm leading-relaxed">
+              <p className="text-slate-800 dark:text-white/78 text-sm leading-relaxed">
                 {dreamText.slice(0, dreamPreviewLength)}
                 {dreamNeedsMore && "..."}
               </p>
@@ -172,8 +171,8 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               </div>
               <div className="p-3 rounded-lg
                               bg-black/5 border border-black/10
-                              dark:bg-gradient-to-br dark:from-amber-900/20 dark:to-amber-800/10 dark:border-amber-500/20">
-                <p className="text-slate-800 dark:text-amber-100/90 text-sm leading-relaxed">
+                              dark:bg-white/[0.05] dark:border-white/10">
+                <p className="text-slate-800 dark:text-white/78 text-sm leading-relaxed">
                   {interpretation.slice(0, interpretationPreviewLength)}
                   {interpretationNeedsMore && "..."}
                 </p>
@@ -183,7 +182,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
           
           {hasMore && (<button onClick={() => setShowModal(true)} className="w-full mt-2 py-2 px-3 rounded-lg text-sm transition-colors
                          border border-black/10 bg-black/5 text-slate-800 hover:bg-black/10
-                         dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-400/20 dark:hover:bg-purple-500/20 dark:hover:text-purple-200">
+                         dark:bg-white/[0.06] dark:text-white/75 dark:border-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white">
               {t("dreams.card.readMore")}
             </button>)}
         </CardContent>
@@ -193,13 +192,13 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
       {showModal && (<div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowModal(false)}>
           <div className="rounded-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden
                        bg-white border border-black/10
-                       dark:bg-gradient-to-br dark:from-purple-900/95 dark:via-purple-800/90 dark:to-purple-900/95 dark:border-2 dark:border-purple-500/30" onClick={(e) => e.stopPropagation()}>
+                       dark:bg-[#12151d] dark:border dark:border-white/10" onClick={(e) => e.stopPropagation()}>
             
             <div className="sticky top-0 p-6 flex items-start justify-between gap-4 border-b
                             bg-white/90 backdrop-blur-md border-black/10
-                            dark:bg-purple-900/80 dark:border-purple-500/20">
+                            dark:bg-[#12151d]/95 dark:border-white/10">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Moon className="w-6 h-6 text-slate-600 dark:text-purple-300 flex-shrink-0"/>
+                <Moon className="w-6 h-6 text-slate-600 dark:text-white/65 flex-shrink-0"/>
                 <h2 className="font-bold text-2xl text-slate-900 dark:text-white">
                   {title}
                 </h2>
@@ -207,7 +206,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
 
               <button onClick={() => setShowModal(false)} className="p-2 rounded-lg transition-colors
                            bg-black/5 hover:bg-black/10
-                           dark:bg-purple-500/20 dark:hover:bg-purple-500/30 dark:text-purple-300 dark:hover:text-white">
+                           dark:bg-white/[0.06] dark:hover:bg-white/[0.1] dark:text-white/70 dark:hover:text-white">
                 <X className="w-5 h-5"/>
               </button>
             </div>
@@ -218,9 +217,9 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                 <div className="flex items-center gap-3">
                   {showDate && created && (<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                                     bg-black/5 border border-black/10
-                                    dark:bg-purple-500/20 dark:border-purple-400/30">
-                      <Calendar className="w-4 h-4 text-slate-600 dark:text-purple-300"/>
-                      <span className="text-sm text-slate-700 dark:text-purple-200">
+                                    dark:bg-white/[0.06] dark:border-white/10">
+                      <Calendar className="w-4 h-4 text-slate-600 dark:text-white/65"/>
+                      <span className="text-sm text-slate-700 dark:text-white/70">
                         {formatDate(created, i18n.language)}
                       </span>
                     </div>)}
@@ -236,20 +235,20 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                     onShare(dream._id);
                 }} className="px-4 py-2 rounded-lg flex items-center gap-2
                                border border-black/10 bg-black/5 text-slate-800 hover:bg-black/10
-                               dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-400/30 dark:hover:bg-purple-500/30 dark:hover:text-purple-200">
+                               dark:bg-white/[0.06] dark:text-white/75 dark:border-white/10 dark:hover:bg-white/[0.1] dark:hover:text-white">
                     <Share2 className="w-4 h-4"/>
                     <span className="text-sm">{t("dreams.shareAction")}</span>
                   </button>)}
               </div>
 
-              <div className="h-px bg-black/10 dark:bg-purple-500/20"/>
+              <div className="h-px bg-black/10 dark:bg-white/10"/>
 
               {dreamText && (<div>
-                  <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-purple-200">
-                    <div className="w-1 h-5 rounded-full bg-slate-400 dark:bg-gradient-to-b dark:from-purple-400 dark:to-pink-400"/>
+                  <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-white/85">
+                    <div className="w-1 h-5 rounded-full bg-[var(--brand)]"/>
                     {t("dreams.card.fullDream")}
                   </h3>
-                  <div className="text-slate-800 dark:text-purple-50 text-base leading-relaxed whitespace-pre-wrap">
+                  <div className="text-slate-800 dark:text-white/82 text-base leading-relaxed whitespace-pre-wrap">
                     {dreamText}
                   </div>
                 </div>)}
@@ -261,8 +260,8 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                   </h3>
                   <div className="p-5 rounded-xl
                                   border border-black/10 bg-black/5
-                                  dark:bg-gradient-to-br dark:from-amber-900/30 dark:to-amber-800/20 dark:border-amber-500/20">
-                    <p className="text-slate-800 dark:text-amber-50/90 text-base leading-relaxed whitespace-pre-wrap">
+                                  dark:bg-white/[0.05] dark:border-white/10">
+                    <p className="text-slate-800 dark:text-white/82 text-base leading-relaxed whitespace-pre-wrap">
                       {interpretation}
                     </p>
                   </div>
