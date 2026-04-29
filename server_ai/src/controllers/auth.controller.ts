@@ -178,11 +178,7 @@ export const getGoogleAuthUrl = (req: Request, res: Response) => {
     res.json({ url });
   } catch (error: any) {
     console.error("[GoogleOAuth] url error:", error);
-    handleError(
-      res,
-      error.status || 500,
-      error.message || GOOGLE_ERROR_MESSAGE
-    );
+    handleError(res, error.status || 500, GOOGLE_ERROR_MESSAGE);
   }
 };
 
@@ -231,12 +227,11 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
     return res.redirect(302, target);
   } catch (error: any) {
     console.error("[GoogleOAuth] callback error:", error);
-    const message = error?.message || GOOGLE_ERROR_MESSAGE;
     const target = buildGoogleRedirect(
       decoded?.redirectTo,
       "error",
       decoded?.next,
-      message
+      GOOGLE_ERROR_MESSAGE
     );
     return res.redirect(302, target);
   }
@@ -268,10 +263,12 @@ export const registerUser = async (
     });
     res.status(201).json({ user });
   } catch (error: any) {
+    const message =
+      error?.status === 409 ? "Email already registered" : "Registration failed";
     handleError(
       res,
-      error.status || 400,
-      error.message || "Registration failed"
+      error?.status || 400,
+      message
     );
   }
 };
@@ -285,7 +282,12 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     });
     res.status(200).json({ user });
   } catch (error: any) {
-    handleError(res, error.status || 401, error.message || "Login failed");
+    const status = error?.status || 401;
+    handleError(
+      res,
+      status,
+      status === 401 ? "Invalid email or password" : "Login failed"
+    );
   }
 };
 export const logoutUser = (_req: Request, res: Response): void => {
@@ -294,7 +296,7 @@ export const logoutUser = (_req: Request, res: Response): void => {
     clearAuthCookies(res);
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
-    handleError(res, 500, error.message);
+    handleError(res, 500, "Logout failed");
   }
 };
 export const refreshToken = (req: Request, res: Response): void => {
@@ -325,7 +327,7 @@ export const refreshToken = (req: Request, res: Response): void => {
       res.json({ ok: true });
     });
   } catch (error: any) {
-    handleError(res, 500, error.message);
+    handleError(res, 500, "Could not refresh session");
   }
 };
 export const verifyToken = (req: Request, res: Response): void => {
@@ -344,7 +346,7 @@ export const verifyToken = (req: Request, res: Response): void => {
       });
     });
   } catch (error: any) {
-    handleError(res, 500, error.message);
+    handleError(res, 500, "Could not verify session");
   }
 };
 export const getUserById = async (
@@ -357,7 +359,7 @@ export const getUserById = async (
       return void res.status(404).json({ message: "User not found" });
     res.status(200).json({ user: foundUser });
   } catch (error: any) {
-    handleError(res, error.status || 500, error.message);
+    handleError(res, error.status || 500, "Could not load user");
   }
 };
 export async function requestPasswordReset(req: Request, res: Response) {
@@ -390,7 +392,9 @@ export async function requestPasswordReset(req: Request, res: Response) {
     return handleError(
       res,
       status,
-      e?.message || "Failed to send password reset email"
+      status === 429
+        ? "too_many_requests"
+        : "Failed to send password reset email"
     );
   }
 }
@@ -450,6 +454,6 @@ export async function resetPasswordWithCookie(req: Request, res: Response) {
     console.error("[resetPasswordWithCookie] error:", e);
     return res
       .status(500)
-      .json({ error: { message: e.message || "server_error" } });
+      .json({ error: { message: "server_error" } });
   }
 }

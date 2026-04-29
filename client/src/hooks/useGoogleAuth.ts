@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AuthApi, GoogleUrlParams } from "@/lib/api/auth";
 import { TERMS_VERSION } from "@/constants/legal";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 
 type StartOptions = Partial<GoogleUrlParams> & {
   termsAccepted?: boolean;
@@ -59,11 +60,7 @@ export function useGoogleAuth(defaults?: StartOptions) {
         window.location.assign(result.url);
         return true;
       } catch (err: any) {
-        const message =
-          err?.response?.data?.error?.message ||
-          err?.message ||
-          t("googleCallback.genericError");
-        setError(message);
+        setError(getFriendlyErrorMessage(err, t, "google"));
         return false;
       } finally {
         setLoading(false);

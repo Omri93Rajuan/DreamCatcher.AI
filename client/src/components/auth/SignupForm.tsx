@@ -10,6 +10,7 @@ import { UploadsApi } from "@/lib/api/uploads";
 import { toast } from "react-toastify";
 import { convertFileToWebp, toStoredImageUrl } from "@/lib/images";
 import { useTranslation } from "react-i18next";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 
 type Props = {
   onSuccess?: () => void;
@@ -167,7 +168,7 @@ export default function SignupForm({ onSuccess }: Props) {
             presign.publicUrl;
           setAvatarUploadCache({ fingerprint, url: imageUrl });
         } catch (err: any) {
-          toast.error(err?.message || t("signup.errors.avatarUpload"));
+          toast.error(getFriendlyErrorMessage(err, t, "signupAvatar"));
           setSubmitting(false);
           setUploadingAvatar(false);
           return;
@@ -210,14 +211,12 @@ export default function SignupForm({ onSuccess }: Props) {
       setErrors({ general: t("signup.errors.genericCreate") });
     } catch (error: any) {
       const status = error?.response?.status;
-      const message =
-        error?.response?.data?.message || error?.message || t("auth.signupErrors.generic");
       if (status === 409) {
         setErrors({
           email: t("signup.errors.emailExists"),
         });
       } else {
-        setErrors({ general: message });
+        setErrors({ general: getFriendlyErrorMessage(error, t, "generic") });
       }
     } finally {
       setSubmitting(false);

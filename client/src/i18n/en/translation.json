@@ -41,6 +41,31 @@
     "haveAccount": "Already have an account?",
     "noAccount": "Don't have an account?"
   },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "We could not reach the server. Check your connection and try again.",
+    "timeout": "The request took too long. Please try again.",
+    "unauthorized": "Please log in and try again.",
+    "forbidden": "You do not have permission to do that.",
+    "notFound": "We could not find what you asked for.",
+    "fileTooLarge": "The file is too large.",
+    "rateLimited": "Too many attempts. Please wait a moment and try again.",
+    "server": "The service is temporarily unavailable. Please try again soon.",
+    "aiUnavailable": "Dream interpretation is temporarily unavailable. Please try again later.",
+    "aiTimeout": "Dream interpretation took too long. Please try again.",
+    "boundary": "Something unexpected happened. Please try again.",
+    "context": {
+      "generic": "Something went wrong. Please try again.",
+      "interpret": "Could not interpret the dream right now. Your text is still here, so you can try again.",
+      "popular": "Could not load popular dreams right now.",
+      "stats": "Could not load statistics right now.",
+      "profileSave": "Could not save your profile. Please try again.",
+      "profileUpload": "Could not upload the image. Please try another image.",
+      "signupAvatar": "Could not upload the avatar. Please try another image.",
+      "contact": "Could not send the message. Please try again.",
+      "google": "Google login is temporarily unavailable. Please try again."
+    }
+  },
   "userMenu": {
     "label": "User menu",
     "verified": "Verified account",

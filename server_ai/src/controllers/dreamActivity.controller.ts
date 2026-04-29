@@ -53,7 +53,7 @@ export const postActivity: RequestHandler = async (req: AuthRequest, res) => {
     res.json(result);
   } catch (e: any) {
     console.error("[Activity Error]", e);
-    res.status(500).json({ error: e?.message ?? "internal_error" });
+    res.status(500).json({ error: "activity_failed" });
   }
 };
 export const getDreamReactions: RequestHandler = async (
@@ -71,7 +71,7 @@ export const getDreamReactions: RequestHandler = async (
     res.json(data);
   } catch (e: any) {
     console.error("[Reactions Error]", e);
-    handleErr(res, 500, e?.message ?? "internal_error");
+    handleErr(res, 500, "reactions_failed");
   }
 };
 export const getPopularController: RequestHandler = async (req, res) => {
@@ -85,6 +85,9 @@ export const getPopularController: RequestHandler = async (req, res) => {
     res.json(rows);
   } catch (e: any) {
     console.error("[Popular Error]", e);
-    res.status(500).json({ error: "popular_failed", message: e?.message });
+    res.status(500).json({
+      error: "popular_failed",
+      message: "Could not load popular dreams.",
+    });
   }
 };

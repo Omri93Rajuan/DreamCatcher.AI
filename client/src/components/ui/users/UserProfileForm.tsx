@@ -13,6 +13,7 @@ import { Loader2, Upload, Camera } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { UploadsApi } from "@/lib/api/uploads";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import {
   convertFileToWebp,
   isValidImageInput,
@@ -143,11 +144,7 @@ export default function UserProfileForm({ user }: { user: User }) {
       toast.success(t("account.profile.toastSaved"));
     },
     onError: (e: any) => {
-      toast.error(
-        e?.response?.data?.error?.message ??
-          e?.message ??
-          t("account.profile.toastError")
-      );
+      toast.error(getFriendlyErrorMessage(e, t, "profileSave"));
     },
   });
 
@@ -178,7 +175,7 @@ export default function UserProfileForm({ user }: { user: User }) {
           presign.proxyUrl ||
           presign.publicUrl;
       } catch (err: any) {
-        toast.error(err?.message || t("account.profile.toastUpload"));
+        toast.error(getFriendlyErrorMessage(err, t, "profileUpload"));
         return;
       } finally {
         setUploading(false);
