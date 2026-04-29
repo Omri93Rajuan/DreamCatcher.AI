@@ -67,15 +67,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen pb-20">
       <section className="relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-4 py-20 text-center" dir={i18n.dir()}>
+        <div className="max-w-6xl mx-auto px-4 py-16 md:py-20 text-center" dir={i18n.dir()}>
           <div className="animate-[fadeIn_0.45s_ease-out]">
             <h1
               className="
           font-extrabold leading-[1.1] tracking-tight
           text-4xl sm:text-6xl md:text-7xl
-          bg-clip-text text-transparent
-          bg-gradient-to-r from-[#D4A100] via-[#C4903A] to-[#B87E40]   /* Light */
-          dark:from-purple-300 dark:via-purple-200 dark:to-amber-200 /* Dark */
+          max-w-4xl mx-auto
+          text-slate-950 dark:text-white
           mb-6
         "
             >
@@ -86,8 +85,8 @@ export default function HomePage() {
               className="
           max-w-2xl mx-auto mb-8
           text-lg md:text-xl font-medium
-          text-[#B87E40]       /* Light */
-          dark:text-purple-200 /* Dark */
+          text-slate-600
+          dark:text-white/70
         "
             >
               {t("home.heroSubtitle")}
@@ -100,7 +99,7 @@ export default function HomePage() {
 
       <section className="max-w-7xl mx-auto px-4 mb-20">
         {statsError ? (
-          <div className="text-sm text-red-400">
+          <div className="text-sm text-rose-600 dark:text-rose-300">
             {t("home.statsError", { message: statsError })}
           </div>
         ) : stats ? (

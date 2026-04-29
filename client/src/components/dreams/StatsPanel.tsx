@@ -35,14 +35,14 @@ function PeriodToggle({ value, onChange, accent = "#F2C94C", }: {
         { key: "year", label: t("stats.period.year") },
     ];
     return (<div className="
-        inline-flex gap-2 rounded-full p-1 border
+        inline-flex gap-2 rounded-lg p-1 border
         bg-white/80 border-black/10
         dark:bg-white/[0.06] dark:border-white/10
       " dir={i18n.dir()}>
       {items.map((it) => {
             const active = it.key === value;
             return (<button key={it.key} type="button" onClick={() => onChange?.(it.key)} className={[
-                    "px-3 py-1.5 text-sm rounded-full transition-all",
+                    "px-3 py-1.5 text-sm rounded-md transition-colors",
                     active
                         ? "text-slate-900 dark:text-slate-900"
                         : "text-slate-700 hover:bg-black/5 dark:text-white/80 hover:dark:bg-white/10",
@@ -101,17 +101,17 @@ export default function StatsPanelUltraCompact({ stats, className, showPeriodTog
         </div>)}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {KPIs.map((k, idx) => (<Card key={idx} className="relative rounded-3xl overflow-hidden">
-            <CardContent className="relative h-32">
+        {KPIs.map((k, idx) => (<Card key={idx} className="relative rounded-xl overflow-hidden">
+            <CardContent className="relative h-28">
               
               <div className="absolute inset-0 grid place-items-center pointer-events-none">
                 <span className="font-extrabold leading-none tabular-nums select-none" style={{
-                fontSize: "72px",
+                fontSize: "60px",
                 backgroundImage: numGradient,
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 color: "transparent",
-                textShadow: "0 2px 12px rgba(245, 166, 35, 0.15)",
+                textShadow: "0 2px 10px rgba(185, 130, 19, 0.12)",
             }}>
                   <AnimatedNumber value={k.value} enabled duration={animationDurationMs} from={animateFromZero ? 0 : k.value}/>
                 </span>
@@ -126,7 +126,7 @@ export default function StatsPanelUltraCompact({ stats, className, showPeriodTog
               </div>
 
               
-              <div className="pointer-events-none absolute inset-0 rounded-3xl border
+              <div className="pointer-events-none absolute inset-0 rounded-xl border
                               border-black/10 dark:border-white/10"/>
             </CardContent>
           </Card>))}

@@ -70,9 +70,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div
       dir={i18n.dir()}
       className="
-        min-h-screen flex flex-col
-        bg-gradient-to-br from-indigo-50 via-purple-50 to-slate-100 text-slate-900
-        dark:from-indigo-950 dark:via-purple-950 dark:to-slate-900 dark:text-white
+        min-h-screen flex flex-col text-slate-900 dark:text-white
       "
     >
       <Header user={user} onLogout={handleLogout} />

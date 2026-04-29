@@ -1,6 +1,7 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { X } from "lucide-react";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 
@@ -57,10 +58,10 @@ export default function AuthGateDialog({
           onClick={(e) => e.stopPropagation()}
           role="document"
           className="
-            w-full max-w-md sm:max-w-lg rounded-2xl
+            w-full max-w-md sm:max-w-lg rounded-xl
             bg-white/90 text-slate-900 border border-black/10
             shadow-[0_20px_60px_-30px_rgba(0,0,0,.45)]
-            dark:bg-white/[0.08] dark:text-white dark:border-white/12
+            dark:bg-white/[0.08] dark:text-white dark:border-white/15
             max-h-[calc(100vh-3rem)] overflow-y-auto
           "
         >
@@ -71,18 +72,19 @@ export default function AuthGateDialog({
               </h3>
               <button
                 onClick={() => onOpenChange(false)}
-                className="text-slate-500 hover:text-slate-700 dark:text-white/70 dark:hover:text-white transition"
+                className="inline-flex text-[0px] text-slate-500 hover:text-slate-700 dark:text-white/70 dark:hover:text-white transition"
                 aria-label={t("common.close")}
               >
+                <X className="h-5 w-5" aria-hidden />
                 ✕
               </button>
             </div>
 
             <div
               className="
-                mt-3 inline-flex rounded-xl p-1 border
+                mt-3 inline-flex rounded-lg p-1 border
                 bg-slate-100/80 border-black/10
-                dark:bg-white/[0.06] dark:border-white/10
+                dark:bg-white/[0.06] dark:border-white/15
               "
             >
               <button

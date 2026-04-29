@@ -5,8 +5,8 @@ export type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: "primary" | "outline" | "ghost";
 };
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ className, size = "md", variant = "primary", disabled, ...props }, ref) => {
-    const base = "inline-flex items-center justify-center font-medium rounded-xl transition-all " +
-        "focus-visible:ring-2 focus-visible:ring-[var(--brand)]/40 " +
+    const base = "inline-flex items-center justify-center font-medium rounded-lg transition-colors " +
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 " +
         "select-none shrink-0 active:scale-[0.98]";
     const sizes: Record<"sm" | "md" | "lg", string> = {
         sm: "h-9 px-3 text-sm",
@@ -14,10 +14,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({ classN
         lg: "h-14 px-7 text-lg",
     };
     const variants: Record<"primary" | "outline" | "ghost", string> = {
-        primary: "bg-[var(--brand)] text-[var(--brand-fg)] " +
+        primary: "bg-[var(--brand)] text-[var(--brand-fg)] shadow-sm " +
             "hover:brightness-105 dark:hover:brightness-110",
-        outline: "border border-[var(--brand)]/40 text-[var(--brand)] " +
-            "hover:bg-[var(--brand)]/10 dark:hover:bg-[var(--brand)]/20 " +
+        outline: "border border-[var(--brand)]/35 text-slate-900 " +
+            "hover:border-[var(--brand)] hover:bg-[var(--brand)]/10 dark:hover:bg-[var(--brand)]/20 " +
             "dark:text-[var(--brand)]",
         ghost: "text-[var(--brand)] hover:bg-[var(--brand)]/10 " +
             "dark:hover:bg-[var(--brand)]/20",

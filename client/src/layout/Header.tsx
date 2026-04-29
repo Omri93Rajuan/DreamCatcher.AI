@@ -48,9 +48,9 @@ export default function Header({ user, onLogout }: HeaderProps) {
           "relative group px-2 py-1 font-medium transition-colors",
           isActive
             ? "text-slate-900 dark:text-white"
-            : "text-slate-700 hover:text-slate-900 dark:text-purple-200 dark:hover:text-white",
+            : "text-slate-700 hover:text-slate-900 dark:text-white/70 dark:hover:text-white",
           "after:absolute after:bottom-0 after:right-0 after:h-[2px] after:w-0",
-          "after:bg-gradient-to-l after:from-amber-500 after:to-purple-500 after:transition-all after:duration-300",
+          "after:bg-[var(--brand)] after:transition-all after:duration-300",
           "motion-reduce:after:transition-none",
           "group-hover:after:w-full",
         ].join(" ")
@@ -66,12 +66,12 @@ export default function Header({ user, onLogout }: HeaderProps) {
         "sticky top-0 z-50 border-b transition-all duration-300",
         scrolled
           ? [
-              "backdrop-blur-md bg-white/80 border-black/10 shadow-[0_6px_20px_-10px_rgba(0,0,0,.25)]",
-              "dark:bg-[#0b0e1a]/60 dark:border-white/10 dark:shadow-[0_8px_24px_-12px_rgba(0,0,0,.6)]",
+              "backdrop-blur-md bg-white/90 border-black/10 shadow-[0_10px_30px_-24px_rgba(15,23,42,.7)]",
+              "dark:bg-[#11131a]/80 dark:border-white/10 dark:shadow-[0_10px_30px_-24px_rgba(0,0,0,.9)]",
             ].join(" ")
           : [
-              "backdrop-blur-sm bg-white/30 border-black/10 shadow-none",
-              "dark:bg-white/5 dark:border-white/10 dark:shadow-none",
+              "backdrop-blur-sm bg-white/55 border-black/10 shadow-none",
+              "dark:bg-[#11131a]/50 dark:border-white/10 dark:shadow-none",
             ].join(" "),
       ].join(" ")}
     >
@@ -79,7 +79,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
         <div className="h-16 flex items-center justify-between gap-4">
           <Link
             to={createPageUrl("HomePage")}
-            className="flex items-center gap-2.5 group rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+            className="flex items-center gap-2.5 group rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
             aria-label={t("layout.nav.logoLabel")}
           >
             <img
@@ -110,13 +110,10 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 <NavItem to="/login">{t("layout.nav.login")}</NavItem>
                 <Link
                   to="/register"
-                  className="px-3.5 py-1.5 rounded-xl font-semibold
-                             text-white
-                             bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
-                             hover:opacity-95 active:scale-[0.98]
-                             shadow-[0_6px_20px_-10px_rgba(139,92,246,.35)]
-                             dark:shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]
-                             transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/60"
+                  className="px-3.5 py-1.5 rounded-lg font-semibold
+                             bg-[var(--brand)] text-[var(--brand-fg)]
+                             hover:brightness-105 active:scale-[0.98]
+                             shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
                 >
                   {t("layout.nav.register")}
                 </Link>
@@ -156,7 +153,7 @@ export default function Header({ user, onLogout }: HeaderProps) {
         <div
           className="md:hidden fixed top-16 left-0 right-0 z-40
                      border-t border-black/10 dark:border-white/10
-                     bg-white/80 dark:bg-[#0b0e1a]/70 backdrop-blur-md"
+                     bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md"
         >
           <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
             <NavItem to="/" onClick={() => setMobileOpen(false)}>
@@ -206,12 +203,9 @@ export default function Header({ user, onLogout }: HeaderProps) {
                   <Link
                     to="/register"
                     onClick={() => setMobileOpen(false)}
-                    className="px-3.5 py-2 rounded-xl font-semibold
-                               text-slate-900 dark:text-white
-                               bg-gradient-to-l from-[#F59E0B] to-[#8B5CF6]
-                               hover:opacity-95
-                               shadow-[0_6px_20px_-10px_rgba(139,92,246,.35)]
-                               dark:shadow-[0_6px_20px_-10px_rgba(139,92,246,.55)]"
+                    className="px-3.5 py-2 rounded-lg font-semibold
+                               bg-[var(--brand)] text-[var(--brand-fg)]
+                               hover:brightness-105 shadow-sm transition-colors"
                   >
                     {t("layout.nav.register")}
                   </Link>
