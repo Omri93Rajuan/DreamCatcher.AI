@@ -3,9 +3,8 @@ import { I18nProvider } from "../providers/I18nProvider";
 import { ErrorBoundary } from "../providers/ErrorBoundary";
 import { RouterProvider } from "../providers/RouterProvider";
 import { ThemeProvider } from "../providers/ThemeProvider";
-import { ToastContainer } from "react-toastify";
-import AccessibilityToolbar from "../components/accessibility/AccessibilityToolbar";
-import "react-toastify/dist/ReactToastify.css";
+import AccessibilityPrefsBoot from "../components/accessibility/AccessibilityPrefsBoot";
+import DeferredAppAddons from "./DeferredAppAddons";
 export default function App() {
     return (<ThemeProvider>
       <I18nProvider>
@@ -13,9 +12,9 @@ export default function App() {
           <ErrorBoundary>
             <div id="a11y-app-shell" className="min-h-screen">
               <RouterProvider />
-              <ToastContainer position="top-right" rtl autoClose={1800} className="toast-container" toastClassName="toast-body"/>
             </div>
-            <AccessibilityToolbar />
+            <AccessibilityPrefsBoot />
+            <DeferredAppAddons />
           </ErrorBoundary>
         </QueryProvider>
       </I18nProvider>
