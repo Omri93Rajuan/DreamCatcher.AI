@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { motion } from "framer-motion";
 import { Calendar, Trash2, Share2, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,7 +24,7 @@ const truncateWords = (text: string, maxWords: number) => {
     const words = text.trim().split(/\s+/);
     if (words.length <= maxWords)
         return text;
-    return words.slice(0, maxWords).join(" ") + "…";
+    return words.slice(0, maxWords).join(" ") + "...";
 };
 export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, bodyHeight = 220, maxWordsFront = 55, maxWordsBack = 70, showReactions = true, reactionsVariant = "default", }: Props) {
     const { t, i18n } = useTranslation();
@@ -59,7 +59,12 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
             perspective: 1200,
             transition: "transform .6s cubic-bezier(.22,.61,.36,1)",
             transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }} dir={i18n.dir()} onClick={() => setFlipped((f) => !f)} aria-label={t("myDreams.flipAria", { defaultValue: "Flip card" })}>
+        }} dir={i18n.dir()} onClick={() => setFlipped((f) => !f)} onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setFlipped((f) => !f);
+            }
+        }} role="button" tabIndex={0} aria-pressed={flipped} aria-label={t("myDreams.flipAria", { defaultValue: "Flip card" })}>
           
           <CardContent className="
               absolute inset-0 p-5
@@ -149,7 +154,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                 {t("dreams.card.ai")}
               </h4>
               <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white/90">
-                {backTrunc || "—"}
+                {backTrunc || "-"}
               </p>
             </div>
 
@@ -271,7 +276,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                   {t("dreams.card.dream")}
                 </h4>
                 <p className="leading-relaxed whitespace-pre-line">
-                  {dreamText || "—"}
+                  {dreamText || "-"}
                 </p>
               </section>
 
@@ -280,7 +285,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                   {t("dreams.card.ai")}
                 </h4>
                 <p className="leading-relaxed whitespace-pre-line">
-                  {solution || "—"}
+                  {solution || "-"}
                 </p>
               </section>
             </div>
