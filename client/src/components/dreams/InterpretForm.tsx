@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 const loadAuthGateDialog = () => import("@/components/auth/AuthGateDialog");
 const AuthGateDialog = React.lazy(loadAuthGateDialog);
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
@@ -123,14 +124,7 @@ export default function InterpretForm() {
         catch (e: any) {
             if (e?.response?.status === 401)
                 setAuthOpen(true);
-            const serverMessage =
-                e?.response?.data?.message ||
-                    e?.response?.data?.error?.message ||
-                    e?.response?.data?.error ||
-                    e?.message ||
-                    t("common.errorGeneric");
-            setInterpretError(String(serverMessage));
-            console.error(e);
+            setInterpretError(getFriendlyErrorMessage(e, t, "interpret"));
         }
         finally {
             setIsInterpreting(false);

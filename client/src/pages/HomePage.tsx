@@ -6,6 +6,7 @@ import { DreamsApi } from "@/lib/api/dreams";
 import { GlobalDreamStats } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
 import { useInViewOnce } from "@/hooks/useInViewOnce";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 
 const PopularDreams = lazy(() => import("@/components/dreams/PopularDreams"));
 const DreamsPaginated = lazy(() => import("@/components/dreams/DreamsPaginated"));
@@ -44,14 +45,14 @@ export default function HomePage() {
         const s = await DreamsApi.getGlobalStats(7);
         if (mounted) setStats(s);
       } catch (e: any) {
-        if (mounted) setStatsError(e?.message ?? "Failed to load stats");
+        if (mounted) setStatsError(getFriendlyErrorMessage(e, t, "stats"));
       }
     })();
 
     return () => {
       mounted = false;
     };
-  }, [shouldLoadStats, stats, statsError]);
+  }, [shouldLoadStats, stats, statsError, t]);
 
   // faster, lighter search debounce so results feel instant
   useEffect(() => {

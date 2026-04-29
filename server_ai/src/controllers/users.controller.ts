@@ -17,7 +17,7 @@ export const getAll = async (
     const users = await userService.getAllUsers();
     res.json(users);
   } catch (e: any) {
-    handleError(res, e?.status || 404, e?.message || "Failed to fetch users");
+    handleError(res, e?.status || 404, "Failed to fetch users");
   }
 };
 export const getByCall = async (
@@ -37,7 +37,7 @@ export const getByCall = async (
     handleError(
       res,
       e?.status || 500,
-      e?.message || "Failed to fetch paginated users"
+      "Failed to fetch paginated users"
     );
   }
 };
@@ -66,7 +66,7 @@ export const getById = async (
     }
     res.json(user);
   } catch (e: any) {
-    handleError(res, e?.status || 404, e?.message || "User not found");
+    handleError(res, e?.status || 404, "User not found");
   }
 };
 export const create = async (
@@ -83,7 +83,7 @@ export const create = async (
     );
     res.status(201).json(user);
   } catch (e: any) {
-    handleError(res, e?.status || 400, e?.message || "Error creating user");
+    handleError(res, e?.status || 400, "Error creating user");
   }
 };
 export const update = async (
@@ -110,7 +110,7 @@ export const update = async (
     );
     res.json(updated);
   } catch (e: any) {
-    handleError(res, e?.status || 400, e?.message || "Error updating user");
+    handleError(res, e?.status || 400, "Error updating user");
   }
 };
 export const remove = async (
@@ -134,6 +134,6 @@ export const remove = async (
     const result = await userService.deleteUser(targetId);
     res.json(result);
   } catch (e: any) {
-    handleError(res, e?.status || 404, e?.message || "Error deleting user");
+    handleError(res, e?.status || 404, "Error deleting user");
   }
 };

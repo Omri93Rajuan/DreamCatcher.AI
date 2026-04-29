@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/lib/api/apiClient";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import { useTranslation } from "react-i18next";
 
 type FormState = { name: string; email: string; message: string };
@@ -115,11 +116,7 @@ export default function ContactPage() {
         }
       }
 
-      const message =
-        err?.response?.data?.error?.message ||
-        err?.message ||
-        messages.fallback;
-      setError(message);
+      setError(getFriendlyErrorMessage(err, t, "contact"));
     } finally {
       setSubmitting(false);
     }

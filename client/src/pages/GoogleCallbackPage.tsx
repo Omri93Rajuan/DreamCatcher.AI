@@ -14,12 +14,11 @@ export default function GoogleCallbackPage() {
   const [message, setMessage] = useState(t("googleCallback.connecting"));
   const next = useMemo(() => params.get("next") || "/", [params]);
   const initialStatus = params.get("status");
-  const initialMessage = params.get("message");
 
   useEffect(() => {
     if (initialStatus === "error") {
       setStatus("error");
-      setMessage(initialMessage || t("googleCallback.failed"));
+      setMessage(t("googleCallback.failed"));
       return;
     }
     let cancelled = false;
@@ -50,7 +49,7 @@ export default function GoogleCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [initialStatus, initialMessage, navigate, next, setUser, t]);
+  }, [initialStatus, navigate, next, setUser, t]);
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center bg-gradient-to-br from-[#f6f2ff] via-[#fff6ec] to-[#fef5f5] px-4 py-16 dark:from-[#0b0b1a] dark:via-[#141426] dark:to-[#221933]">
