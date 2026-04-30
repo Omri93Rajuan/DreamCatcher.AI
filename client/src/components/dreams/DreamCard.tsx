@@ -152,10 +152,10 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
 
           
           {dreamText && (<div className="mb-3">
-              <div className="text-xs font-medium text-slate-500 dark:text-white/55 mb-1">
+              <div className="text-xs font-medium text-slate-500 dark:text-white/60 mb-1">
                 {t("dreams.card.dream")}
               </div>
-              <p className="text-slate-800 dark:text-white/78 text-sm leading-relaxed">
+              <p className="text-slate-800 dark:text-white/80 text-sm leading-relaxed">
                 {dreamText.slice(0, dreamPreviewLength)}
                 {dreamNeedsMore && "..."}
               </p>
@@ -172,7 +172,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               <div className="p-3 rounded-lg
                               bg-black/5 border border-black/10
                               dark:bg-white/[0.05] dark:border-white/10">
-                <p className="text-slate-800 dark:text-white/78 text-sm leading-relaxed">
+                <p className="text-slate-800 dark:text-white/80 text-sm leading-relaxed">
                   {interpretation.slice(0, interpretationPreviewLength)}
                   {interpretationNeedsMore && "..."}
                 </p>
@@ -198,7 +198,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                             bg-white/90 backdrop-blur-md border-black/10
                             dark:bg-[#12151d]/95 dark:border-white/10">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <Moon className="w-6 h-6 text-slate-600 dark:text-white/65 flex-shrink-0"/>
+                <Moon className="w-6 h-6 text-slate-600 dark:text-white/70 flex-shrink-0"/>
                 <h2 className="font-bold text-2xl text-slate-900 dark:text-white">
                   {title}
                 </h2>
@@ -218,7 +218,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                   {showDate && created && (<div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                                     bg-black/5 border border-black/10
                                     dark:bg-white/[0.06] dark:border-white/10">
-                      <Calendar className="w-4 h-4 text-slate-600 dark:text-white/65"/>
+                      <Calendar className="w-4 h-4 text-slate-600 dark:text-white/70"/>
                       <span className="text-sm text-slate-700 dark:text-white/70">
                         {formatDate(created, i18n.language)}
                       </span>
@@ -244,11 +244,11 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
               <div className="h-px bg-black/10 dark:bg-white/10"/>
 
               {dreamText && (<div>
-                  <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-white/85">
+                  <h3 className="text-base font-semibold mb-3 flex items-center gap-2 text-slate-900 dark:text-white/90">
                     <div className="w-1 h-5 rounded-full bg-[var(--brand)]"/>
                     {t("dreams.card.fullDream")}
                   </h3>
-                  <div className="text-slate-800 dark:text-white/82 text-base leading-relaxed whitespace-pre-wrap">
+                  <div className="text-slate-800 dark:text-white/80 text-base leading-relaxed whitespace-pre-wrap">
                     {dreamText}
                   </div>
                 </div>)}
@@ -261,7 +261,7 @@ export default function DreamCard({ dream, showDate = false, currentUserId, onSh
                   <div className="p-5 rounded-xl
                                   border border-black/10 bg-black/5
                                   dark:bg-white/[0.05] dark:border-white/10">
-                    <p className="text-slate-800 dark:text-white/82 text-base leading-relaxed whitespace-pre-wrap">
+                    <p className="text-slate-800 dark:text-white/80 text-base leading-relaxed whitespace-pre-wrap">
                       {interpretation}
                     </p>
                   </div>

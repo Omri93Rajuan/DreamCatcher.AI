@@ -60,7 +60,7 @@ export default function DreamDetailsPage() {
     <main className="max-w-4xl mx-auto px-4 py-10" dir={i18n.dir()}>
       <article className="rounded-2xl border border-black/10 bg-white/80 p-5 shadow-[0_16px_40px_-30px_rgba(15,23,42,.7)] dark:border-white/10 dark:bg-white/[0.06]">
         <header className="mb-6 border-b border-black/10 pb-5 dark:border-white/10">
-          <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-white/65">
+          <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-600 dark:text-white/70">
             {dateLabel && (
               <span className="inline-flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -78,10 +78,10 @@ export default function DreamDetailsPage() {
         <div className="grid gap-6">
           <section className="rounded-xl border border-black/10 bg-white/70 p-5 dark:border-white/10 dark:bg-white/[0.04]">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-slate-900 dark:text-white">
-              <Moon className="h-5 w-5 text-slate-500 dark:text-white/65" />
+              <Moon className="h-5 w-5 text-slate-500 dark:text-white/70" />
               {t("dreamDetails.dream")}
             </h2>
-            <p className="whitespace-pre-line leading-8 text-slate-800 dark:text-white/82">
+            <p className="whitespace-pre-line leading-8 text-slate-800 dark:text-white/80">
               {data.userInput || "-"}
             </p>
           </section>
@@ -91,7 +91,7 @@ export default function DreamDetailsPage() {
               <Sparkles className="h-5 w-5" />
               {t("dreamDetails.interpretation")}
             </h2>
-            <p className="whitespace-pre-line leading-8 text-slate-800 dark:text-white/85">
+            <p className="whitespace-pre-line leading-8 text-slate-800 dark:text-white/90">
               {data.aiResponse || "-"}
             </p>
           </section>

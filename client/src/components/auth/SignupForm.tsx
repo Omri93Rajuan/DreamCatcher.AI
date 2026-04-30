@@ -288,7 +288,7 @@ export default function SignupForm({ onSuccess }: Props) {
                       : "ring-1 ring-blue-200/70 dark:ring-white/15 bg-white/80 dark:bg-slate-800/70 hover:ring-amber-300 dark:hover:ring-amber-200 hover:shadow-[0_10px_18px_-12px_rgba(251,191,36,0.55)] hover:scale-[1.04] hover:bg-gradient-to-br hover:from-white hover:via-amber-50 hover:to-white dark:hover:from-slate-800 dark:hover:via-slate-700 dark:hover:to-slate-800",
                   ].join(" ")}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400/18 via-transparent to-fuchsia-400/14 opacity-0 group-hover:opacity-100 transition" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400/20 via-transparent to-fuchsia-400/15 opacity-0 group-hover:opacity-100 transition" />
                   <img
                     src={src}
                     alt="avatar option"

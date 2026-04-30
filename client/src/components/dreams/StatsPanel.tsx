@@ -45,7 +45,7 @@ function PeriodToggle({ value, onChange, accent = "#F2C94C", }: {
                     "px-3 py-1.5 text-sm rounded-md transition-colors",
                     active
                         ? "text-slate-900 dark:text-slate-900"
-                        : "text-slate-700 hover:bg-black/5 dark:text-white/80 hover:dark:bg-white/10",
+                        : "text-slate-700 hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/10",
                 ].join(" ")} style={{ background: active ? accent : "transparent" }} aria-pressed={active}>
             {it.label}
           </button>);
