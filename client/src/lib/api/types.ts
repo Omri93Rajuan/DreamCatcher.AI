@@ -54,6 +54,39 @@ export type InterpretResponse = {
 };
 export type DreamCategory = "flying" | "falling" | "being_chased" | "teeth" | "exam" | "late" | "death" | "romance" | "work" | "school" | "family" | "animals" | "water" | "house" | "vehicle" | "travel" | "lost" | "monster" | "paralysis" | "lucid";
 export type CategoryScores = Partial<Record<DreamCategory | string, number>>;
+export type JournalTrend = "up" | "down" | "steady";
+export type JournalCategoryInsight = {
+    category: DreamCategory;
+    count: number;
+    recentCount: number;
+    previousCount: number;
+    share: number;
+    trend: JournalTrend;
+    trendDelta: number;
+};
+export type JournalActivityPoint = {
+    startISO: string;
+    endISO: string;
+    count: number;
+};
+export type SmartJournalInsights = {
+    windowDays: number;
+    sinceISO: string;
+    previousSinceISO: string;
+    totalDreams: number;
+    recentDreams: number;
+    previousDreams: number;
+    activeDays: number;
+    latestDreamAt?: string | null;
+    latestStreakDays: number;
+    longestGapDays: number;
+    topCategories: JournalCategoryInsight[];
+    recurringCategories: JournalCategoryInsight[];
+    risingCategories: JournalCategoryInsight[];
+    weeklyActivity: JournalActivityPoint[];
+    suggestedFocusCategory?: DreamCategory | null;
+    dataQuality: "empty" | "light" | "ready";
+};
 export interface Dream {
     _id: string;
     userId: string;

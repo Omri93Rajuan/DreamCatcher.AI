@@ -93,3 +93,11 @@ export const dreamStatsRequestSchema = z.object({
     })
     .optional(),
 });
+
+export const journalInsightsRequestSchema = z.object({
+  query: z
+    .object({
+      windowDays: z.coerce.number().int().min(7).max(365).optional(),
+    })
+    .optional(),
+});

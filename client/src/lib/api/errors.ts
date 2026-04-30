@@ -7,6 +7,7 @@ type FriendlyErrorContext =
   | "myDreams"
   | "dreamDetails"
   | "deleteDream"
+  | "journal"
   | "popular"
   | "stats"
   | "profileSave"

@@ -1,5 +1,5 @@
 import { api } from "./apiClient";
-import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, } from "./types";
+import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
 const adapt = (raw: any): Dream => ({
     _id: raw?._id ?? raw?.id,
     userId: String(raw?.userId ?? ""),
@@ -254,6 +254,28 @@ export const DreamsApi = {
             uniqueUsers: Number(payload.uniqueUsers ?? 0),
             windowDays: Number(payload.windowDays ?? 7),
             sinceISO: payload.sinceISO,
+        };
+    },
+    getSmartJournalInsights: async (windowDays: number = 30): Promise<SmartJournalInsights> => {
+        const { data } = await api.get("/dreams/journal/insights", { params: { windowDays } });
+        const payload = data?.success ? data : data;
+        return {
+            windowDays: Number(payload.windowDays ?? windowDays),
+            sinceISO: payload.sinceISO,
+            previousSinceISO: payload.previousSinceISO,
+            totalDreams: Number(payload.totalDreams ?? 0),
+            recentDreams: Number(payload.recentDreams ?? 0),
+            previousDreams: Number(payload.previousDreams ?? 0),
+            activeDays: Number(payload.activeDays ?? 0),
+            latestDreamAt: payload.latestDreamAt ?? null,
+            latestStreakDays: Number(payload.latestStreakDays ?? 0),
+            longestGapDays: Number(payload.longestGapDays ?? 0),
+            topCategories: Array.isArray(payload.topCategories) ? payload.topCategories : [],
+            recurringCategories: Array.isArray(payload.recurringCategories) ? payload.recurringCategories : [],
+            risingCategories: Array.isArray(payload.risingCategories) ? payload.risingCategories : [],
+            weeklyActivity: Array.isArray(payload.weeklyActivity) ? payload.weeklyActivity : [],
+            suggestedFocusCategory: payload.suggestedFocusCategory ?? null,
+            dataQuality: payload.dataQuality ?? "empty",
         };
     },
 };

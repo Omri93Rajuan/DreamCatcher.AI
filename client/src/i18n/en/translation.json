@@ -61,6 +61,7 @@
       "myDreams": "Could not update your dreams right now.",
       "dreamDetails": "Could not load this dream right now.",
       "deleteDream": "Could not delete the dream. Please try again.",
+      "journal": "Could not load smart journal insights right now.",
       "popular": "Could not load popular dreams right now.",
       "stats": "Could not load statistics right now.",
       "profileSave": "Could not save your profile. Please try again.",
@@ -232,6 +233,43 @@
     "deleteWarning": "This action cannot be undone.",
     "deleteConfirm": "Delete",
     "flipAria": "Flip card"
+  },
+  "journal": {
+    "badge": "AI insights",
+    "title": "Smart dream journal",
+    "period": "Analyzing the last {{days}} days",
+    "loading": "Analyzing your dream journal...",
+    "errorTitle": "Could not load insights",
+    "emptyTitle": "Your smart journal appears after the first dream",
+    "emptyBody": "After you save a few dreams, we will surface recurring patterns, rising themes, and reflection questions.",
+    "fallbackFocus": "the latest dream",
+    "themeCount": "{{count}} times",
+    "weekCount": "{{count}} dreams",
+    "activity": "Weekly activity",
+    "recurringTitle": "Recurring patterns",
+    "noThemes": "There are not enough categorized dreams yet to identify a clear recurring pattern.",
+    "insightsTitle": "What stands out right now",
+    "promptsTitle": "Reflection prompts",
+    "metrics": {
+      "total": "Total dreams",
+      "recent": "Recent period",
+      "streak": "Latest streak",
+      "activeDays": "Active writing days"
+    },
+    "insights": {
+      "light": "This is a good start. Insights will get sharper after a few more saved dreams.",
+      "topCategory": "The most recurring theme is {{category}}, appearing in {{count}} dreams.",
+      "risingCategory": "{{category}} appears more in the recent period, up by {{delta}} versus the previous period.",
+      "streak": "You logged dreams for {{count}} consecutive days around your latest entry.",
+      "moreActive": "You logged more dreams in the recent period than in the previous one.",
+      "noRecent": "No dreams were added recently. A short journal check-in can help reveal new patterns.",
+      "keepWriting": "Your journal is starting to reveal a rhythm. A few more entries will make the patterns clearer."
+    },
+    "prompts": {
+      "category": "What might {{category}} be pointing to in this period?",
+      "pattern": "Which emotion kept returning, even when the dream story changed?",
+      "nextDream": "Next time I write a dream, what small detail do I want to remember?"
+    }
   },
   "search": {
     "placeholder": "Search dreams...",

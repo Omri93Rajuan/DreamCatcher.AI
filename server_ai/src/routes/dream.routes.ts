@@ -9,6 +9,7 @@ import {
   dreamStatsRequestSchema,
   getDreamRequestSchema,
   interpretDreamRequestSchema,
+  journalInsightsRequestSchema,
   listDreamsRequestSchema,
   updateDreamRequestSchema,
 } from "../validation/dream.zod";
@@ -36,6 +37,12 @@ router.get(
   authenticateLite,
   validate(dreamStatsRequestSchema),
   dreamController.getDreamStats
+);
+router.get(
+  "/journal/insights",
+  authenticate,
+  validate(journalInsightsRequestSchema),
+  dreamController.getSmartJournalInsights
 );
 router.get(
   "/:id([0-9a-fA-F]{24})",

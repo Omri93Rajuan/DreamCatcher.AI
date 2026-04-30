@@ -376,3 +376,37 @@ export const getDreamStats: RequestHandler = async (
     sendDreamError(res, 400, "stats_failed", "Could not load dream statistics.", err, "stats");
   }
 };
+
+export const getSmartJournalInsights: RequestHandler = async (
+  req,
+  res
+): Promise<void> => {
+  try {
+    const { userId } = getAuth(req as AuthRequest);
+    if (!userId) {
+      res.status(401).json({ success: false, error: "auth_required" });
+      return;
+    }
+
+    const windowDays =
+      req.query.windowDays !== undefined
+        ? parseInt(String(req.query.windowDays), 10)
+        : 30;
+
+    const insights = await DreamService.getSmartJournalInsights({
+      userId,
+      windowDays,
+    });
+
+    res.json({ success: true, ...insights });
+  } catch (err: any) {
+    sendDreamError(
+      res,
+      400,
+      "journal_insights_failed",
+      "Could not load smart journal insights.",
+      err,
+      "journalInsights"
+    );
+  }
+};
