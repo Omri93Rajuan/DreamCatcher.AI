@@ -144,7 +144,7 @@ export default function UserMenu() {
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-4 py-3 text-[15px] font-medium hover:bg-black/5 dark:hover:bg-white/10"
             >
-              <User className="w-[18px] h-[18px] text-slate-600 dark:text-white/65" />
+              <User className="w-[18px] h-[18px] text-slate-600 dark:text-white/70" />
               <span>{t("userMenu.profile")}</span>
             </Link>
 

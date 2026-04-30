@@ -59,7 +59,7 @@ export default function SearchInputBalancedGlow({
             className={[
               "w-full bg-transparent outline-none pr-12 pl-12 py-3.5 text-lg",
               "text-slate-900 placeholder:text-slate-400",
-              "dark:text-white dark:placeholder:text-white/45",
+              "dark:text-white dark:placeholder:text-white/50",
               "[appearance:textfield] [&::-webkit-search-cancel-button]:appearance-none",
               "[&::-webkit-search-decoration]:appearance-none [&::-webkit-search-results-button]:appearance-none",
               "[&::-webkit-search-results-decoration]:appearance-none",

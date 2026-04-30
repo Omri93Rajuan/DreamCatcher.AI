@@ -82,7 +82,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
               </span>
             </div>
 
-            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
+            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/90">
                 <Calendar className="w-4 h-4"/>
                 {format(createdAt, "d MMMM yyyy", {
             locale: i18n.language?.startsWith("he") ? he : undefined,
@@ -137,7 +137,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
               </span>
             </div>
 
-            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/85">
+            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/90">
                 <Calendar className="w-4 h-4"/>
                 {format(createdAt, "d MMMM yyyy", {
             locale: i18n.language?.startsWith("he") ? he : undefined,
@@ -258,7 +258,7 @@ export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, body
                 </div>)}
             </div>
 
-            {createdAt && (<div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/85">
+            {createdAt && (<div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/90">
                 <Calendar className="w-4 h-4"/>
                 {format(createdAt, "d MMMM yyyy", {
             locale: i18n.language?.startsWith("he") ? he : undefined,

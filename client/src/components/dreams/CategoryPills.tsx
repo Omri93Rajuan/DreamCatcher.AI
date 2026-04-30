@@ -117,7 +117,7 @@ function AnimatedPill({ children, gradient, active, onClick, i = 0, }: {
              shadow-sm`
                 :
                     `text-slate-800 bg-white/80 border-black/10 hover:bg-black/5
-             dark:text-white/85 dark:bg-white/[0.06] dark:border-white/15 dark:hover:bg-white/10
+             dark:text-white/90 dark:bg-white/[0.06] dark:border-white/15 dark:hover:bg-white/10
              shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]
              after:pointer-events-none after:absolute after:inset-0 after:rounded-lg
              after:opacity-0 group-hover:after:opacity-100 after:transition
