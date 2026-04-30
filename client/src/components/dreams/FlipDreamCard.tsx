@@ -128,19 +128,19 @@ export default function FlipDreamCard({
           </h3>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
-            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/90">
               <Gauge className="w-4 h-4" />
               {nf.format(row.score)}
             </span>
-            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/90">
               <Clock className="w-4 h-4" />
               {windowDaysLabel}
             </span>
-            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/90">
               <Heart className="w-4 h-4" />
               {nf.format(row.likes)}
             </span>
-            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/85">
+            <span className="inline-flex items-center gap-1 text-slate-700 dark:text-white/90">
               <Eye className="w-4 h-4" />
               {nf.format(row.views)}
             </span>
