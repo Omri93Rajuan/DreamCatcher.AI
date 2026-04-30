@@ -3,6 +3,10 @@ import type { TFunction } from "i18next";
 type FriendlyErrorContext =
   | "generic"
   | "interpret"
+  | "dreams"
+  | "myDreams"
+  | "dreamDetails"
+  | "deleteDream"
   | "popular"
   | "stats"
   | "profileSave"

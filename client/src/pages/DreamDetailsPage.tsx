@@ -1,10 +1,12 @@
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Calendar, Moon, Sparkles } from "lucide-react";
+import { Calendar, Moon, Sparkles } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import ReactionsBar from "@/components/dreams/ReactionsBar";
 import { useTranslation } from "react-i18next";
+import StatusCard from "@/components/ui/StatusCard";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 
 function formatDate(date: string | Date | undefined, locale: string) {
   if (!date) return "";
@@ -23,7 +25,7 @@ function formatDate(date: string | Date | undefined, locale: string) {
 export default function DreamDetailsPage() {
   const { t, i18n } = useTranslation();
   const { id } = useParams<{ id: string }>();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dream", id],
     queryFn: () => DreamsApi.getById(id!),
     enabled: !!id,
@@ -46,10 +48,13 @@ export default function DreamDetailsPage() {
   if (error || !data) {
     return (
       <main className="max-w-3xl mx-auto px-4 py-10" dir={i18n.dir()}>
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-rose-800 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
-          <AlertTriangle className="mb-3 h-6 w-6" />
-          <div className="font-semibold">{t("common.notFound")}</div>
-        </div>
+        <StatusCard
+          tone="error"
+          title={t("dreamDetails.errorTitle")}
+          message={error ? getFriendlyErrorMessage(error, t, "dreamDetails") : t("errors.notFound")}
+          actionLabel={t("common.retry")}
+          onAction={() => void refetch()}
+        />
       </main>
     );
   }

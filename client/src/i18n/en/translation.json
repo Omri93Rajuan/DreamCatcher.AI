@@ -57,6 +57,10 @@
     "context": {
       "generic": "Something went wrong. Please try again.",
       "interpret": "Could not interpret the dream right now. Your text is still here, so you can try again.",
+      "dreams": "Could not load dreams right now.",
+      "myDreams": "Could not update your dreams right now.",
+      "dreamDetails": "Could not load this dream right now.",
+      "deleteDream": "Could not delete the dream. Please try again.",
       "popular": "Could not load popular dreams right now.",
       "stats": "Could not load statistics right now.",
       "profileSave": "Could not save your profile. Please try again.",
@@ -321,6 +325,7 @@
     }
   },
   "dreamDetails": {
+    "errorTitle": "Could not open this dream",
     "dream": "The dream:",
     "interpretation": "Interpretation:"
   },

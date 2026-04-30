@@ -1,17 +1,18 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { TrendingUp, AlertTriangle } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import FlipDreamCard, { PopularRowForFlip, } from "@/components/dreams/FlipDreamCard";
 import { useTranslation } from "react-i18next";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
+import StatusCard from "@/components/ui/StatusCard";
 type WindowKind = 7 | 30 | 365;
 export default function PopularDreams() {
     const { t, i18n } = useTranslation();
     const [windowKind, setWindowKind] = React.useState<WindowKind>(30);
     const windowLabel = React.useMemo(() => (windowKind === 7 ? t("popular.period.week") : windowKind === 30 ? t("popular.period.month") : t("popular.period.year")), [windowKind, t]);
-    const { data = [], isLoading, isFetching, error, } = useQuery<PopularRowForFlip[] | any[]>({
+    const { data = [], isLoading, isFetching, error, refetch, } = useQuery<PopularRowForFlip[] | any[]>({
         queryKey: ["popular", windowKind],
         queryFn: () => DreamsApi.getPopular(windowKind),
         staleTime: 60000,
@@ -60,17 +61,7 @@ export default function PopularDreams() {
         </div>
       </div>
 
-      {isLoading ? (<SkeletonGrid />) : error ? (<div className="flex items-center gap-2 rounded-xl p-4 border
-                        text-rose-800 bg-rose-50 border-rose-200
-                        dark:text-rose-300 dark:bg-rose-500/10 dark:border-rose-500/30">
-          <AlertTriangle className="w-5 h-5"/>
-          <div>
-            <div className="font-semibold">{t("popular.errorTitle")}</div>
-            <div className="text-sm opacity-75">{getFriendlyErrorMessage(error, t, "popular")}</div>
-          </div>
-        </div>) : safeRows.length === 0 ? (<div className="text-slate-700 dark:text-white/70">
-          {t("popular.empty")}
-        </div>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading ? (<SkeletonGrid />) : error ? (<StatusCard tone="error" title={t("popular.errorTitle")} message={getFriendlyErrorMessage(error, t, "popular")} actionLabel={t("common.retry")} onAction={() => void refetch()}/>) : safeRows.length === 0 ? (<StatusCard tone="empty" title={t("popular.empty")}/>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {safeRows.map((row, i) => (<motion.div key={`${row.dreamId}-${row.rank}-${i}`} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: i * 0.06 }}>
               <FlipDreamCard row={row} windowDaysLabel={windowLabel}/>
             </motion.div>))}

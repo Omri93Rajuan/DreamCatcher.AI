@@ -7,6 +7,7 @@ import { GlobalDreamStats } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
 import { useInViewOnce } from "@/hooks/useInViewOnce";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
+import StatusCard from "@/components/ui/StatusCard";
 
 const PopularDreams = lazy(() => import("@/components/dreams/PopularDreams"));
 const DreamsPaginated = lazy(() => import("@/components/dreams/DreamsPaginated"));
@@ -31,7 +32,13 @@ export default function HomePage() {
   const shouldLoadPopular = popularSection.isInView;
   const shouldLoadDreams = dreamsSection.isInView;
 
-  const { data, isLoading, isFetching } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam, shouldLoadDreams);
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error: dreamsError,
+    refetch: refetchDreams,
+  } = useDreamsPage(page, PAGE_SIZE, searchQuery, "createdAt", "desc", categoriesParam, shouldLoadDreams);
   const isDreamsLoading = shouldLoadDreams && isLoading;
   const [stats, setStats] = useState<GlobalDreamStats | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
@@ -100,9 +107,14 @@ export default function HomePage() {
 
       <section className="max-w-7xl mx-auto px-4 mb-20">
         {statsError ? (
-          <div className="text-sm text-rose-600 dark:text-rose-300">
-            {t("home.statsError", { message: statsError })}
-          </div>
+          <StatusCard
+            tone="error"
+            compact
+            title={t("common.errorGeneric")}
+            message={t("home.statsError", { message: statsError })}
+            actionLabel={t("common.retry")}
+            onAction={() => setStatsError(null)}
+          />
         ) : stats ? (
           <Suspense fallback={<SectionFallback />}>
             <StatsPanel stats={stats} />
@@ -136,7 +148,9 @@ export default function HomePage() {
               data={data}
               isLoading={isDreamsLoading}
               isFetching={isFetching && shouldLoadDreams}
+              error={dreamsError}
               onPageChange={setPage}
+              onRetry={() => void refetchDreams()}
             />
           </Suspense>
         ) : (

@@ -2,13 +2,17 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import DreamCard from "@/components/dreams/DreamCard";
 import Pagination from "@/components/ui/Pagination";
+import StatusCard from "@/components/ui/StatusCard";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import type { DreamsPage } from "@/lib/api/types";
 
 type Props = {
   data?: DreamsPage;
   isLoading?: boolean;
   isFetching?: boolean;
+  error?: unknown;
   onPageChange: (page: number) => void;
+  onRetry?: () => void;
   view?: "grid" | "list";
 };
 
@@ -16,13 +20,26 @@ export default function DreamsPaginated({
   data,
   isLoading,
   isFetching,
+  error,
   onPageChange,
+  onRetry,
   view = "grid",
 }: Props) {
   const { t, i18n } = useTranslation();
 
   if (isLoading)
-    return <div className="text-center py-12">{t("common.loading")}</div>;
+    return <StatusCard tone="loading" title={t("common.loading")} />;
+
+  if (error)
+    return (
+      <StatusCard
+        tone="error"
+        title={t("common.errorGeneric")}
+        message={getFriendlyErrorMessage(error, t, "dreams")}
+        actionLabel={onRetry ? t("common.retry") : undefined}
+        onAction={onRetry}
+      />
+    );
 
   const dreams = data?.dreams ?? [];
   const pages = data?.pages ?? 1;
@@ -30,9 +47,7 @@ export default function DreamsPaginated({
 
   if (!dreams.length)
     return (
-      <div className="text-center py-8 text-slate-600 dark:text-white/70">
-        {t("myDreams.empty")}
-      </div>
+      <StatusCard tone="empty" title={t("myDreams.empty")} />
     );
 
   return (

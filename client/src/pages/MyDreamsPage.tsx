@@ -8,6 +8,9 @@ import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
 import DreamFlipCardMini from "@/components/dreams/DreamFlipCardMini";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import StatusCard from "@/components/ui/StatusCard";
+import { getFriendlyErrorMessage } from "@/lib/api/errors";
 export default function MyDreams() {
     const { t, i18n } = useTranslation();
     const qc = useQueryClient();
@@ -22,7 +25,7 @@ export default function MyDreams() {
         () => ["my-dreams", userId, page, limit, search] as const,
         [userId, page, limit, search]
     );
-    const { data, isLoading, isFetching } = useQuery<DreamsListResult>({
+    const { data, isLoading, isFetching, error, refetch } = useQuery<DreamsListResult>({
         queryKey,
         enabled: isReady,
         staleTime: 60000,
@@ -52,7 +55,10 @@ export default function MyDreams() {
                 : curr);
             return { prev };
         },
-        onError: (_e, _v, ctx) => ctx?.prev && qc.setQueryData(queryKey, ctx.prev),
+        onError: (e, _v, ctx) => {
+            ctx?.prev && qc.setQueryData(queryKey, ctx.prev);
+            toast.error(getFriendlyErrorMessage(e, t, "myDreams"));
+        },
         onSettled: () => qc.invalidateQueries({ queryKey }),
     });
     const mRemove = useMutation({
@@ -69,9 +75,9 @@ export default function MyDreams() {
                 : curr);
             return { prev };
         },
-        onError: (_e, _v, ctx) => {
+        onError: (e, _v, ctx) => {
             ctx?.prev && qc.setQueryData(queryKey, ctx.prev);
-            alert(t("common.errorGeneric"));
+            toast.error(getFriendlyErrorMessage(e, t, "deleteDream"));
         },
         onSettled: () => qc.invalidateQueries({ queryKey }),
     });
@@ -96,9 +102,7 @@ export default function MyDreams() {
     return (<section dir={i18n.dir()} className="max-w-7xl mx-auto px-4 mb-20">
       <Header q={q} setQ={setQ} onSearch={onSearch} onClear={clearSearch} isFetching={isFetching}/>
 
-      {isLoading ? (<SkeletonGrid />) : dreams.length === 0 ? (<div className="rounded-2xl border border-black/10 bg-white/70 px-6 py-16 text-center text-slate-700 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/70">
-          {t("myDreams.empty")}
-        </div>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {isLoading ? (<SkeletonGrid />) : error ? (<StatusCard tone="error" title={t("common.errorGeneric")} message={getFriendlyErrorMessage(error, t, "myDreams")} actionLabel={t("common.retry")} onAction={() => void refetch()}/>) : dreams.length === 0 ? (<StatusCard tone="empty" title={t("myDreams.empty")}/>) : (<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {dreams.map((d, index) => (<DreamFlipCardMini key={d?._id || `${page}-${index}`} dream={d} onToggleShare={(next) => mToggleShare.mutate({ id: d._id, next })} onDelete={() => mRemove.mutate(d._id)} maxWordsFront={30} maxWordsBack={30}/>))}
         </div>)}
 
