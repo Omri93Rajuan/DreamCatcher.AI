@@ -1,295 +1,279 @@
-﻿import * as React from "react";
+import * as React from "react";
 import { motion } from "framer-motion";
-import { Calendar, Trash2, Share2, X } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import type { Dream } from "@/lib/api/types";
+import {
+  Calendar,
+  FileText,
+  Globe2,
+  Lock,
+  Share2,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import { format } from "date-fns";
 import { he } from "date-fns/locale";
-import ReactionsBar from "@/components/dreams/ReactionsBar";
 import { useTranslation } from "react-i18next";
+import ReactionsBar from "@/components/dreams/ReactionsBar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { Dream } from "@/lib/api/types";
+
 type Props = {
-    dream: Dream;
-    onToggleShare?: (next: boolean) => void;
-    onDelete?: () => void;
-    bodyHeight?: number;
-    maxWordsFront?: number;
-    maxWordsBack?: number;
-    showReactions?: boolean;
-    reactionsVariant?: "default" | "compact";
+  dream: Dream;
+  onToggleShare?: (next: boolean) => void;
+  onDelete?: () => void;
+  bodyHeight?: number;
+  maxWordsFront?: number;
+  maxWordsBack?: number;
+  showReactions?: boolean;
+  reactionsVariant?: "default" | "compact";
 };
+
 const truncateWords = (text: string, maxWords: number) => {
-    if (!text)
-        return "";
-    const words = text.trim().split(/\s+/);
-    if (words.length <= maxWords)
-        return text;
-    return words.slice(0, maxWords).join(" ") + "...";
+  if (!text) return "";
+  const words = text.trim().split(/\s+/);
+  if (words.length <= maxWords) return text;
+  return `${words.slice(0, maxWords).join(" ")}...`;
 };
-export default function DreamFlipCardMini({ dream, onToggleShare, onDelete, bodyHeight = 220, maxWordsFront = 55, maxWordsBack = 70, showReactions = true, reactionsVariant = "default", }: Props) {
-    const { t, i18n } = useTranslation();
-    const [flipped, setFlipped] = React.useState(false);
-    const [confirmOpen, setConfirmOpen] = React.useState(false);
-    const [fullOpen, setFullOpen] = React.useState<null | "dream" | "solution">(null);
-    const title = (dream?.title ?? t("dreams.untitled")) as string;
-    const dreamText = (dream as any)?.userInput ?? (dream as any)?.text ?? "";
-    const solution = (dream as any)?.aiResponse ?? (dream as any)?.interpretation ?? "";
-    const createdAt = dream?.createdAt ? new Date(dream.createdAt) : null;
-    const isShared = !!(dream as any)?.isShared;
-    const dreamId = dream?._id as string | undefined;
-    const frontTrunc = truncateWords(dreamText, maxWordsFront);
-    const backTrunc = truncateWords(solution, maxWordsBack);
-    const frontOver = dreamText && dreamText.trim().split(/\s+/).length > maxWordsFront;
-    const backOver = solution && solution.trim().split(/\s+/).length > maxWordsBack;
-    return (<motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="group relative rounded-2xl overflow-visible">
-      
-      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-amber-400 blur-lg opacity-0 group-hover:opacity-25 transition-all duration-500 pointer-events-none"/>
 
-      
-      <Card className="
-          relative rounded-2xl overflow-hidden
-          border bg-white/85 border-black/10 backdrop-blur-sm
-          shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)]
-          dark:bg-white/[0.10] dark:border-white/15 dark:backdrop-blur-md
-          dark:shadow-[0_8px_24px_-16px_rgba(0,0,0,.45)]
-        ">
-        
-        <div className="relative w-full [transform-style:preserve-3d] cursor-pointer" style={{
-            height: bodyHeight,
-            perspective: 1200,
-            transition: "transform .6s cubic-bezier(.22,.61,.36,1)",
-            transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-        }} dir={i18n.dir()} onClick={() => setFlipped((f) => !f)} onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setFlipped((f) => !f);
-            }
-        }} role="button" tabIndex={0} aria-pressed={flipped} aria-label={t("myDreams.flipAria", { defaultValue: "Flip card" })}>
-          
-          <CardContent className="
-              absolute inset-0 p-5
-              [backface-visibility:hidden]
-              bg-white/60 dark:bg-white/10
-              selection:bg-amber-200 selection:text-slate-900
-              dark:selection:bg-amber-300/30 dark:selection:text-white
-            ">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg truncate text-slate-900 dark:text-white">
-                {title}
-              </h3>
-              <span className={[
-            "px-2 py-1 rounded-md text-[11px]",
-            isShared
-                ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
-                : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
-        ].join(" ")}>
+export default function DreamFlipCardMini({
+  dream,
+  onToggleShare,
+  onDelete,
+  bodyHeight = 250,
+  maxWordsFront = 42,
+  maxWordsBack = 48,
+  showReactions = true,
+}: Props) {
+  const { t, i18n } = useTranslation();
+  const [activeView, setActiveView] = React.useState<"dream" | "ai">("dream");
+  const [confirmOpen, setConfirmOpen] = React.useState(false);
+  const [fullOpen, setFullOpen] = React.useState<null | "dream" | "solution">(
+    null
+  );
+
+  const title = (dream?.title ?? t("dreams.untitled")) as string;
+  const dreamText = (dream as any)?.userInput ?? (dream as any)?.text ?? "";
+  const solution =
+    (dream as any)?.aiResponse ?? (dream as any)?.interpretation ?? "";
+  const createdAt = dream?.createdAt ? new Date(dream.createdAt) : null;
+  const isShared = !!(dream as any)?.isShared;
+  const dreamId = dream?._id as string | undefined;
+
+  const isDreamView = activeView === "dream";
+  const content = isDreamView ? dreamText : solution;
+  const contentType = isDreamView ? "dream" : "solution";
+  const maxWords = isDreamView ? maxWordsFront : maxWordsBack;
+  const truncated = truncateWords(content, maxWords);
+  const isOverLimit = content.trim().split(/\s+/).filter(Boolean).length > maxWords;
+  const locale = i18n.language?.startsWith("he") ? he : undefined;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.22 }}
+      className="h-full"
+      dir={i18n.dir()}
+    >
+      <Card className="flex h-full flex-col overflow-hidden rounded-xl border border-black/10 bg-white/88 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-white/[0.06]">
+        <CardContent className="flex flex-1 flex-col p-0">
+          <header className="border-b border-black/10 px-4 py-4 dark:border-white/10">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate text-lg font-extrabold leading-7 text-slate-950 dark:text-white">
+                  {title}
+                </h3>
+                {createdAt && (
+                  <div className="mt-1 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/55">
+                    <Calendar className="h-4 w-4" />
+                    {format(createdAt, "d MMMM yyyy", { locale })}
+                  </div>
+                )}
+              </div>
+
+              <span
+                className={[
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+                  isShared
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
+                    : "border-slate-500/15 bg-slate-500/10 text-slate-600 dark:text-white/60",
+                ].join(" ")}
+              >
+                {isShared ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
                 {isShared ? t("myDreams.shared") : t("myDreams.private")}
               </span>
             </div>
 
-            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/90">
-                <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", {
-            locale: i18n.language?.startsWith("he") ? he : undefined,
-        })}
-              </div>)}
-
-            <div className="mt-3 h-full">
-              <h4 className="font-semibold mb-1 text-amber-800 dark:text-amber-300">
+            <div className="grid grid-cols-2 rounded-lg border border-black/10 bg-slate-100/80 p-1 text-sm dark:border-white/10 dark:bg-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => setActiveView("dream")}
+                className={[
+                  "inline-flex h-9 items-center justify-center gap-2 rounded-md font-semibold transition",
+                  isDreamView
+                    ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
+                    : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
+                ].join(" ")}
+              >
+                <FileText className="h-4 w-4" />
                 {t("dreams.card.dream")}
-              </h4>
-              <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white">
-                {frontTrunc}
-              </p>
-            </div>
-
-            {frontOver && (<button onClick={(e) => {
-                e.stopPropagation();
-                setFullOpen("dream");
-            }} className="
-                  absolute bottom-2 left-1/2 -translate-x-1/2
-                  text-[11px] px-2 py-1 rounded-full
-                  bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
-                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
-                ">
-                {t("myDreams.more")}
-              </button>)}
-
-            <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
-              {t("myDreams.flip")}
-            </div>
-          </CardContent>
-
-          
-          <CardContent className="
-              absolute inset-0 p-5
-              [backface-visibility:hidden] [transform:rotateY(180deg)]
-              bg-white/60 dark:bg-white/10
-              selection:bg-amber-200 selection:text-slate-900
-              dark:selection:bg-amber-300/30 dark:selection:text-white
-            ">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bold text-lg truncate text-slate-900 dark:text-white">
-                {title}
-              </h3>
-              <span className={[
-            "px-2 py-1 rounded-md text-[11px]",
-            isShared
-                ? "bg-emerald-600/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200"
-                : "bg-black/5 text-slate-700 dark:bg-white/10 dark:text-white/70",
-        ].join(" ")}>
-                {isShared ? t("myDreams.shared") : t("myDreams.private")}
-              </span>
-            </div>
-
-            {createdAt && (<div className="mt-1 text-sm flex items-center gap-2 text-slate-700 dark:text-white/90">
-                <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", {
-            locale: i18n.language?.startsWith("he") ? he : undefined,
-        })}
-              </div>)}
-
-            <div className="mt-3 h-full">
-              <h4 className="font-semibold mb-1 text-rose-800 dark:text-rose-300">
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("ai")}
+                className={[
+                  "inline-flex h-9 items-center justify-center gap-2 rounded-md font-semibold transition",
+                  !isDreamView
+                    ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
+                    : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
+                ].join(" ")}
+              >
+                <Sparkles className="h-4 w-4" />
                 {t("dreams.card.ai")}
-              </h4>
-              <p className="leading-relaxed whitespace-pre-line line-clamp-6 text-slate-900 dark:text-white/90">
-                {backTrunc || "-"}
-              </p>
+              </button>
             </div>
+          </header>
 
-            {backOver && (<button onClick={(e) => {
-                e.stopPropagation();
-                setFullOpen("solution");
-            }} className="
-                  absolute bottom-2 left-1/2 -translate-x-1/2
-                  text-[11px] px-2 py-1 rounded-full
-                  bg-black/10 hover:bg-black/15 text-slate-900 border border-black/15
-                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white dark:border-white/20
-                ">
+          <section
+            className="flex flex-1 flex-col px-4 py-4"
+            style={{ minHeight: bodyHeight }}
+          >
+            <p className="line-clamp-7 whitespace-pre-line text-sm leading-7 text-slate-700 dark:text-white/72">
+              {truncated || "-"}
+            </p>
+
+            {isOverLimit && (
+              <button
+                type="button"
+                onClick={() => setFullOpen(contentType)}
+                className="mt-3 self-start text-sm font-semibold text-amber-700 underline-offset-4 hover:underline dark:text-amber-300"
+              >
                 {t("myDreams.more")}
-              </button>)}
+              </button>
+            )}
+          </section>
 
-            <div className="absolute bottom-3 left-4 text-sm text-amber-700 dark:text-amber-300">
-              {t("myDreams.flipBack")}
-            </div>
-          </CardContent>
-        </div>
+          <footer className="mt-auto flex flex-col gap-3 border-t border-black/10 px-4 py-3 dark:border-white/10">
+            {showReactions && dreamId && (
+              <ReactionsBar
+                dreamId={dreamId}
+                className="text-slate-500 dark:text-white/60"
+              />
+            )}
 
-        
-        <CardContent className="
-            pt-4 pb-5 flex items-center justify-between gap-3
-            border-t border-black/10 dark:border-white/15
-          " dir="rtl">
-          
-          {showReactions && dreamId && (<div className="min-w-0">
-              
-              <ReactionsBar dreamId={dreamId}/>
-            </div>)}
-
-          
-          <div className="flex items-center gap-2">
-            {onToggleShare && (<Button onClick={() => onToggleShare(!isShared)} title={isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")} className="
-                  inline-flex items-center gap-2
-                  bg-black/10 hover:bg-black/15 text-slate-900
-                  dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
-                " variant="ghost">
-                <Share2 className="w-4 h-4"/>
-                {isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")}
-              </Button>)}
-
-            {onDelete && (<>
-                <Button size="sm" onClick={() => setConfirmOpen(true)} title={t("myDreams.delete")} className="
-                    bg-black/10 hover:bg-black/15 text-slate-900
-                    dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
-                  " variant="ghost">
-                  <Trash2 className="w-4 h-4"/>
+            <div className="flex items-center justify-between gap-2">
+              {onToggleShare && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onToggleShare(!isShared)}
+                  title={
+                    isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")
+                  }
+                  className="gap-2"
+                >
+                  <Share2 className="h-4 w-4" />
+                  {isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")}
                 </Button>
+              )}
 
-                {confirmOpen && (<div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-                    <div className="
-                        w-full max-w-sm rounded-2xl p-6
-                        bg-white/95 border border-rose-500/25 text-slate-900 shadow-xl
-                        dark:bg-white/[0.10] dark:text-white dark:border-rose-500/30
-                      ">
-                      <h2 className="text-xl font-bold mb-3 text-rose-700 dark:text-rose-300">
-                        {t("myDreams.deleteTitle")}
-                      </h2>
-                      <p className="text-slate-600 dark:text-white/70 mb-6 text-sm">
-                        {t("myDreams.deleteWarning")}
-                      </p>
-                      <div className="flex justify-end gap-3">
-                        <Button variant="outline" onClick={() => setConfirmOpen(false)} className="
-                            border-black/15 text-slate-800
-                            dark:border-white/20 dark:text-white
-                          ">
-                          {t("common.cancel")}
-                        </Button>
-                        <Button onClick={() => {
-                    setConfirmOpen(false);
-                    setTimeout(() => onDelete?.(), 100);
-                }} className="bg-rose-600 hover:bg-rose-700 text-white">
-                          {t("myDreams.deleteConfirm")}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>)}
-              </>)}
-          </div>
+              {onDelete && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setConfirmOpen(true)}
+                  title={t("myDreams.delete")}
+                  className="text-rose-600 hover:bg-rose-500/10 dark:text-rose-300"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </footer>
         </CardContent>
       </Card>
 
-      
-      {fullOpen && (<div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[70] flex items-center justify-center p-4" onClick={() => setFullOpen(null)}>
-          <div className="
-              relative w-full max-w-2xl max-h-[80vh] overflow-auto rounded-2xl p-6
-              bg-white/90 border border-black/10 text-slate-900
-              dark:bg-white/[0.10] dark:border-white/15 dark:text-white
-              selection:bg-amber-200 selection:text-slate-900
-              dark:selection:bg-amber-300/30 dark:selection:text-white
-            " onClick={(e) => e.stopPropagation()} dir={i18n.dir()}>
-            <button onClick={() => setFullOpen(null)} className="
-                absolute left-3 top-3 p-1.5 rounded-md
-                bg-black/10 hover:bg-black/15 text-slate-900
-                dark:bg-white/15 dark:hover:bg-white/20 dark:text-white
-              " aria-label={t("common.close")}>
-              <X className="w-4 h-4"/>
+      {confirmOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-xl border border-black/10 bg-white p-6 text-slate-900 shadow-xl dark:border-rose-500/25 dark:bg-slate-950 dark:text-white">
+            <h2 className="mb-3 text-xl font-bold text-rose-700 dark:text-rose-300">
+              {t("myDreams.deleteTitle")}
+            </h2>
+            <p className="mb-6 text-sm leading-6 text-slate-600 dark:text-white/70">
+              {t("myDreams.deleteWarning")}
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                onClick={() => {
+                  setConfirmOpen(false);
+                  setTimeout(() => onDelete?.(), 100);
+                }}
+                className="bg-rose-600 text-white hover:bg-rose-700"
+              >
+                {t("myDreams.deleteConfirm")}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {fullOpen && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          onClick={() => setFullOpen(null)}
+        >
+          <div
+            className="relative max-h-[82vh] w-full max-w-2xl overflow-auto rounded-xl border border-black/10 bg-white p-6 text-slate-900 shadow-xl dark:border-white/10 dark:bg-slate-950 dark:text-white"
+            onClick={(e) => e.stopPropagation()}
+            dir={i18n.dir()}
+          >
+            <button
+              type="button"
+              onClick={() => setFullOpen(null)}
+              className="absolute left-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-black/5 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/10 dark:hover:text-white"
+              aria-label={t("common.close")}
+            >
+              <X className="h-4 w-4" />
             </button>
 
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h3 className="text-2xl font-extrabold">{title}</h3>
-              {showReactions && dreamId && (<div className="pt-1">
-                  <ReactionsBar dreamId={dreamId}/>
-                </div>)}
+            <div className="mb-5 pe-10">
+              <h3 className="text-2xl font-extrabold leading-tight">{title}</h3>
+              {createdAt && (
+                <div className="mt-2 flex items-center gap-2 text-sm text-slate-500 dark:text-white/60">
+                  <Calendar className="h-4 w-4" />
+                  {format(createdAt, "d MMMM yyyy", { locale })}
+                </div>
+              )}
             </div>
 
-            {createdAt && (<div className="text-sm mb-4 flex items-center gap-2 text-slate-700 dark:text-white/90">
-                <Calendar className="w-4 h-4"/>
-                {format(createdAt, "d MMMM yyyy", {
-            locale: i18n.language?.startsWith("he") ? he : undefined,
-        })}
-              </div>)}
-
             <div className="space-y-6">
-              <section id="dreamFull">
-                <h4 className="font-semibold mb-2 text-amber-800 dark:text-amber-300">
+              <section>
+                <h4 className="mb-2 flex items-center gap-2 font-bold text-slate-950 dark:text-white">
+                  <FileText className="h-4 w-4 text-amber-600 dark:text-amber-300" />
                   {t("dreams.card.dream")}
                 </h4>
-                <p className="leading-relaxed whitespace-pre-line">
+                <p className="whitespace-pre-line text-sm leading-8 text-slate-700 dark:text-white/75">
                   {dreamText || "-"}
                 </p>
               </section>
 
-              <section id="solutionFull">
-                <h4 className="font-semibold mb-2 text-rose-800 dark:text-rose-300">
+              <section>
+                <h4 className="mb-2 flex items-center gap-2 font-bold text-slate-950 dark:text-white">
+                  <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-300" />
                   {t("dreams.card.ai")}
                 </h4>
-                <p className="leading-relaxed whitespace-pre-line">
+                <p className="whitespace-pre-line text-sm leading-8 text-slate-700 dark:text-white/75">
                   {solution || "-"}
                 </p>
               </section>
             </div>
           </div>
-        </div>)}
-    </motion.div>);
+        </div>
+      )}
+    </motion.article>
+  );
 }
