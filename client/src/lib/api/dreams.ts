@@ -1,5 +1,10 @@
 import { api } from "./apiClient";
 import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
+type ApiRecord = Record<string, unknown>;
+const asRecord = (value: unknown): ApiRecord =>
+    value && typeof value === "object" && !Array.isArray(value)
+        ? (value as ApiRecord)
+        : {};
 const asStringArray = (value: unknown): string[] | undefined => {
     if (!Array.isArray(value))
         return undefined;
@@ -27,24 +32,29 @@ const asKeySymbols = (value: unknown): Dream["keySymbols"] => {
         .filter(Boolean) as NonNullable<Dream["keySymbols"]>;
     return arr.length ? arr : undefined;
 };
-const adapt = (raw: any): Dream => ({
-    _id: raw?._id ?? raw?.id,
-    userId: String(raw?.userId ?? ""),
-    title: raw?.title ?? "",
-    userInput: raw?.userInput ?? raw?.text ?? "",
-    aiResponse: raw?.aiResponse ?? raw?.interpretation ?? "",
-    insights: asStringArray(raw?.insights),
-    keySymbols: asKeySymbols(raw?.keySymbols ?? raw?.symbols),
-    emotions: asStringArray(raw?.emotions),
-    isShared: Boolean(raw?.isShared),
-    sharedAt: raw?.sharedAt ?? null,
-    categories: Array.isArray(raw?.categories) ? raw.categories : undefined,
-    categoryScores: raw?.categoryScores && typeof raw.categoryScores === "object"
-        ? raw.categoryScores
-        : undefined,
-    createdAt: raw?.createdAt ?? "",
-    updatedAt: raw?.updatedAt ?? "",
-});
+const asCategoryScores = (value: unknown): Dream["categoryScores"] =>
+    value && typeof value === "object" && !Array.isArray(value)
+        ? (value as Dream["categoryScores"])
+        : undefined;
+const adapt = (rawInput: unknown): Dream => {
+    const raw = asRecord(rawInput);
+    return {
+        _id: String(raw._id ?? raw.id ?? ""),
+        userId: String(raw.userId ?? ""),
+        title: String(raw.title ?? ""),
+        userInput: String(raw.userInput ?? raw.text ?? ""),
+        aiResponse: String(raw.aiResponse ?? raw.interpretation ?? ""),
+        insights: asStringArray(raw.insights),
+        keySymbols: asKeySymbols(raw.keySymbols ?? raw.symbols),
+        emotions: asStringArray(raw.emotions),
+        isShared: Boolean(raw.isShared),
+        sharedAt: typeof raw.sharedAt === "string" ? raw.sharedAt : null,
+        categories: asStringArray(raw.categories) as Dream["categories"],
+        categoryScores: asCategoryScores(raw.categoryScores),
+        createdAt: String(raw.createdAt ?? ""),
+        updatedAt: String(raw.updatedAt ?? ""),
+    };
+};
 type ListParams = {
     page?: number;
     limit?: number;
@@ -62,6 +72,10 @@ type ListParams = {
 function toPosInt(v: unknown, fallback: number) {
     const n = typeof v === "string" ? parseInt(v, 10) : typeof v === "number" ? v : NaN;
     return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
+}
+function toOptionalPosInt(v: unknown) {
+    const n = typeof v === "string" ? parseInt(v, 10) : typeof v === "number" ? v : NaN;
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
 }
 function asAuthError(err: any) {
     if ([401, 403].includes(err?.response?.status)) {
@@ -98,7 +112,7 @@ function parseListResponse(data: any): DreamsPage {
             total: toPosInt(payload.total, payload.dreams.length),
             page: toPosInt(payload.page, 1),
             pages: toPosInt(payload.pages, 1),
-            limit: toPosInt(payload.limit, undefined as any),
+            limit: toOptionalPosInt(payload.limit),
             hasNext: typeof payload.hasNext === "boolean" ? payload.hasNext : undefined,
             hasPrev: typeof payload.hasPrev === "boolean" ? payload.hasPrev : undefined,
         };

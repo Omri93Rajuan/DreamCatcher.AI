@@ -1,8 +1,6 @@
 import { DreamCategory } from "../types/categories.interface";
-export type DreamSymbolInsight = {
-  symbol: string;
-  meaning: string;
-};
+import type { DreamSymbolInsight } from "../types/dreamAnalysis.interface";
+export type { DreamSymbolInsight };
 export type LLMResult = {
   title?: string;
   interpretation: string;

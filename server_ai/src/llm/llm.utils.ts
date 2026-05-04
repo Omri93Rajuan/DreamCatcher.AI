@@ -7,7 +7,7 @@ export function stripFences(s: string): string {
   if (lower.startsWith("json")) return trimmed.slice(4).trim();
   return trimmed;
 }
-export function tryParseJsonLike(s: string): any | null {
+export function tryParseJsonLike(s: string): unknown | null {
   if (!s) return null;
   const t = s.trim().replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
   if (t.startsWith("{") && t.endsWith("}")) {

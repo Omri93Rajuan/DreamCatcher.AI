@@ -3,7 +3,7 @@ import { getLLMProvider } from "../llm";
 import { LLMOptions } from "../llm/llm.types";
 import { Dream } from "../models/dream";
 import { DREAM_CATEGORIES, DreamCategory } from "../types/categories.interface";
-import type { DreamSymbolInsight } from "../types/dream.interface";
+import type { DreamSymbolInsight } from "../types/dreamAnalysis.interface";
 
 type SortOrder = "asc" | "desc";
 
@@ -63,6 +63,19 @@ export interface SmartJournalInsights {
   suggestedFocusCategory?: DreamCategory | null;
   dataQuality: "empty" | "light" | "ready";
 }
+
+export type UpdateDreamPatch = Partial<{
+  title: string;
+  userInput: string;
+  aiResponse: string;
+  insights: string[];
+  keySymbols: DreamSymbolInsight[];
+  emotions: string[];
+  isShared: boolean;
+  categories: DreamCategory[];
+  categoryScores: Record<string, number>;
+  sharedAt: Date | null;
+}>;
 
 const DEFAULT_TITLE = "Untitled dream";
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -246,19 +259,9 @@ export const createDreamWithAI = async (
 
 export const updateDream = async (
   id: string,
-  data: Partial<{
-    title: string;
-    userInput: string;
-    aiResponse: string;
-    insights: string[];
-    keySymbols: DreamSymbolInsight[];
-    emotions: string[];
-    isShared: boolean;
-    categories: DreamCategory[];
-    categoryScores: Record<string, number>;
-  }>
+  data: UpdateDreamPatch
 ) => {
-  const patch: any = { ...data };
+  const patch: UpdateDreamPatch = { ...data };
   if (typeof data.isShared === "boolean") {
     patch.sharedAt = data.isShared ? new Date() : null;
   }

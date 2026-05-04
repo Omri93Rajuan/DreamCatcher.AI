@@ -1,11 +1,36 @@
 import { DREAM_CATEGORIES } from "../types/categories.interface";
+import { z } from "zod";
+import { LLMOptions, LLMProvider, LLMResult } from "./llm.types";
 import {
-  DreamSymbolInsight,
-  LLMOptions,
-  LLMProvider,
-  LLMResult,
-} from "./llm.types";
+  DREAM_ANALYSIS_LIMITS,
+  normalizeKeySymbols,
+  normalizeStringList,
+} from "../utils/dreamAnalysis";
 import { sleep, stripFences, tryParseJsonLike } from "./llm.utils";
+
+const parsedPayloadSchema = z
+  .object({
+    title: z.string().optional(),
+    interpretation: z.string().optional(),
+    insights: z.unknown().optional(),
+    keySymbols: z.unknown().optional(),
+    symbols: z.unknown().optional(),
+    centralSymbols: z.unknown().optional(),
+    emotions: z.unknown().optional(),
+    categories: z.unknown().optional(),
+    categoryScores: z.unknown().optional(),
+  })
+  .passthrough();
+
+type ParsedLLMPayload = z.infer<typeof parsedPayloadSchema>;
+
+type OpenRouterChatResponse = {
+  choices?: Array<{
+    message?: {
+      content?: unknown;
+    };
+  }>;
+};
 export type OpenRouterProviderConfig = {
   apiKey: string;
   models?: string[];
@@ -52,6 +77,7 @@ export class OpenRouterProvider implements LLMProvider {
   ): Promise<LLMResult> {
     const controller = new AbortController();
     const to = setTimeout(() => controller.abort(), this.timeoutMs);
+    to.unref?.();
     const models = options?.modelOverride
       ? [options.modelOverride, ...this.models]
       : this.models;
@@ -157,12 +183,14 @@ export class OpenRouterProvider implements LLMProvider {
       err.status = resp.status;
       throw err;
     }
-    const data: any = await resp.json();
+    const data = (await resp.json()) as OpenRouterChatResponse;
     const raw = data?.choices?.[0]?.message?.content ?? "";
-    if (!raw) throw new Error("LLM response missing content");
+    if (typeof raw !== "string" || !raw.trim()) {
+      throw new Error("LLM response missing content");
+    }
     const cleaned = stripFences(raw);
-    let parsed = tryParseJsonLike(cleaned);
-    if (!parsed) {
+    let parsedPayload = parseLLMPayload(tryParseJsonLike(cleaned));
+    if (!parsedPayload) {
       const titleMatch =
         cleaned.match(/"(?:title|כותרת)"\s*:\s*"([^"]+)"/i) ||
         cleaned.match(/(?:כותרת|Title)[:\-]?\s*(.*)/i);
@@ -189,29 +217,38 @@ export class OpenRouterProvider implements LLMProvider {
             .filter(Boolean);
         }
       }
-      parsed = {
+      parsedPayload = {
         title: titleMatch?.[1]?.trim(),
         interpretation: (interpMatch?.[1] ?? cleaned).trim(),
         categories: cats,
       };
     }
-    const title = (parsed.title as string | undefined)?.trim();
-    const interpretation = (
-      parsed.interpretation as string | undefined
-    )?.trim();
-    const insights = normalizeStringArray(parsed.insights, 4, 220);
-    const keySymbols = normalizeKeySymbols(
-      parsed.keySymbols ?? parsed.symbols ?? parsed.centralSymbols
+    const title = parsedPayload.title?.trim();
+    const interpretation = parsedPayload.interpretation?.trim();
+    const insights = normalizeStringList(
+      parsedPayload.insights,
+      DREAM_ANALYSIS_LIMITS.insights
     );
-    const emotions = normalizeStringArray(parsed.emotions, 6, 60);
+    const keySymbols = normalizeKeySymbols(
+      parsedPayload.keySymbols ??
+        parsedPayload.symbols ??
+        parsedPayload.centralSymbols
+    );
+    const emotions = normalizeStringList(
+      parsedPayload.emotions,
+      DREAM_ANALYSIS_LIMITS.llmEmotions
+    );
     const allowed = new Set<string>(DREAM_CATEGORIES);
-    const rawCats = Array.isArray(parsed.categories) ? parsed.categories : [];
+    const rawCats = Array.isArray(parsedPayload.categories)
+      ? parsedPayload.categories
+      : [];
     const categories: DreamCategory[] = uniqueStrings(
       rawCats.map((c) => String(c || "").trim()).filter((c) => allowed.has(c))
     ).slice(0, 4) as DreamCategory[];
     const rawScores =
-      parsed.categoryScores && typeof parsed.categoryScores === "object"
-        ? (parsed.categoryScores as Record<string, unknown>)
+      parsedPayload.categoryScores &&
+      typeof parsedPayload.categoryScores === "object"
+        ? (parsedPayload.categoryScores as Record<string, unknown>)
         : undefined;
     const categoryScores = rawScores
       ? Object.fromEntries(
@@ -247,48 +284,7 @@ function uniqueStrings(arr: string[]) {
   }
   return out;
 }
-function normalizeStringArray(
-  input: unknown,
-  maxItems: number,
-  maxLength: number
-) {
-  const arr = Array.isArray(input) ? input : [];
-  return uniqueStrings(
-    arr
-      .map((item) =>
-        String(item ?? "")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, maxLength)
-      )
-      .filter(Boolean)
-  ).slice(0, maxItems);
-}
-function normalizeKeySymbols(input: unknown): DreamSymbolInsight[] {
-  const arr = Array.isArray(input) ? input : [];
-  const out: DreamSymbolInsight[] = [];
-  for (const item of arr) {
-    if (typeof item === "string") {
-      const symbol = item.replace(/\s+/g, " ").trim().slice(0, 80);
-      if (symbol && !out.some((existing) => existing.symbol === symbol)) {
-        out.push({ symbol, meaning: "" });
-      }
-      continue;
-    }
-    if (!item || typeof item !== "object") continue;
-    const raw = item as Record<string, unknown>;
-    const symbol = String(raw.symbol ?? raw.name ?? raw.title ?? "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 80);
-    const meaning = String(raw.meaning ?? raw.description ?? raw.insight ?? "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 240);
-    if (symbol && !out.some((existing) => existing.symbol === symbol)) {
-      out.push({ symbol, meaning });
-    }
-    if (out.length >= 5) break;
-  }
-  return out.slice(0, 5);
+function parseLLMPayload(input: unknown): ParsedLLMPayload | null {
+  const parsed = parsedPayloadSchema.safeParse(input);
+  return parsed.success ? parsed.data : null;
 }
