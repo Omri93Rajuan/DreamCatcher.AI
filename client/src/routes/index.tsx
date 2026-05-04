@@ -1,7 +1,7 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
 import { createBrowserRouter } from "react-router-dom";
 import Layout from "@/layout/layout";
-import { ProtectedRoute } from "./protected";
+import { AdminRoute, ProtectedRoute } from "./protected";
 
 const HomePage = lazy(() => import("@/pages/HomePage"));
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -16,6 +16,7 @@ const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const TermsPage = lazy(() => import("@/pages/TermsPage"));
 const PrivacyPage = lazy(() => import("@/pages/PrivacyPage"));
+const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const NotFoundPage = lazy(() => import("@/pages/NotFoundPage"));
 
 function PageShell({ children }: { children: ReactNode }) {
@@ -43,6 +44,15 @@ function routeElement(Page: ComponentType, protectedRoute = false) {
   );
 }
 
+function adminRouteElement(Page: ComponentType) {
+  const page = <Page />;
+  return (
+    <PageShell>
+      <AdminRoute>{page}</AdminRoute>
+    </PageShell>
+  );
+}
+
 export const router = createBrowserRouter([
   { path: "/", element: routeElement(HomePage) },
   { path: "/login", element: routeElement(LoginPage) },
@@ -57,5 +67,6 @@ export const router = createBrowserRouter([
   { path: "/forgot-password", element: routeElement(ForgotPasswordPage) },
   { path: "/terms", element: routeElement(TermsPage) },
   { path: "/privacy", element: routeElement(PrivacyPage) },
+  { path: "/admin", element: adminRouteElement(AdminPage) },
   { path: "*", element: routeElement(NotFoundPage) },
 ]);

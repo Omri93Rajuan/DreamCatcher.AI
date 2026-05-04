@@ -1,7 +1,7 @@
 "use client";
 import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LogOut, User, NotebookPen, ShieldCheck } from "lucide-react";
+import { LogOut, User, NotebookPen, ShieldCheck, LayoutDashboard } from "lucide-react";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
 import AvatarChip from "./AvatarChip";
@@ -51,6 +51,10 @@ export default function UserMenu() {
     user.email?.split("@")[0] ||
     t("userMenu.fallbackName");
   const email = user.email || "";
+  const isAdmin = user.role === "admin";
+  const adminLabel = t("layout.nav.admin", {
+    defaultValue: i18n.language?.startsWith("he") ? "ניהול" : "Admin",
+  });
 
   const handleLogout = async () => {
     try {
@@ -156,6 +160,17 @@ export default function UserMenu() {
               <NotebookPen className="w-[18px] h-[18px] text-amber-600 dark:text-amber-300" />
               <span>{t("userMenu.myDreams")}</span>
             </Link>
+
+            {isAdmin && (
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 text-[15px] font-semibold text-emerald-700 hover:bg-emerald-50 dark:text-emerald-200 dark:hover:bg-emerald-900/20"
+              >
+                <LayoutDashboard className="w-[18px] h-[18px]" />
+                <span>{adminLabel}</span>
+              </Link>
+            )}
 
             <div className="my-1 h-px bg-black/10 dark:bg-white/10" />
 
