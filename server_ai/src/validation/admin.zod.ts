@@ -25,6 +25,26 @@ export const adminDreamsRequestSchema = z.object({
     .optional(),
 });
 
+export const adminUsersRequestSchema = z.object({
+  query: z
+    .object({
+      page: z.coerce.number().int().positive().optional(),
+      limit: z.coerce.number().int().positive().max(100).optional(),
+      search: z.string().optional(),
+      role: z.enum(["admin", "user"]).optional(),
+      sortBy: z.string().optional(),
+      order: z.enum(["asc", "desc"]).optional(),
+    })
+    .optional(),
+});
+
 export const adminDeleteDreamRequestSchema = z.object({
   params: z.object({ id: zodMongoObjectId }),
+});
+
+export const adminUpdateUserRoleRequestSchema = z.object({
+  params: z.object({ id: zodMongoObjectId }),
+  body: z.object({
+    role: z.enum(["admin", "user"]),
+  }),
 });
