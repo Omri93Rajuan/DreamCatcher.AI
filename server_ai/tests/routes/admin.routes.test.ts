@@ -137,4 +137,43 @@ describe("admin routes", () => {
       expect.objectContaining({ category: "travel", count: 1 }),
     ]);
   });
+
+  it("lets admins paginate users and promote a user to admin", async () => {
+    const admin = await createUser("admin", "admin@example.com");
+    const regular = await createUser("user", "regular@example.com");
+    await createUser("user", "other@example.com");
+
+    const app = createTestApp();
+    const list = await request(app)
+      .get("/api/admin/users?page=1&limit=2&search=example")
+      .set("Cookie", [`auth_token=${signToken(admin._id.toString())}`]);
+
+    expect(list.status).toBe(200);
+    expect(list.body.total).toBe(3);
+    expect(list.body.users).toHaveLength(2);
+
+    const promote = await request(app)
+      .patch(`/api/admin/users/${regular._id}/role`)
+      .set("Cookie", [`auth_token=${signToken(admin._id.toString())}`])
+      .send({ role: "admin" });
+
+    expect(promote.status).toBe(200);
+    expect(promote.body.user.role).toBe("admin");
+    await expect(User.findById(regular._id).lean()).resolves.toEqual(
+      expect.objectContaining({ role: "admin" })
+    );
+  });
+
+  it("does not allow demoting the last admin", async () => {
+    const admin = await createUser("admin", "admin@example.com");
+    const app = createTestApp();
+
+    const res = await request(app)
+      .patch(`/api/admin/users/${admin._id}/role`)
+      .set("Cookie", [`auth_token=${signToken(admin._id.toString())}`])
+      .send({ role: "user" });
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toBe("last_admin");
+  });
 });

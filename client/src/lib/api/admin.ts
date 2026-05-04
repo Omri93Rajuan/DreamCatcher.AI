@@ -1,5 +1,5 @@
 import { api } from "./apiClient";
-import type { Dream, User } from "./types";
+import type { Dream, User, UserRole } from "./types";
 
 export type AdminTrendMetric = {
   current: number;
@@ -46,6 +46,16 @@ export type AdminDream = Dream & {
 
 export type AdminDreamsPage = {
   dreams: AdminDream[];
+  total: number;
+  page: number;
+  pages: number;
+  limit: number;
+};
+
+export type AdminUser = User;
+
+export type AdminUsersPage = {
+  users: AdminUser[];
   total: number;
   page: number;
   pages: number;
@@ -124,5 +134,27 @@ export const AdminApi = {
   deleteDream: async (id: string) => {
     const { data } = await api.delete(`/admin/dreams/${id}`);
     return data;
+  },
+
+  listUsers: async (params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: UserRole;
+  }): Promise<AdminUsersPage> => {
+    const { data } = await api.get("/admin/users", { params });
+    const payload = data?.success ? data : data;
+    return {
+      users: Array.isArray(payload.users) ? payload.users : [],
+      total: toNumber(payload.total),
+      page: toNumber(payload.page, 1),
+      pages: toNumber(payload.pages, 1),
+      limit: toNumber(payload.limit, params.limit ?? 20),
+    };
+  },
+
+  updateUserRole: async (id: string, role: UserRole): Promise<AdminUser> => {
+    const { data } = await api.patch(`/admin/users/${id}/role`, { role });
+    return (data?.user ?? data) as AdminUser;
   },
 };
