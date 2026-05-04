@@ -3,6 +3,7 @@ import { Dream } from "../models/dream";
 import { DreamActivity } from "../models/dreamActivity";
 import { SiteVisit } from "../models/siteVisit";
 import User from "../models/user";
+import { PublicUser, UserRole } from "../types/users.interface";
 
 type SortOrder = "asc" | "desc";
 
@@ -222,4 +223,92 @@ export async function deleteAdminDream(id: string) {
 
   await DreamActivity.deleteMany({ dreamId: new Types.ObjectId(id) });
   return deleted;
+}
+
+export async function listAdminUsers(query: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: UserRole;
+  sortBy?: string;
+  order?: SortOrder;
+}) {
+  const page = Math.max(1, Math.floor(Number(query.page) || 1));
+  const limit = Math.max(1, Math.min(100, Math.floor(Number(query.limit) || 20)));
+  const filter: Record<string, any> = {};
+
+  if (query.role) {
+    filter.role = query.role;
+  }
+
+  const search = String(query.search || "").trim();
+  if (search) {
+    filter.$or = [
+      { firstName: { $regex: search, $options: "i" } },
+      { lastName: { $regex: search, $options: "i" } },
+      { email: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const sortBy = query.sortBy || "createdAt";
+  const sort: Record<string, 1 | -1> = {
+    [sortBy]: query.order === "asc" ? 1 : -1,
+  };
+
+  const [users, total] = await Promise.all([
+    User.find(filter)
+      .select("-password -resetPasswordTokenHash")
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    User.countDocuments(filter),
+  ]);
+
+  return {
+    users: users.map((user: any) => ({
+      ...user,
+      _id: String(user._id),
+    })) as PublicUser[],
+    total,
+    page,
+    pages: Math.ceil(total / limit) || 1,
+    limit,
+  };
+}
+
+export async function updateAdminUserRole(id: string, role: UserRole) {
+  if (!Types.ObjectId.isValid(id)) {
+    return null;
+  }
+
+  const existing = await User.findById(id).select("_id role");
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.role === UserRole.Admin && role !== UserRole.Admin) {
+    const adminCount = await User.countDocuments({ role: UserRole.Admin });
+    if (adminCount <= 1) {
+      const err: any = new Error("Cannot demote the last admin user");
+      err.status = 409;
+      err.code = "last_admin";
+      throw err;
+    }
+  }
+
+  const updated = await User.findByIdAndUpdate(
+    id,
+    { role },
+    { new: true, runValidators: true }
+  )
+    .select("-password -resetPasswordTokenHash")
+    .lean();
+
+  return updated
+    ? ({
+        ...updated,
+        _id: String(updated._id),
+      } as PublicUser)
+    : null;
 }
