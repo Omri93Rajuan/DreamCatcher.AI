@@ -12,6 +12,18 @@ const categoryScoresSchema = z
   .record(z.string().min(1), z.number().min(0).max(1))
   .optional();
 
+const analysisListSchema = z.array(z.string().min(1).max(260)).max(8).optional();
+
+const keySymbolsSchema = z
+  .array(
+    z.object({
+      symbol: z.string().min(1).max(100),
+      meaning: z.string().max(300).optional(),
+    })
+  )
+  .max(5)
+  .optional();
+
 const dreamBodySchema = z.object({
   title: z.string().min(1, "Title is required").optional(),
   userInput: z.string().min(1, "User input (dream text) is required"),
@@ -20,6 +32,10 @@ const dreamBodySchema = z.object({
   model: z.string().optional(),
   categories: categoriesSchema,
   categoryScores: categoryScoresSchema,
+  insights: analysisListSchema,
+  keySymbols: keySymbolsSchema,
+  symbols: keySymbolsSchema,
+  emotions: analysisListSchema,
 });
 
 export const createDreamRequestSchema = z.object({
@@ -45,6 +61,10 @@ export const interpretDreamRequestSchema = z.object({
       titleOverride: z.string().optional(),
       categories: categoriesSchema,
       categoryScores: categoryScoresSchema,
+      insights: analysisListSchema,
+      keySymbols: keySymbolsSchema,
+      symbols: keySymbolsSchema,
+      emotions: analysisListSchema,
     })
     .refine(
       (val) =>

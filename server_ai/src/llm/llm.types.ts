@@ -1,7 +1,14 @@
 import { DreamCategory } from "../types/categories.interface";
+export type DreamSymbolInsight = {
+  symbol: string;
+  meaning: string;
+};
 export type LLMResult = {
   title?: string;
   interpretation: string;
+  insights?: string[];
+  keySymbols?: DreamSymbolInsight[];
+  emotions?: string[];
   categories?: DreamCategory[];
   categoryScores?: Record<DreamCategory, number>;
 };

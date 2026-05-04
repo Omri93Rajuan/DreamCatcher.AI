@@ -11,6 +11,17 @@ const DreamSchema = new Schema<IDream>(
     title: { type: String, required: true },
     userInput: { type: String, required: true },
     aiResponse: { type: String, required: true },
+    insights: { type: [String], default: [] },
+    keySymbols: {
+      type: [
+        {
+          symbol: { type: String, required: true },
+          meaning: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+    emotions: { type: [String], default: [] },
     isShared: { type: Boolean, default: false, index: true },
     sharedAt: { type: Date, default: null },
     categories: {

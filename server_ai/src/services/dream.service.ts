@@ -3,6 +3,7 @@ import { getLLMProvider } from "../llm";
 import { LLMOptions } from "../llm/llm.types";
 import { Dream } from "../models/dream";
 import { DREAM_CATEGORIES, DreamCategory } from "../types/categories.interface";
+import type { DreamSymbolInsight } from "../types/dream.interface";
 
 type SortOrder = "asc" | "desc";
 
@@ -116,6 +117,10 @@ function buildFilter(input: {
             { title: { $regex: trimmed, $options: "i" } },
             { userInput: { $regex: trimmed, $options: "i" } },
             { aiResponse: { $regex: trimmed, $options: "i" } },
+            { insights: { $regex: trimmed, $options: "i" } },
+            { emotions: { $regex: trimmed, $options: "i" } },
+            { "keySymbols.symbol": { $regex: trimmed, $options: "i" } },
+            { "keySymbols.meaning": { $regex: trimmed, $options: "i" } },
           ],
         }
       : null;
@@ -138,13 +143,21 @@ export const saveDream = async (
   aiResponse: string,
   isShared: boolean = false,
   categories: DreamCategory[] = [],
-  categoryScores?: Record<string, number>
+  categoryScores?: Record<string, number>,
+  analysis?: {
+    insights?: string[];
+    keySymbols?: DreamSymbolInsight[];
+    emotions?: string[];
+  }
 ) => {
   const dream = new Dream({
     userId,
     title,
     userInput,
     aiResponse,
+    insights: analysis?.insights ?? [],
+    keySymbols: analysis?.keySymbols ?? [],
+    emotions: analysis?.emotions ?? [],
     isShared,
     sharedAt: isShared ? new Date() : null,
     categories,
@@ -162,6 +175,9 @@ export const createDreamFromInterpretation = async (
     isShared?: boolean;
     categories?: DreamCategory[];
     categoryScores?: Record<string, number>;
+    insights?: string[];
+    keySymbols?: DreamSymbolInsight[];
+    emotions?: string[];
   }
 ) => {
   if (!userId) throw new Error("userId is required");
@@ -178,7 +194,12 @@ export const createDreamFromInterpretation = async (
     interpretation,
     isShared,
     opts?.categories ?? [],
-    opts?.categoryScores
+    opts?.categoryScores,
+    {
+      insights: opts?.insights,
+      keySymbols: opts?.keySymbols,
+      emotions: opts?.emotions,
+    }
   );
 };
 
@@ -197,6 +218,9 @@ export const createDreamWithAI = async (
   const {
     title,
     interpretation,
+    insights = [],
+    keySymbols = [],
+    emotions = [],
     categories = [],
     categoryScores,
   } = await llm.interpretDream(userInput, llmOptions);
@@ -215,7 +239,8 @@ export const createDreamWithAI = async (
     interpretation,
     isShared,
     categories,
-    categoryScores
+    categoryScores,
+    { insights, keySymbols, emotions }
   );
 };
 
@@ -225,6 +250,9 @@ export const updateDream = async (
     title: string;
     userInput: string;
     aiResponse: string;
+    insights: string[];
+    keySymbols: DreamSymbolInsight[];
+    emotions: string[];
     isShared: boolean;
     categories: DreamCategory[];
     categoryScores: Record<string, number>;
