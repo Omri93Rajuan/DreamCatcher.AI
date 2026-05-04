@@ -34,11 +34,19 @@ describe("dream routes", () => {
         title: "t",
         categories: ["travel", "invalid"],
         categoryScores: { travel: 0.8 },
+        insights: ["notice the journey"],
+        keySymbols: [{ symbol: "train", meaning: "movement" }],
+        emotions: ["curiosity"],
       });
     expect(res.status).toBe(201);
     const stored = await Dream.findById(res.body.dream._id).lean();
     expect(stored?.categories).toEqual(["travel"]);
     expect((stored as any)?.categoryScores?.travel).toBe(0.8);
+    expect(stored?.insights).toEqual(["notice the journey"]);
+    expect(stored?.keySymbols).toEqual([
+      expect.objectContaining({ symbol: "train", meaning: "movement" }),
+    ]);
+    expect(stored?.emotions).toEqual(["curiosity"]);
   });
 
   it("lists only shared dreams for anonymous viewer", async () => {
@@ -80,6 +88,9 @@ describe("dream routes", () => {
       interpretDream: async () => ({
         title: "t",
         interpretation: "i",
+        insights: ["focus"],
+        keySymbols: [{ symbol: "door", meaning: "choice" }],
+        emotions: ["hope"],
         categories: ["travel"],
         categoryScores: { travel: 0.5 },
       }),
@@ -91,6 +102,11 @@ describe("dream routes", () => {
       .send({ text: "hello", isShared: true });
     expect(res.status).toBe(201);
     expect(res.body.dream.isShared).toBe(true);
+    expect(res.body.dream.insights).toEqual(["focus"]);
+    expect(res.body.dream.keySymbols).toEqual([
+      expect.objectContaining({ symbol: "door", meaning: "choice" }),
+    ]);
+    expect(res.body.dream.emotions).toEqual(["hope"]);
   });
 });
 

@@ -375,8 +375,19 @@
   },
   "dreamDetails": {
     "errorTitle": "Could not open this dream",
-    "dream": "The dream:",
-    "interpretation": "Interpretation:"
+    "dream": "The dream",
+    "interpretation": "Interpretation",
+    "insights": "Insights",
+    "keySymbols": "Key symbols",
+    "emotions": "Emotions that came up",
+    "categories": "Main themes",
+    "savedCta": "Saved to my dreams",
+    "shareCta": "Share",
+    "unshareCta": "Make private",
+    "newInterpretation": "New interpretation",
+    "sharedStatus": "Shared",
+    "privateStatus": "Private",
+    "richAnalysisFallback": "This dream was saved before the richer analysis format was added. New interpretations will include insights, symbols, and emotions."
   },
   "accessibility": {
     "trigger": "Accessibility menu",

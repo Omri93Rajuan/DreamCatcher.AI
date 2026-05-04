@@ -7,6 +7,12 @@ const config: Config = {
   testMatch: ["**/?(*.)+(spec|test).ts"],
   moduleFileExtensions: ["ts", "js", "json"],
   setupFiles: ["<rootDir>/tests/support/setup.ts"],
+  transform: {
+    "^.+\\.ts$": [
+      "ts-jest",
+      { tsconfig: { types: ["node", "jest"] } },
+    ],
+  },
   extensionsToTreatAsEsm: [],
   clearMocks: true,
   moduleNameMapper: {

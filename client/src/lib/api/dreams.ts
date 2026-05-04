@@ -1,11 +1,41 @@
 import { api } from "./apiClient";
 import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
+const asStringArray = (value: unknown): string[] | undefined => {
+    if (!Array.isArray(value))
+        return undefined;
+    const arr = value
+        .map((item) => String(item ?? "").trim())
+        .filter(Boolean);
+    return arr.length ? arr : undefined;
+};
+const asKeySymbols = (value: unknown): Dream["keySymbols"] => {
+    if (!Array.isArray(value))
+        return undefined;
+    const arr = value
+        .map((item) => {
+        if (typeof item === "string") {
+            const symbol = item.trim();
+            return symbol ? { symbol, meaning: "" } : null;
+        }
+        if (!item || typeof item !== "object")
+            return null;
+        const raw = item as Record<string, unknown>;
+        const symbol = String(raw.symbol ?? raw.name ?? "").trim();
+        const meaning = String(raw.meaning ?? raw.description ?? "").trim();
+        return symbol ? { symbol, meaning } : null;
+    })
+        .filter(Boolean) as NonNullable<Dream["keySymbols"]>;
+    return arr.length ? arr : undefined;
+};
 const adapt = (raw: any): Dream => ({
     _id: raw?._id ?? raw?.id,
     userId: String(raw?.userId ?? ""),
     title: raw?.title ?? "",
     userInput: raw?.userInput ?? raw?.text ?? "",
     aiResponse: raw?.aiResponse ?? raw?.interpretation ?? "",
+    insights: asStringArray(raw?.insights),
+    keySymbols: asKeySymbols(raw?.keySymbols ?? raw?.symbols),
+    emotions: asStringArray(raw?.emotions),
     isShared: Boolean(raw?.isShared),
     sharedAt: raw?.sharedAt ?? null,
     categories: Array.isArray(raw?.categories) ? raw.categories : undefined,

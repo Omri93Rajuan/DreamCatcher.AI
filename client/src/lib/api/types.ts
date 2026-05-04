@@ -25,6 +25,9 @@ export type CreateDreamDto = {
     title: string;
     userInput: string;
     aiResponse: string;
+    insights?: string[];
+    keySymbols?: DreamSymbolInsight[];
+    emotions?: string[];
     isShared?: boolean;
     sharedAt?: string | null;
 };
@@ -54,6 +57,10 @@ export type InterpretResponse = {
 };
 export type DreamCategory = "flying" | "falling" | "being_chased" | "teeth" | "exam" | "late" | "death" | "romance" | "work" | "school" | "family" | "animals" | "water" | "house" | "vehicle" | "travel" | "lost" | "monster" | "paralysis" | "lucid";
 export type CategoryScores = Partial<Record<DreamCategory | string, number>>;
+export type DreamSymbolInsight = {
+    symbol: string;
+    meaning: string;
+};
 export type JournalTrend = "up" | "down" | "steady";
 export type JournalCategoryInsight = {
     category: DreamCategory;
@@ -93,6 +100,9 @@ export interface Dream {
     title: string;
     userInput: string;
     aiResponse: string;
+    insights?: string[];
+    keySymbols?: DreamSymbolInsight[];
+    emotions?: string[];
     isShared: boolean;
     sharedAt?: string | null;
     categories?: DreamCategory[];
