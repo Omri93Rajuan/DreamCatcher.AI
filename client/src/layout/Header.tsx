@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ShieldCheck } from "lucide-react";
 import { createPageUrl } from "@/lib/utils/createPageUrl";
 import ThemeToggle from "@/components/nav/ThemeToggle";
 import LanguageSwitcher from "@/components/nav/LanguageSwitcher";
@@ -16,6 +17,10 @@ export default function Header({ user, onLogout }: HeaderProps) {
   const { t, i18n } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isAdmin = user?.role === "admin";
+  const adminLabel = t("layout.nav.admin", {
+    defaultValue: i18n.language?.startsWith("he") ? "ניהול" : "Admin",
+  });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -104,7 +109,18 @@ export default function Header({ user, onLogout }: HeaderProps) {
             <NavItem to="/articles">{t("layout.nav.articles")}</NavItem>
 
             {user ? (
-              <UserMenu />
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 text-sm font-extrabold text-emerald-700 transition-colors hover:bg-emerald-500/15 dark:text-emerald-200"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    {adminLabel}
+                  </Link>
+                )}
+                <UserMenu />
+              </>
             ) : (
               <>
                 <NavItem to="/login">{t("layout.nav.login")}</NavItem>
@@ -171,6 +187,16 @@ export default function Header({ user, onLogout }: HeaderProps) {
                 <NavItem to="/me/dreams" onClick={() => setMobileOpen(false)}>
                   {t("layout.nav.myDreams")}
                 </NavItem>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 font-extrabold text-emerald-700 dark:text-emerald-200"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    {adminLabel}
+                  </Link>
+                )}
                 <div
                   className="mt-1 flex items-center justify-between gap-3 px-1"
                   dir={i18n.dir()}

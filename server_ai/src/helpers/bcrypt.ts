@@ -1,4 +1,4 @@
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 const hashPassword = (password: string) => {
   return bcrypt.hashSync(password, 10);
 };

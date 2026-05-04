@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import User from "../models/user";
 import { SubscriptionType, UserRole } from "../types/users.interface";
 

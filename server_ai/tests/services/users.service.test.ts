@@ -14,6 +14,8 @@ import { hashPassword } from "../../src/helpers/bcrypt";
 
 jest.mock("../../src/services/upload.service", () => ({
   deleteUserAvatar: jest.fn().mockResolvedValue(undefined),
+  getAvatarKeyFromUrl: jest.fn(() => null),
+  normalizeStoredImageUrl: jest.fn((url?: string | null) => url),
 }));
 
 const seedUser = async (overrides: Partial<any> = {}) => {

@@ -3,9 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { AuthApi } from "@/lib/api/auth";
+import { VisitsApi } from "@/lib/api/visits";
 import Header from "./Header";
 import Footer from "./Footer";
 import CookieConsent from "./CookieConsent";
+
+const VISIT_SESSION_KEY = "dreamcatcher:visit-session-id";
+const VISIT_RECORDED_KEY = "dreamcatcher:visit-recorded";
+
+function getVisitSessionId() {
+  const existing = window.sessionStorage.getItem(VISIT_SESSION_KEY);
+  if (existing) return existing;
+
+  const generated =
+    window.crypto?.randomUUID?.() ||
+    `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.sessionStorage.setItem(VISIT_SESSION_KEY, generated);
+  return generated;
+}
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { i18n } = useTranslation();
@@ -42,6 +57,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [checkedAuth, setUser]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (window.sessionStorage.getItem(VISIT_RECORDED_KEY)) return;
+      const sessionId = getVisitSessionId();
+      window.sessionStorage.setItem(VISIT_RECORDED_KEY, "1");
+      VisitsApi.record({
+        sessionId,
+        path: `${window.location.pathname}${window.location.search}`,
+      }).catch(() => {
+        window.sessionStorage.removeItem(VISIT_RECORDED_KEY);
+      });
+    } catch {
+      /* ignore analytics failures */
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
