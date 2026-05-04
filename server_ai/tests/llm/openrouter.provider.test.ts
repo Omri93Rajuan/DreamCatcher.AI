@@ -6,6 +6,7 @@ const fetchMock = fetch as unknown as jest.Mock;
 describe("OpenRouterProvider", () => {
   beforeEach(() => {
     fetchMock.mockReset();
+    (globalThis as any).fetch = fetchMock;
     process.env.OPENROUTER_MODEL = "test-model";
   });
 
@@ -21,6 +22,9 @@ describe("OpenRouterProvider", () => {
                 JSON.stringify({
                   title: "כותרת",
                   interpretation: "פירוש",
+                  insights: ["תובנה"],
+                  keySymbols: [{ symbol: "ים", meaning: "רגש עמוק" }],
+                  emotions: ["סקרנות"],
                   categories: ["travel", "invalid"],
                   categoryScores: { travel: 0.7, invalid: 2 },
                 }) +
@@ -34,6 +38,9 @@ describe("OpenRouterProvider", () => {
     const res = await provider.interpretDream("hi");
     expect(res.title).toBe("כותרת");
     expect(res.interpretation).toBe("פירוש");
+    expect(res.insights).toEqual(["תובנה"]);
+    expect(res.keySymbols).toEqual([{ symbol: "ים", meaning: "רגש עמוק" }]);
+    expect(res.emotions).toEqual(["סקרנות"]);
     expect(res.categories).toEqual(["travel"]);
     expect(res.categoryScores).toEqual({ travel: 0.7 });
   });

@@ -1,5 +1,10 @@
 import { DREAM_CATEGORIES } from "../types/categories.interface";
-import { LLMOptions, LLMProvider, LLMResult } from "./llm.types";
+import {
+  DreamSymbolInsight,
+  LLMOptions,
+  LLMProvider,
+  LLMResult,
+} from "./llm.types";
 import { sleep, stripFences, tryParseJsonLike } from "./llm.utils";
 export type OpenRouterProviderConfig = {
   apiKey: string;
@@ -117,17 +122,26 @@ export class OpenRouterProvider implements LLMProvider {
           {
             role: "system",
             content: [
+              "You are DreamCatcher.AI, a careful Hebrew dream interpretation assistant.",
               "Return STRICT JSON with keys:",
               ' - "title": string (Hebrew, up to 6 words)',
-              ' - "interpretation": string',
+              ' - "interpretation": string (Hebrew, 2-4 short paragraphs, warm and practical)',
+              ' - "insights": array of 3 concise Hebrew strings with practical reflections',
+              ' - "keySymbols": array of 2-5 objects: {"symbol": string, "meaning": string}',
+              ' - "emotions": array of 2-6 short Hebrew emotion labels',
               ` - "categories": array of strings; each must be one of ${categoryList}`,
               ' - "categoryScores": object mapping category->confidence float in [0,1] (optional)',
+              "Avoid diagnosis, certainty, fortune-telling, or medical/legal advice.",
               "Do not include any extra text or markdown. JSON only.",
             ].join("\n"),
           },
           {
             role: "user",
-            content: `חלמתי: "${userInput}". החזר JSON בלבד עם השדות: title, interpretation, categories (אך ורק מתוך הרשימה), ו-categoryScores אופציונלי.`,
+            content: [
+              `חלמתי: "${userInput}".`,
+              "החזר JSON בלבד עם השדות: title, interpretation, insights, keySymbols, emotions, categories ו-categoryScores.",
+              "הקפד שכל התוכן למשתמש יהיה בעברית טבעית, אישי אך לא נחרץ, ובגובה העיניים.",
+            ].join("\n"),
           },
         ],
       }),
@@ -185,6 +199,11 @@ export class OpenRouterProvider implements LLMProvider {
     const interpretation = (
       parsed.interpretation as string | undefined
     )?.trim();
+    const insights = normalizeStringArray(parsed.insights, 4, 220);
+    const keySymbols = normalizeKeySymbols(
+      parsed.keySymbols ?? parsed.symbols ?? parsed.centralSymbols
+    );
+    const emotions = normalizeStringArray(parsed.emotions, 6, 60);
     const allowed = new Set<string>(DREAM_CATEGORIES);
     const rawCats = Array.isArray(parsed.categories) ? parsed.categories : [];
     const categories: DreamCategory[] = uniqueStrings(
@@ -202,7 +221,15 @@ export class OpenRouterProvider implements LLMProvider {
         )
       : undefined;
     if (!interpretation) throw new Error("Missing interpretation");
-    return { title, interpretation, categories, categoryScores } as LLMResult;
+    return {
+      title,
+      interpretation,
+      insights,
+      keySymbols,
+      emotions,
+      categories,
+      categoryScores,
+    } as LLMResult;
   }
 }
 function clamp01(n: number) {
@@ -219,4 +246,49 @@ function uniqueStrings(arr: string[]) {
     }
   }
   return out;
+}
+function normalizeStringArray(
+  input: unknown,
+  maxItems: number,
+  maxLength: number
+) {
+  const arr = Array.isArray(input) ? input : [];
+  return uniqueStrings(
+    arr
+      .map((item) =>
+        String(item ?? "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, maxLength)
+      )
+      .filter(Boolean)
+  ).slice(0, maxItems);
+}
+function normalizeKeySymbols(input: unknown): DreamSymbolInsight[] {
+  const arr = Array.isArray(input) ? input : [];
+  const out: DreamSymbolInsight[] = [];
+  for (const item of arr) {
+    if (typeof item === "string") {
+      const symbol = item.replace(/\s+/g, " ").trim().slice(0, 80);
+      if (symbol && !out.some((existing) => existing.symbol === symbol)) {
+        out.push({ symbol, meaning: "" });
+      }
+      continue;
+    }
+    if (!item || typeof item !== "object") continue;
+    const raw = item as Record<string, unknown>;
+    const symbol = String(raw.symbol ?? raw.name ?? raw.title ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 80);
+    const meaning = String(raw.meaning ?? raw.description ?? raw.insight ?? "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 240);
+    if (symbol && !out.some((existing) => existing.symbol === symbol)) {
+      out.push({ symbol, meaning });
+    }
+    if (out.length >= 5) break;
+  }
+  return out.slice(0, 5);
 }

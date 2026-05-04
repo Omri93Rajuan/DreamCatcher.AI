@@ -375,8 +375,19 @@
   },
   "dreamDetails": {
     "errorTitle": "לא הצלחנו לפתוח את החלום",
-    "dream": "החלום:",
-    "interpretation": "הפרשנות:"
+    "dream": "החלום",
+    "interpretation": "הפרשנות",
+    "insights": "תובנות",
+    "keySymbols": "סמלים מרכזיים",
+    "emotions": "רגשות שעלו",
+    "categories": "נושאים מרכזיים",
+    "savedCta": "שמורה בחלומות שלי",
+    "shareCta": "שתף",
+    "unshareCta": "הפוך לפרטי",
+    "newInterpretation": "פירוש חדש",
+    "sharedStatus": "משותף",
+    "privateStatus": "פרטי",
+    "richAnalysisFallback": "החלום הזה נשמר לפני פורמט הניתוח העשיר. פירושים חדשים יכללו תובנות, סמלים ורגשות."
   },
   "accessibility": {
     "trigger": "תפריט נגישות",
