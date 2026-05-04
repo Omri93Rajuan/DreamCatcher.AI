@@ -2,7 +2,11 @@ import type { RequestHandler, Response } from "express";
 import * as DreamService from "../services/dream.service";
 import type { AuthRequest } from "../types/auth.interface";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
-import type { DreamSymbolInsight } from "../types/dream.interface";
+import {
+  DREAM_ANALYSIS_LIMITS,
+  normalizeKeySymbols,
+  normalizeStringList,
+} from "../utils/dreamAnalysis";
 
 type DreamCategory = (typeof DREAM_CATEGORIES)[number];
 
@@ -137,54 +141,6 @@ function normalizeCategoryScores(
     : undefined;
 }
 
-function normalizeStringList(
-  input: unknown,
-  maxItems = 6,
-  maxLength = 180
-): string[] {
-  if (!input) return [];
-  const arr = Array.isArray(input) ? input : [input];
-  const out: string[] = [];
-  for (const item of arr) {
-    const value = String(item ?? "")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, maxLength);
-    if (value && !out.includes(value)) out.push(value);
-    if (out.length >= maxItems) break;
-  }
-  return out;
-}
-
-function normalizeKeySymbols(input: unknown): DreamSymbolInsight[] {
-  if (!input) return [];
-  const arr = Array.isArray(input) ? input : [input];
-  const out: DreamSymbolInsight[] = [];
-  for (const item of arr) {
-    if (typeof item === "string") {
-      const symbol = item.replace(/\s+/g, " ").trim().slice(0, 80);
-      if (symbol && !out.some((existing) => existing.symbol === symbol)) {
-        out.push({ symbol, meaning: "" });
-      }
-    } else if (item && typeof item === "object") {
-      const raw = item as Record<string, unknown>;
-      const symbol = String(raw.symbol ?? raw.name ?? raw.title ?? "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 80);
-      const meaning = String(raw.meaning ?? raw.description ?? raw.insight ?? "")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 240);
-      if (symbol && !out.some((existing) => existing.symbol === symbol)) {
-        out.push({ symbol, meaning });
-      }
-    }
-    if (out.length >= 5) break;
-  }
-  return out;
-}
-
 export const getAllDreams: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { userId } = getAuth(req as AuthRequest);
@@ -256,9 +212,15 @@ export const createDream: RequestHandler = async (req, res): Promise<void> => {
 
     const safeCategories = normalizeCategories(categories);
     const safeScores = normalizeCategoryScores(categoryScores);
-    const safeInsights = normalizeStringList(insights, 4, 220);
+    const safeInsights = normalizeStringList(
+      insights,
+      DREAM_ANALYSIS_LIMITS.insights
+    );
     const safeSymbols = normalizeKeySymbols(keySymbols ?? symbols);
-    const safeEmotions = normalizeStringList(emotions, 8, 60);
+    const safeEmotions = normalizeStringList(
+      emotions,
+      DREAM_ANALYSIS_LIMITS.emotions
+    );
     const saved = aiResponse
       ? await DreamService.createDreamFromInterpretation(
           userId,
@@ -379,15 +341,25 @@ export const updateDream: RequestHandler = async (req, res): Promise<void> => {
       emotions,
     } = req.body ?? {};
 
-    const patch: any = {};
+    const patch: DreamService.UpdateDreamPatch = {};
     if (typeof title === "string") patch.title = title;
     if (typeof userInput === "string") patch.userInput = userInput;
     if (typeof aiResponse === "string") patch.aiResponse = aiResponse;
-    if (insights !== undefined) patch.insights = normalizeStringList(insights, 4, 220);
+    if (insights !== undefined) {
+      patch.insights = normalizeStringList(
+        insights,
+        DREAM_ANALYSIS_LIMITS.insights
+      );
+    }
     if (keySymbols !== undefined || symbols !== undefined) {
       patch.keySymbols = normalizeKeySymbols(keySymbols ?? symbols);
     }
-    if (emotions !== undefined) patch.emotions = normalizeStringList(emotions, 8, 60);
+    if (emotions !== undefined) {
+      patch.emotions = normalizeStringList(
+        emotions,
+        DREAM_ANALYSIS_LIMITS.emotions
+      );
+    }
     if (typeof isShared === "boolean") patch.isShared = isShared;
     if (categories !== undefined) {
       patch.categories = normalizeCategories(categories);
