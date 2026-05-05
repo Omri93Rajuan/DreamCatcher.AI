@@ -80,31 +80,31 @@ export default function Header({ user, onLogout }: HeaderProps) {
             ].join(" "),
       ].join(" ")}
     >
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="mx-auto max-w-7xl px-3 sm:px-4">
         <div className="h-16 flex items-center justify-between gap-4">
           <Link
             to={createPageUrl("HomePage")}
-            className="flex items-center gap-2.5 group rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50"
+            className="group flex min-w-0 items-center gap-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/50 sm:gap-2.5"
             aria-label={t("layout.nav.logoLabel")}
           >
             <img
               src={logoMark}
               alt="DreamCatcher.AI"
-              className="w-16 h-16 transition-transform duration-200 group-hover:scale-105"
+              className="h-14 w-14 shrink-0 transition-transform duration-200 group-hover:scale-105 sm:h-16 sm:w-16"
               decoding="async"
               loading="eager"
             />
-            <div className="leading-tight select-none">
-              <span className="text-[22px] md:text-[25px] font-bold tracking-tight text-slate-900 dark:text-white">
+            <div className="min-w-0 select-none leading-tight">
+              <span className="block truncate text-[18px] font-bold tracking-tight text-slate-900 dark:text-white sm:text-[22px] lg:text-[25px]">
                 DreamCatcher.AI
               </span>
-              <span className="block text-[13px] md:text-[14px] text-slate-700 dark:text-white/70">
+              <span className="block max-w-[13rem] truncate text-[11px] text-slate-700 dark:text-white/70 sm:max-w-none sm:text-[13px] lg:text-[14px]">
                 {t("layout.brandTagline")}
               </span>
             </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-4">
+          <nav className="hidden lg:flex items-center gap-4">
             <NavItem to="/">{t("layout.nav.home")}</NavItem>
             <NavItem to="/articles">{t("layout.nav.articles")}</NavItem>
 
@@ -142,10 +142,10 @@ export default function Header({ user, onLogout }: HeaderProps) {
 
           <button
             onClick={() => setMobileOpen((v) => !v)}
-            className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border
                        border-black/10 hover:bg-black/5
                        dark:border-white/15 dark:hover:bg-white/10
-                       transition"
+                       transition lg:hidden"
             aria-label={
               mobileOpen ? t("layout.nav.menuClose") : t("layout.nav.menuOpen")
             }
@@ -167,11 +167,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
 
       {mobileOpen && (
         <div
-          className="md:hidden fixed top-16 left-0 right-0 z-40
+          className="fixed top-16 left-0 right-0 z-40
                      border-t border-black/10 dark:border-white/10
-                     bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md"
+                     bg-white/95 dark:bg-[#11131a]/90 backdrop-blur-md lg:hidden"
         >
-          <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3">
             <NavItem to="/" onClick={() => setMobileOpen(false)}>
               {t("layout.nav.home")}
             </NavItem>
