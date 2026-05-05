@@ -38,20 +38,20 @@ export default function PopularDreams() {
     })
         .filter((r) => !!r.dreamId);
     return (<section className="max-w-7xl mx-auto px-4 mb-20" dir={i18n.dir()}>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <TrendingUp className="w-8 h-8 text-amber-500"/>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-center gap-3">
+          <TrendingUp className="h-7 w-7 shrink-0 text-amber-500 sm:h-8 sm:w-8"/>
+          <h2 className="min-w-0 text-2xl font-bold leading-tight text-slate-900 dark:text-white sm:text-3xl">
             {t("popular.title")}
           </h2>
         </div>
 
         
-        <div className="flex items-center gap-2 rounded-xl p-1 border
+        <div className="grid w-full grid-cols-3 items-center gap-1 rounded-xl p-1 border
                         bg-white/80 border-black/10 backdrop-blur-sm
-                        dark:bg-white/[0.06] dark:border-white/10 dark:backdrop-blur-md">
+                        dark:bg-white/[0.06] dark:border-white/10 dark:backdrop-blur-md sm:w-auto sm:flex sm:gap-2">
           {([7, 30, 365] as WindowKind[]).map((n) => (<button key={n} onClick={() => setWindowKind(n)} className={[
-                "px-3 py-1.5 rounded-lg text-sm transition",
+                "rounded-lg px-2 py-1.5 text-sm transition sm:px-3",
                 windowKind === n
                     ? "bg-amber-400 text-slate-900"
                     : "text-slate-700 hover:bg-black/5 dark:text-white/80 dark:hover:bg-white/10",
