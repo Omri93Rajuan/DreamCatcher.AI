@@ -1,0 +1,19 @@
+{
+  "name": "dreamcatcher-ai",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "server_ai"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace server_ai",
+    "start": "npm run start --workspace server_ai",
+    "test": "npm run test --workspace server_ai --",
+    "dev": "npm run dev --workspace server_ai"
+  },
+  "engines": {
+    "node": "22.x",
+    "npm": "10.x"
+  },
+  "packageManager": "npm@10.9.2"
+}
