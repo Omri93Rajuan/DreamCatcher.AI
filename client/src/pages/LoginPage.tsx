@@ -13,8 +13,8 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen px-4 py-10 sm:py-14">
       <div className="mx-auto grid w-full max-w-6xl gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] lg:items-center">
-        <section className="space-y-7 text-center lg:text-right" dir={i18n.dir()}>
-          <span className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white/80 px-4 py-2 text-sm font-semibold text-amber-700 shadow-sm dark:border-amber-300/20 dark:bg-white/[0.06] dark:text-amber-200">
+        <section className="min-w-0 space-y-7 text-center lg:text-right" dir={i18n.dir()}>
+          <span className="inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-amber-200 bg-white/80 px-3 py-2 text-center text-sm font-semibold text-amber-700 shadow-sm sm:px-4 dark:border-amber-300/20 dark:bg-white/[0.06] dark:text-amber-200">
             {t("loginPage.badge")}
           </span>
 
@@ -36,13 +36,13 @@ export default function LoginPage() {
                 <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-700 dark:bg-amber-400/20 dark:text-amber-200">
                   <CheckCircle2 className="h-4 w-4" />
                 </span>
-                <span>{item}</span>
+                <span className="min-w-0">{item}</span>
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="w-full rounded-2xl border border-black/10 bg-white/90 p-6 shadow-[0_20px_60px_-38px_rgba(15,23,42,.9)] backdrop-blur-sm sm:p-8 dark:border-white/10 dark:bg-white/[0.06]">
+        <section className="min-w-0 w-full rounded-2xl border border-black/10 bg-white/90 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,.9)] backdrop-blur-sm sm:p-8 dark:border-white/10 dark:bg-white/[0.06]">
           <header className="space-y-2 text-center" dir={i18n.dir()}>
             <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
               {t("loginPage.formTitle")}

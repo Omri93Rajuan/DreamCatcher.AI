@@ -149,7 +149,7 @@ export default function AccessibilityToolbar() {
   return (
     <div
       data-a11y-root="true"
-      className="fixed bottom-6 right-6 z-[11000] flex flex-col items-end gap-3"
+      className="fixed bottom-4 right-4 z-[11000] flex max-w-[calc(100vw-2rem)] flex-col items-end gap-3 sm:bottom-6 sm:right-6"
       dir={i18n.dir()}
     >
       <button
@@ -168,7 +168,7 @@ export default function AccessibilityToolbar() {
           id={panelId}
           role="dialog"
           aria-label={t("accessibility.dialogLabel")}
-          className="w-80 rounded-3xl border border-slate-200 bg-white/95 p-5 text-sm shadow-2xl backdrop-blur dark:border-white/20 dark:bg-slate-900/95 max-h-[min(80vh,500px)] overflow-y-auto"
+          className="w-[min(20rem,calc(100vw-2rem))] rounded-3xl border border-slate-200 bg-white/95 p-4 text-sm shadow-2xl backdrop-blur dark:border-white/20 dark:bg-slate-900/95 max-h-[min(80vh,500px)] overflow-y-auto sm:p-5"
           style={{ fontSize: "14px" }}
         >
           <div className="mb-4 flex items-center justify-between">

@@ -25,15 +25,18 @@ html,
 body,
 #root {
   height: 100%;
+  max-width: 100%;
 }
 
 #a11y-app-shell {
   min-height: 100%;
   color: inherit;
+  overflow-x: clip;
 }
 
 html {
   font-size: calc(100% * var(--a11y-text-scale));
+  overflow-x: clip;
 }
 
 * {
@@ -42,9 +45,31 @@ html {
 
 body {
   margin: 0;
+  overflow-x: clip;
   background: var(--body-bg-light);
   color: var(--body-fg-light);
   transition: background 0.45s ease, color 0.45s ease;
+}
+
+main,
+section,
+article,
+div,
+header,
+footer,
+nav {
+  min-width: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+li,
+a,
+button {
+  overflow-wrap: anywhere;
 }
 
 .dark body {
