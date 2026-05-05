@@ -198,10 +198,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
                   </Link>
                 )}
                 <div
-                  className="mt-1 flex items-center justify-between gap-3 px-1"
+                  className="mt-1 flex flex-wrap items-center justify-between gap-3 px-1"
                   dir={i18n.dir()}
                 >
                   <LanguageSwitcher compact />
+                  <ThemeToggle />
                   <button
                     onClick={async () => {
                       setMobileOpen(false);
@@ -222,10 +223,11 @@ export default function Header({ user, onLogout }: HeaderProps) {
                   {t("layout.nav.login")}
                 </NavItem>
                 <div
-                  className="mt-1 flex items-center justify-between gap-3 px-1"
+                  className="mt-1 flex flex-wrap items-center justify-between gap-3 px-1"
                   dir={i18n.dir()}
                 >
                   <LanguageSwitcher compact />
+                  <ThemeToggle />
                   <Link
                     to="/register"
                     onClick={() => setMobileOpen(false)}
