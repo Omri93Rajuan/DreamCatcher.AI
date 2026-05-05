@@ -239,59 +239,39 @@ function issueAuthTokens(
   return { accessToken, refreshToken };
 }
 
-export const getGoogleAuthUrl = (req: Request, res: Response) => {
-  try {
-    const googleRedirectUri = ensureGoogleConfig(req);
-    const requestedMode = String(req.query.mode || "login").toLowerCase();
-    const mode = requestedMode === "signup" ? "signup" : "login";
-    const redirectTo =
-      (req.query.redirectTo as string) || defaultGoogleRedirect;
-    const next = (req.query.next as string) || "/";
-    const termsAccepted =
-      req.query.termsAccepted === "true" || req.query.termsAccepted === "1";
-    const termsVersion =
-      (req.query.termsVersion as string) || DEFAULT_TERMS_VERSION;
-    if (mode === "signup" && (!termsAccepted || !termsVersion)) {
-      return handleError(
-        res,
-        400,
-        "Terms must be accepted before Google signup"
-      );
-    }
-    const state = createGoogleStateToken({
-      redirectTo,
-      next,
-      mode,
-      termsAccepted: mode === "signup" ? termsAccepted : false,
-      termsVersion: mode === "signup" ? termsVersion : null,
-      termsLocale:
-        (req.query.termsLocale as string) ||
-        (req.headers["accept-language"] as string)?.split(",")[0] ||
-        null,
-      termsUserAgent: req.headers["user-agent"] || null,
-    });
-    const url = buildGoogleAuthUrl(
-      GOOGLE_CLIENT_ID,
-      googleRedirectUri,
-      state
-    );
-    res.json({ url });
-  } catch (error: any) {
-    console.error("[GoogleOAuth] url error:", error);
-    handleError(res, error.status || 500, GOOGLE_ERROR_MESSAGE);
+function toPublicUser(user: any) {
+  const publicUser =
+    typeof user?.toJSON === "function"
+      ? user.toJSON()
+      : typeof user?.toObject === "function"
+        ? user.toObject()
+        : { ...(user || {}) };
+  delete publicUser.password;
+  if (publicUser._id) publicUser._id = publicUser._id.toString();
+  if (!publicUser.name) {
+    publicUser.name = `${publicUser.firstName ?? ""} ${
+      publicUser.lastName ?? ""
+    }`.trim();
   }
+  return publicUser;
+}
+
+type GoogleCompletionInput = {
+  code?: string;
+  stateToken?: string;
+  oauthError?: string;
+  oauthErrorDescription?: string;
 };
 
-export const handleGoogleCallback = async (req: Request, res: Response) => {
+async function completeGoogleAuthorization(
+  req: Request,
+  res: Response,
+  input: GoogleCompletionInput
+) {
   let decoded: GoogleStatePayload | null = null;
   try {
     const googleRedirectUri = ensureGoogleConfig(req);
-    const code = req.query.code as string | undefined;
-    const stateToken = req.query.state as string | undefined;
-    const oauthError = req.query.error as string | undefined;
-    const oauthErrorDescription = req.query.error_description as
-      | string
-      | undefined;
+    const { code, stateToken, oauthError, oauthErrorDescription } = input;
     if (stateToken) {
       decoded = decodeGoogleStateToken(stateToken);
     }
@@ -336,6 +316,64 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       },
       decoded.redirectTo
     );
+    return { decoded, user: toPublicUser(user) };
+  } catch (error: any) {
+    error.decoded = decoded;
+    throw error;
+  }
+}
+
+export const getGoogleAuthUrl = (req: Request, res: Response) => {
+  try {
+    const googleRedirectUri = ensureGoogleConfig(req);
+    const requestedMode = String(req.query.mode || "login").toLowerCase();
+    const mode = requestedMode === "signup" ? "signup" : "login";
+    const redirectTo =
+      (req.query.redirectTo as string) || defaultGoogleRedirect;
+    const next = (req.query.next as string) || "/";
+    const termsAccepted =
+      req.query.termsAccepted === "true" || req.query.termsAccepted === "1";
+    const termsVersion =
+      (req.query.termsVersion as string) || DEFAULT_TERMS_VERSION;
+    if (mode === "signup" && (!termsAccepted || !termsVersion)) {
+      return handleError(
+        res,
+        400,
+        "Terms must be accepted before Google signup"
+      );
+    }
+    const state = createGoogleStateToken({
+      redirectTo,
+      next,
+      mode,
+      termsAccepted: mode === "signup" ? termsAccepted : false,
+      termsVersion: mode === "signup" ? termsVersion : null,
+      termsLocale:
+        (req.query.termsLocale as string) ||
+        (req.headers["accept-language"] as string)?.split(",")[0] ||
+        null,
+      termsUserAgent: req.headers["user-agent"] || null,
+    });
+    const url = buildGoogleAuthUrl(
+      GOOGLE_CLIENT_ID,
+      googleRedirectUri,
+      state
+    );
+    res.json({ url });
+  } catch (error: any) {
+    console.error("[GoogleOAuth] url error:", error);
+    handleError(res, error.status || 500, GOOGLE_ERROR_MESSAGE);
+  }
+};
+
+export const handleGoogleCallback = async (req: Request, res: Response) => {
+  try {
+    const { decoded } = await completeGoogleAuthorization(req, res, {
+      code: req.query.code as string | undefined,
+      stateToken: req.query.state as string | undefined,
+      oauthError: req.query.error as string | undefined,
+      oauthErrorDescription: req.query.error_description as string | undefined,
+    });
     const target = buildGoogleRedirect(
       decoded.redirectTo,
       "success",
@@ -344,6 +382,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
     return res.redirect(302, target);
   } catch (error: any) {
     console.error("[GoogleOAuth] callback error:", error);
+    const decoded = error?.decoded as GoogleStatePayload | null | undefined;
     const target = buildGoogleRedirect(
       decoded?.redirectTo,
       "error",
@@ -353,6 +392,26 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
     return res.redirect(302, target);
   }
 };
+
+export const completeGoogleCallback = async (req: Request, res: Response) => {
+  try {
+    const { decoded, user } = await completeGoogleAuthorization(req, res, {
+      code: req.body?.code,
+      stateToken: req.body?.state,
+      oauthError: req.body?.error,
+      oauthErrorDescription: req.body?.error_description,
+    });
+    return res.json({
+      ok: true,
+      user,
+      next: sanitizeNextPath(decoded.next),
+    });
+  } catch (error: any) {
+    console.error("[GoogleOAuth] complete error:", error);
+    return handleError(res, error.status || 400, GOOGLE_ERROR_MESSAGE);
+  }
+};
+
 export const registerUser = async (
   req: Request,
   res: Response

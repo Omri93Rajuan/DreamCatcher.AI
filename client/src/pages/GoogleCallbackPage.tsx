@@ -14,6 +14,10 @@ export default function GoogleCallbackPage() {
   const [message, setMessage] = useState(t("googleCallback.connecting"));
   const next = useMemo(() => params.get("next") || "/", [params]);
   const initialStatus = params.get("status");
+  const code = params.get("code") || undefined;
+  const stateToken = params.get("state") || undefined;
+  const oauthError = params.get("error") || undefined;
+  const oauthErrorDescription = params.get("error_description") || undefined;
 
   useEffect(() => {
     const loadVerifiedUser = async () => {
@@ -25,6 +29,20 @@ export default function GoogleCallbackPage() {
       return verify?.user ?? null;
     };
 
+    const finishClientSideGoogleCallback = async () => {
+      if (!code && !oauthError) return null;
+      const result = await AuthApi.googleComplete({
+        code,
+        state: stateToken,
+        error: oauthError,
+        error_description: oauthErrorDescription,
+      });
+      return {
+        user: result?.user ?? null,
+        next: result?.next || next,
+      };
+    };
+
     if (initialStatus === "error") {
       setStatus("error");
       setMessage(t("googleCallback.failed"));
@@ -33,7 +51,11 @@ export default function GoogleCallbackPage() {
     let cancelled = false;
     (async () => {
       try {
-        const verifiedUser = await loadVerifiedUser();
+        const completed = await finishClientSideGoogleCallback();
+        let verifiedUser = completed?.user ?? null;
+        if (!verifiedUser) {
+          verifiedUser = await loadVerifiedUser();
+        }
         if (cancelled) return;
         if (verifiedUser) {
           const id = (verifiedUser as any)._id || (verifiedUser as any).id;
@@ -43,7 +65,7 @@ export default function GoogleCallbackPage() {
             ...(detailed as any),
             _id: (detailed as any)?._id || id,
           } as any);
-          navigate(next, { replace: true });
+          navigate(completed?.next || next, { replace: true });
           return;
         }
         setStatus("error");
@@ -58,7 +80,17 @@ export default function GoogleCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [initialStatus, navigate, next, setUser, t]);
+  }, [
+    code,
+    initialStatus,
+    navigate,
+    next,
+    oauthError,
+    oauthErrorDescription,
+    setUser,
+    stateToken,
+    t,
+  ]);
 
   return (
     <div className="flex min-h-[60vh] items-center justify-center bg-gradient-to-br from-[#f6f2ff] via-[#fff6ec] to-[#fef5f5] px-4 py-16 dark:from-[#0b0b1a] dark:via-[#141426] dark:to-[#221933]">

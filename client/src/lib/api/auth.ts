@@ -23,6 +23,12 @@ export type GoogleUrlParams = {
     termsVersion?: string | null;
     termsLocale?: string | null;
 };
+export type GoogleCompleteDto = {
+    code?: string;
+    state?: string;
+    error?: string;
+    error_description?: string;
+};
 export const AuthApi = {
     login: (data: LoginDto) => api
         .post("/auth/login", data, { withCredentials: true })
@@ -54,6 +60,13 @@ export const AuthApi = {
         .get("/auth/google/url", { params, withCredentials: true })
         .then((r) => r.data as {
         url: string;
+    }),
+    googleComplete: (data: GoogleCompleteDto) => api
+        .post("/auth/google/complete", data, { withCredentials: true })
+        .then((r) => r.data as {
+        ok: boolean;
+        user?: User;
+        next?: string;
     }),
     deleteAccount: (userId: string) => api.delete(`/users/${userId}`),
 };

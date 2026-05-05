@@ -62,6 +62,33 @@ export const googleCallbackSchema = z.object({
     }),
 });
 
+export const googleCompleteSchema = z.object({
+  body: z
+    .object({
+      code: z.string().min(1).optional(),
+      state: z.string().min(1).optional(),
+      error: z.string().min(1).optional(),
+      error_description: z.string().optional(),
+    })
+    .superRefine((body, ctx) => {
+      if (body.error) return;
+      if (!body.code) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["code"],
+          message: "code is required unless Google returned an error",
+        });
+      }
+      if (!body.state) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["state"],
+          message: "state is required unless Google returned an error",
+        });
+      }
+    }),
+});
+
 export const consumeResetTokenSchema = z.object({
   query: z.object({
     token: z.string().min(1),
