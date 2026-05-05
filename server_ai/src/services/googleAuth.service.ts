@@ -153,9 +153,10 @@ export const buildGoogleAuthUrl = (
   return `${GOOGLE_AUTH_URL}?${params.toString()}`;
 };
 
-const toError = (message: string, status = 400) => {
+const toError = (message: string, status = 400, code?: string) => {
   const err: any = new Error(message);
   err.status = status;
+  if (code) err.code = code;
   return err;
 };
 
@@ -180,24 +181,48 @@ export const validateGoogleRedirectUri = (
   try {
     parsed = new URL(redirectUri.trim());
   } catch {
-    throw toError("Google redirect URI must be a valid absolute URL", 500);
+    throw toError(
+      "Google redirect URI must be a valid absolute URL",
+      500,
+      "redirect_uri_invalid"
+    );
   }
 
   const isLocal = isLocalhostHost(parsed.hostname);
   if (parsed.hash) {
-    throw toError("Google redirect URI must not include a URL fragment", 500);
+    throw toError(
+      "Google redirect URI must not include a URL fragment",
+      500,
+      "redirect_uri_has_fragment"
+    );
   }
   if (parsed.username || parsed.password) {
-    throw toError("Google redirect URI must not include credentials", 500);
+    throw toError(
+      "Google redirect URI must not include credentials",
+      500,
+      "redirect_uri_has_credentials"
+    );
   }
   if (production && isLocal) {
-    throw toError("Google redirect URI cannot use localhost in production", 500);
+    throw toError(
+      "Google redirect URI cannot use localhost in production",
+      500,
+      "redirect_uri_localhost_production"
+    );
   }
   if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLocal)) {
-    throw toError("Google redirect URI must use HTTPS outside localhost", 500);
+    throw toError(
+      "Google redirect URI must use HTTPS outside localhost",
+      500,
+      "redirect_uri_not_https"
+    );
   }
   if (!isLocal && isIP(normalizeHost(parsed.hostname))) {
-    throw toError("Google redirect URI cannot use a raw IP address", 500);
+    throw toError(
+      "Google redirect URI cannot use a raw IP address",
+      500,
+      "redirect_uri_raw_ip"
+    );
   }
 
   return parsed.toString();
@@ -225,11 +250,16 @@ export const exchangeCodeForTokens = async (
   if (!response.ok) {
     throw toError(
       data.error_description || "Failed to exchange authorization code",
-      response.status
+      response.status,
+      data.error || "token_exchange_failed"
     );
   }
   if (!data.access_token) {
-    throw toError("Google token response missing access_token", 502);
+    throw toError(
+      "Google token response missing access_token",
+      502,
+      "missing_access_token"
+    );
   }
   return data;
 };
@@ -241,7 +271,11 @@ export const fetchGoogleProfile = async (
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   if (!response.ok) {
-    throw toError("Failed to fetch Google profile", response.status);
+    throw toError(
+      "Failed to fetch Google profile",
+      response.status,
+      "profile_fetch_failed"
+    );
   }
   return (await response.json()) as GoogleProfile;
 };
@@ -271,16 +305,20 @@ export const upsertGoogleUser = async (
   options: UpsertGoogleUserOptions = {}
 ) => {
   if (!profile?.sub) {
-    throw toError("Google profile missing user id", 400);
+    throw toError("Google profile missing user id", 400, "profile_missing_sub");
   }
   const email = profile.email?.toLowerCase();
   if (!email) {
-    throw toError("Google profile missing email", 400);
+    throw toError("Google profile missing email", 400, "profile_missing_email");
   }
   const requireTerms = !!options.requireTerms;
   const effectiveTermsVersion = options.termsVersion || DEFAULT_TERMS_VERSION;
   if (requireTerms && !effectiveTermsVersion) {
-    throw toError("Terms version is required for Google signup", 400);
+    throw toError(
+      "Terms version is required for Google signup",
+      400,
+      "terms_version_missing"
+    );
   }
   let user = await User.findOne({ googleId: profile.sub });
   if (!user && email) {
@@ -289,7 +327,11 @@ export const upsertGoogleUser = async (
   const avatar = normalizeGoogleAvatar(profile.picture);
   if (!user) {
     if (!options.allowCreate) {
-      throw toError("Google account is not registered", 404);
+      throw toError(
+        "Google account is not registered",
+        404,
+        "google_account_not_registered"
+      );
     }
     const { firstName, lastName } = parseNames(profile);
     const randomPassword = hashPassword(randomBytes(32).toString("hex"));
