@@ -22,6 +22,7 @@ const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
   "https://dream770catcher.netlify.app",
+  "https://dreamcatcher-ai.pages.dev",
   ...configuredOrigins,
 ]);
 
