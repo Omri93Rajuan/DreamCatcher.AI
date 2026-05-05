@@ -1,7 +1,9 @@
 import * as React from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import {
   Calendar,
+  ExternalLink,
   FileText,
   Globe2,
   Lock,
@@ -59,6 +61,11 @@ export default function DreamFlipCardMini({
   const createdAt = dream?.createdAt ? new Date(dream.createdAt) : null;
   const isShared = !!(dream as any)?.isShared;
   const dreamId = dream?._id as string | undefined;
+  const openDetailsLabel = t("myDreams.openDetails", {
+    defaultValue: i18n.language?.startsWith("he")
+      ? "פתח ניתוח מלא"
+      : "Open full analysis",
+  });
 
   const isDreamView = activeView === "dream";
   const content = isDreamView ? dreamText : solution;
@@ -162,7 +169,18 @@ export default function DreamFlipCardMini({
               />
             )}
 
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              {dreamId && (
+                <Link
+                  to={`/dreams/${dreamId}`}
+                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 dark:text-amber-200"
+                  title={openDetailsLabel}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  {openDetailsLabel}
+                </Link>
+              )}
+
               {onToggleShare && (
                 <Button
                   size="sm"

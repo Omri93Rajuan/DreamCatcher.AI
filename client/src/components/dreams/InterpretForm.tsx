@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback, } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Search, CheckCircle2, Loader2 } from "lucide-react";
+import { Send, Search, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -141,6 +141,14 @@ export default function InterpretForm() {
   const openMyDreams = () => {
     navigate(MY_DREAMS_PATH);
   };
+  const openDreamDetails = () => {
+    if (dream?._id) navigate(`/dreams/${dream._id}`);
+  };
+  const openDetailsLabel = t("myDreams.openDetails", {
+    defaultValue: i18n.language?.startsWith("he")
+      ? "פתח ניתוח מלא"
+      : "Open full analysis",
+  });
     return (<>
       
       <div className="grid gap-3 max-w-3xl mx-auto mb-8">
@@ -216,6 +224,11 @@ export default function InterpretForm() {
 
             
             {dream && !isStreaming && (<div className="mt-5 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                {dream._id && (<Button onClick={openDreamDetails} variant="outline" className="gap-2 bg-white/80 dark:bg-white/[0.04]">
+                    <Sparkles className="h-4 w-4"/>
+                    {openDetailsLabel}
+                  </Button>)}
+
                 {!dream.isShared ? (<Button onClick={shareWithEveryone} className={[
                         "px-4 py-2 rounded-lg",
                         "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
