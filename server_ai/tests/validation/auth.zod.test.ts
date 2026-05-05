@@ -1,6 +1,7 @@
 import {
   googleAuthUrlSchema,
   googleCallbackSchema,
+  googleCompleteSchema,
 } from "../../src/validation/auth.zod";
 
 describe("googleAuthUrlSchema", () => {
@@ -51,6 +52,27 @@ describe("googleAuthUrlSchema", () => {
     if (!result.success) {
       const paths = result.error.issues.map((issue) => issue.path.join("."));
       expect(paths).toContain("query.code");
+    }
+  });
+
+  it("allows client-side Google callback completion with code and state", () => {
+    const result = googleCompleteSchema.safeParse({
+      body: {
+        code: "auth-code",
+        state: "state-token",
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("requires state for client-side Google callback completion", () => {
+    const result = googleCompleteSchema.safeParse({
+      body: { code: "auth-code" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((issue) => issue.path.join("."));
+      expect(paths).toContain("body.state");
     }
   });
 });
