@@ -1,4 +1,7 @@
-import { googleAuthUrlSchema } from "../../src/validation/auth.zod";
+import {
+  googleAuthUrlSchema,
+  googleCallbackSchema,
+} from "../../src/validation/auth.zod";
 
 describe("googleAuthUrlSchema", () => {
   it("requires terms acceptance and version for signup", () => {
@@ -28,6 +31,27 @@ describe("googleAuthUrlSchema", () => {
       query: { mode: "login" },
     });
     expect(result.success).toBe(true);
+  });
+
+  it("allows Google callback errors without an authorization code", () => {
+    const result = googleCallbackSchema.safeParse({
+      query: {
+        error: "access_denied",
+        error_description: "The user denied the request",
+      },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("requires code and state for successful Google callbacks", () => {
+    const result = googleCallbackSchema.safeParse({
+      query: { state: "state-token" },
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const paths = result.error.issues.map((issue) => issue.path.join("."));
+      expect(paths).toContain("query.code");
+    }
   });
 });
 

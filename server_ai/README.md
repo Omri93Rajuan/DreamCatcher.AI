@@ -35,6 +35,13 @@ PORT=3000
 MONGO_URI=mongodb://localhost:27017/dreamcatcher
 JWT_SECRET=replace-with-secret
 APP_URL=http://localhost:5173
+API_URL=http://localhost:3000
+
+# Google OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+# Production recommended value:
+# GOOGLE_REDIRECT_URI=https://your-api-domain.com/api/auth/google/callback
 
 # Optional LLM/OpenRouter keys
 OPENROUTER_API_KEY=sk-...
@@ -42,6 +49,14 @@ OPENROUTER_MODEL=meta-llama/...
 ```
 
 Add monitoring, analytics, or extra API credentials only when they are configured and stored securely.
+
+For Google OAuth in production, `APP_URL` must be the public client URL,
+`API_URL` must be the public API URL, and the Google Cloud Console authorized
+redirect URI must exactly match:
+
+```text
+https://your-api-domain.com/api/auth/google/callback
+```
 
 ---
 

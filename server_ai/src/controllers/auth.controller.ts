@@ -21,6 +21,7 @@ import {
   sanitizeNextPath,
   sanitizeRedirectUrl,
   upsertGoogleUser,
+  validateGoogleRedirectUri,
 } from "../services/googleAuth.service";
 import {
   canRequestPasswordReset,
@@ -54,19 +55,49 @@ const isProd = process.env.NODE_ENV === "production";
 const RESET_COOKIE = "pw_reset";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-const SERVER_GOOGLE_REDIRECT = `${apiBaseUrl}/api/auth/google/callback`;
-const GOOGLE_REDIRECT_URI =
-  process.env.GOOGLE_REDIRECT_URI || SERVER_GOOGLE_REDIRECT;
 const DEFAULT_TERMS_VERSION = process.env.TERMS_VERSION || "2025-10-28";
 const GOOGLE_ERROR_MESSAGE =
   "Google OAuth is temporarily unavailable, please try again later.";
 
-function ensureGoogleConfig() {
-  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI) {
+function getFirstHeaderValue(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return raw?.split(",")[0]?.trim() || null;
+}
+
+function getRequestBaseUrl(req: Request) {
+  const forwardedProto = getFirstHeaderValue(
+    req.headers["x-forwarded-proto"] as string | string[] | undefined
+  );
+  const forwardedHost = getFirstHeaderValue(
+    req.headers["x-forwarded-host"] as string | string[] | undefined
+  );
+  const proto = forwardedProto || req.protocol || "http";
+  const host = forwardedHost || req.get("host");
+  if (!host) return null;
+  return `${proto}://${host}`;
+}
+
+function getGoogleRedirectUri(req: Request) {
+  const explicit = process.env.GOOGLE_REDIRECT_URI?.trim();
+  if (explicit) return validateGoogleRedirectUri(explicit);
+
+  const base =
+    process.env.API_URL?.trim() ||
+    process.env.SERVER_URL?.trim() ||
+    getRequestBaseUrl(req) ||
+    `http://localhost:${process.env.PORT || 1000}`;
+  return validateGoogleRedirectUri(
+    `${base.replace(/\/+$/, "")}/api/auth/google/callback`
+  );
+}
+
+function ensureGoogleConfig(req: Request) {
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     const err: any = new Error("Google OAuth is not configured correctly");
     err.status = 500;
     throw err;
   }
+  return getGoogleRedirectUri(req);
 }
 
 const getClientIp = (req: Request) => {
@@ -91,26 +122,90 @@ const buildGoogleRedirect = (
   }
   return url.toString();
 };
-const buildCookieOptions = () => ({
-  httpOnly: true,
-  sameSite: isProd ? ("none" as const) : ("lax" as const),
-  secure: isProd,
-  path: "/",
-});
-function setAccessCookie(res: Response, token: string) {
+
+function getUrlOrigin(value?: string | null) {
+  if (!value) return null;
+  try {
+    return new URL(value.trim()).origin;
+  } catch {
+    return null;
+  }
+}
+
+function isHttpsUrl(value?: string | null) {
+  return getUrlOrigin(value)?.startsWith("https://") || false;
+}
+
+function isHttpsRequest(req?: Request) {
+  if (!req) return false;
+  const forwardedProto = getFirstHeaderValue(
+    req.headers["x-forwarded-proto"] as string | string[] | undefined
+  );
+  return req.secure || forwardedProto === "https";
+}
+
+function getCookieClientOrigin(req?: Request, clientUrl?: string | null) {
+  return (
+    getUrlOrigin(clientUrl) ||
+    getUrlOrigin(
+      getFirstHeaderValue(req?.headers.origin as string | string[] | undefined)
+    ) ||
+    getUrlOrigin(process.env.APP_URL) ||
+    getUrlOrigin(process.env.CLIENT_URL)
+  );
+}
+
+function getCookieApiOrigin(req?: Request) {
+  return (
+    getUrlOrigin(process.env.API_URL) ||
+    getUrlOrigin(process.env.SERVER_URL) ||
+    getUrlOrigin(req ? getRequestBaseUrl(req) : null)
+  );
+}
+
+const buildCookieOptions = (req?: Request, clientUrl?: string | null) => {
+  const secure =
+    isProd ||
+    isHttpsRequest(req) ||
+    isHttpsUrl(process.env.API_URL) ||
+    isHttpsUrl(process.env.SERVER_URL);
+  const clientOrigin = getCookieClientOrigin(req, clientUrl);
+  const apiOrigin = getCookieApiOrigin(req);
+  const crossOriginApi =
+    !!clientOrigin && !!apiOrigin && clientOrigin !== apiOrigin;
+
+  return {
+    httpOnly: true,
+    sameSite: secure && crossOriginApi ? ("none" as const) : ("lax" as const),
+    secure,
+    path: "/",
+  };
+};
+
+function setAccessCookie(
+  req: Request,
+  res: Response,
+  token: string,
+  clientUrl?: string | null
+) {
   res.cookie("auth_token", token, {
-    ...buildCookieOptions(),
+    ...buildCookieOptions(req, clientUrl),
     maxAge: 15 * 60 * 1000,
   });
 }
-function setRefreshCookie(res: Response, token: string) {
+function setRefreshCookie(
+  req: Request,
+  res: Response,
+  token: string,
+  clientUrl?: string | null
+) {
   res.cookie("refresh_token", token, {
-    ...buildCookieOptions(),
+    ...buildCookieOptions(req, clientUrl),
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
-function clearAuthCookies(res: Response) {
-  const opts = buildCookieOptions();
+function clearAuthCookies(req: Request, res: Response) {
+  const opts = buildCookieOptions(req);
   res.clearCookie("auth_token", opts);
   res.clearCookie("refresh_token", opts);
   res.clearCookie(RESET_COOKIE, opts);
@@ -122,7 +217,12 @@ type TokenUser = {
   email?: string;
 };
 
-function issueAuthTokens(res: Response, user: TokenUser) {
+function issueAuthTokens(
+  req: Request,
+  res: Response,
+  user: TokenUser,
+  clientUrl?: string | null
+) {
   const payload = {
     _id: user._id,
     role: user.role,
@@ -134,14 +234,14 @@ function issueAuthTokens(res: Response, user: TokenUser) {
     REFRESH_SECRET,
     { expiresIn: "7d" }
   );
-  setAccessCookie(res, accessToken);
-  setRefreshCookie(res, refreshToken);
+  setAccessCookie(req, res, accessToken, clientUrl);
+  setRefreshCookie(req, res, refreshToken, clientUrl);
   return { accessToken, refreshToken };
 }
 
 export const getGoogleAuthUrl = (req: Request, res: Response) => {
   try {
-    ensureGoogleConfig();
+    const googleRedirectUri = ensureGoogleConfig(req);
     const requestedMode = String(req.query.mode || "login").toLowerCase();
     const mode = requestedMode === "signup" ? "signup" : "login";
     const redirectTo =
@@ -172,7 +272,7 @@ export const getGoogleAuthUrl = (req: Request, res: Response) => {
     });
     const url = buildGoogleAuthUrl(
       GOOGLE_CLIENT_ID,
-      GOOGLE_REDIRECT_URI,
+      googleRedirectUri,
       state
     );
     res.json({ url });
@@ -185,12 +285,24 @@ export const getGoogleAuthUrl = (req: Request, res: Response) => {
 export const handleGoogleCallback = async (req: Request, res: Response) => {
   let decoded: GoogleStatePayload | null = null;
   try {
-    ensureGoogleConfig();
+    const googleRedirectUri = ensureGoogleConfig(req);
     const code = req.query.code as string | undefined;
     const stateToken = req.query.state as string | undefined;
+    const oauthError = req.query.error as string | undefined;
+    const oauthErrorDescription = req.query.error_description as
+      | string
+      | undefined;
+    if (stateToken) {
+      decoded = decodeGoogleStateToken(stateToken);
+    }
+    if (oauthError) {
+      throw new Error(
+        oauthErrorDescription || `Google authorization failed: ${oauthError}`
+      );
+    }
     if (!code) throw new Error("Missing authorization code");
     if (!stateToken) throw new Error("Missing state parameter");
-    decoded = decodeGoogleStateToken(stateToken);
+    if (!decoded) decoded = decodeGoogleStateToken(stateToken);
     if (decoded.mode === "signup" && !decoded.termsAccepted) {
       throw new Error("Terms must be accepted to continue with Google signup");
     }
@@ -198,7 +310,7 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
       code,
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
-      GOOGLE_REDIRECT_URI
+      googleRedirectUri
     );
     const profile = await fetchGoogleProfile(tokens.access_token);
     const user = await upsertGoogleUser(profile, {
@@ -214,11 +326,16 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
         decoded.termsUserAgent || req.headers["user-agent"] || null,
       ip: getClientIp(req),
     });
-    issueAuthTokens(res, {
-      _id: user._id.toString(),
-      role: user.role,
-      email: user.email,
-    });
+    issueAuthTokens(
+      req,
+      res,
+      {
+        _id: user._id.toString(),
+        role: user.role,
+        email: user.email,
+      },
+      decoded.redirectTo
+    );
     const target = buildGoogleRedirect(
       decoded.redirectTo,
       "success",
@@ -256,7 +373,7 @@ export const registerUser = async (
       termsUserAgent: req.headers["user-agent"] || null,
       termsLocale: (req.headers["accept-language"] as string) || null,
     });
-    issueAuthTokens(res, {
+    issueAuthTokens(req, res, {
       _id: user._id,
       role: user.role,
       email: user.email,
@@ -275,7 +392,7 @@ export const registerUser = async (
 export const loginUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = await loginSvc(req.body);
-    issueAuthTokens(res, {
+    issueAuthTokens(req, res, {
       _id: user._id,
       role: user.role,
       email: user.email,
@@ -290,10 +407,10 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     );
   }
 };
-export const logoutUser = (_req: Request, res: Response): void => {
+export const logoutUser = (req: Request, res: Response): void => {
   try {
     logoutSvc();
-    clearAuthCookies(res);
+    clearAuthCookies(req, res);
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error: any) {
     handleError(res, 500, "Logout failed");
@@ -323,7 +440,7 @@ export const refreshToken = (req: Request, res: Response): void => {
         ACCESS_SECRET,
         { expiresIn: "15m" }
       );
-      setAccessCookie(res, newAccess);
+      setAccessCookie(req, res, newAccess);
       res.json({ ok: true });
     });
   } catch (error: any) {
@@ -407,17 +524,14 @@ export async function consumeResetToken(req: Request, res: Response) {
     const session = jwt.sign({ uid: user._id }, RESET_SESSION_SECRET, {
       expiresIn: "10m",
     });
-    res.cookie(RESET_COOKIE, session, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: isProd,
-      path: "/",
-      maxAge: 10 * 60 * 1000,
-    });
     const app = (process.env.APP_URL || "http://localhost:5173").replace(
       /\/+$/,
       ""
     );
+    res.cookie(RESET_COOKIE, session, {
+      ...buildCookieOptions(req, app),
+      maxAge: 10 * 60 * 1000,
+    });
     return res.redirect(302, `${app}/reset-password`);
   } catch (e) {
     console.error("[consumeResetToken] error:", e);
@@ -448,7 +562,7 @@ export async function resetPasswordWithCookie(req: Request, res: Response) {
     user.password = hashPassword(newPassword);
     user.passwordChangedAt = new Date();
     await user.save();
-    clearAuthCookies(res);
+    clearAuthCookies(req, res);
     return res.json({ ok: true });
   } catch (e: any) {
     console.error("[resetPasswordWithCookie] error:", e);

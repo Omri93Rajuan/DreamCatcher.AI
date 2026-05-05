@@ -36,10 +36,30 @@ export const googleAuthUrlSchema = z
   });
 
 export const googleCallbackSchema = z.object({
-  query: z.object({
-    code: z.string().min(1),
-    state: z.string().min(1),
-  }),
+  query: z
+    .object({
+      code: z.string().min(1).optional(),
+      state: z.string().min(1).optional(),
+      error: z.string().min(1).optional(),
+      error_description: z.string().optional(),
+    })
+    .superRefine((query, ctx) => {
+      if (query.error) return;
+      if (!query.code) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["code"],
+          message: "code is required unless Google returned an error",
+        });
+      }
+      if (!query.state) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["state"],
+          message: "state is required unless Google returned an error",
+        });
+      }
+    }),
 });
 
 export const consumeResetTokenSchema = z.object({
