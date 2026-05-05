@@ -5,6 +5,7 @@ import {
   consumeResetTokenSchema,
   googleAuthUrlSchema,
   googleCallbackSchema,
+  googleCompleteSchema,
   refreshTokenSchema,
   verifyTokenSchema,
 } from "../validation/auth.zod";
@@ -43,6 +44,11 @@ router.get(
   "/google/callback",
   validate(googleCallbackSchema),
   authController.handleGoogleCallback
+);
+router.post(
+  "/google/complete",
+  validate(googleCompleteSchema),
+  authController.completeGoogleCallback
 );
 router.get(
   "/user/:id",
