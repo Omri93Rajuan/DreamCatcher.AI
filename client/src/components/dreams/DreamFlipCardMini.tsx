@@ -80,70 +80,78 @@ export default function DreamFlipCardMini({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22 }}
-      className="h-full"
+      className="h-full min-w-0"
       dir={i18n.dir()}
     >
-      <Card className="flex h-full flex-col overflow-hidden rounded-xl border border-black/10 bg-white/88 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-white/[0.06]">
-        <CardContent className="flex flex-1 flex-col p-0">
-          <header className="border-b border-black/10 px-4 py-4 dark:border-white/10">
+      <Card className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-black/10 bg-white/88 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-white/[0.06]">
+        <CardContent className="flex min-w-0 flex-1 flex-col p-0">
+          <header className="border-b border-black/10 px-3 py-4 dark:border-white/10 sm:px-4">
             <div className="mb-3 flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h3 className="truncate text-lg font-extrabold leading-7 text-slate-950 dark:text-white">
                   {title}
                 </h3>
                 {createdAt && (
-                  <div className="mt-1 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/55">
-                    <Calendar className="h-4 w-4" />
-                    {format(createdAt, "d MMMM yyyy", { locale })}
+                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/55">
+                    <Calendar className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      {format(createdAt, "d MMMM yyyy", { locale })}
+                    </span>
                   </div>
                 )}
               </div>
 
               <span
                 className={[
-                  "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+                  "inline-flex max-w-[48%] shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold",
                   isShared
                     ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200"
                     : "border-slate-500/15 bg-slate-500/10 text-slate-600 dark:text-white/60",
                 ].join(" ")}
               >
-                {isShared ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
-                {isShared ? t("myDreams.shared") : t("myDreams.private")}
+                {isShared ? (
+                  <Globe2 className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <Lock className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="truncate">
+                  {isShared ? t("myDreams.shared") : t("myDreams.private")}
+                </span>
               </span>
             </div>
 
-            <div className="grid grid-cols-2 rounded-lg border border-black/10 bg-slate-100/80 p-1 text-sm dark:border-white/10 dark:bg-white/[0.06]">
+            <div className="grid min-w-0 grid-cols-2 rounded-lg border border-black/10 bg-slate-100/80 p-1 text-sm dark:border-white/10 dark:bg-white/[0.06]">
               <button
                 type="button"
                 onClick={() => setActiveView("dream")}
                 className={[
-                  "inline-flex h-9 items-center justify-center gap-2 rounded-md font-semibold transition",
+                  "inline-flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 font-semibold transition",
                   isDreamView
                     ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
                     : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
                 ].join(" ")}
               >
-                <FileText className="h-4 w-4" />
-                {t("dreams.card.dream")}
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("dreams.card.dream")}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveView("ai")}
                 className={[
-                  "inline-flex h-9 items-center justify-center gap-2 rounded-md font-semibold transition",
+                  "inline-flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 font-semibold transition",
                   !isDreamView
                     ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
                     : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
                 ].join(" ")}
               >
-                <Sparkles className="h-4 w-4" />
-                {t("dreams.card.ai")}
+                <Sparkles className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t("dreams.card.ai")}</span>
               </button>
             </div>
           </header>
 
           <section
-            className="flex flex-1 flex-col px-4 py-4"
+            className="flex min-w-0 flex-1 flex-col px-3 py-4 sm:px-4"
             style={{ minHeight: bodyHeight }}
           >
             <p className="line-clamp-7 whitespace-pre-line text-sm leading-7 text-slate-700 dark:text-white/72">
@@ -161,51 +169,68 @@ export default function DreamFlipCardMini({
             )}
           </section>
 
-          <footer className="mt-auto flex flex-col gap-3 border-t border-black/10 px-4 py-3 dark:border-white/10">
+          <footer className="mt-auto flex min-w-0 flex-col gap-3 border-t border-black/10 px-3 py-3 dark:border-white/10 sm:px-4">
             {showReactions && dreamId && (
               <ReactionsBar
                 dreamId={dreamId}
-                className="text-slate-500 dark:text-white/60"
+                className="min-w-0 flex-wrap justify-end gap-x-4 gap-y-1 text-slate-500 dark:text-white/60"
               />
             )}
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid min-w-0 gap-2">
               {dreamId && (
                 <Link
                   to={`/dreams/${dreamId}`}
-                  className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 dark:text-amber-200"
+                  className="inline-flex h-9 w-full min-w-0 items-center justify-center gap-2 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 text-sm font-semibold text-amber-800 transition-colors hover:bg-amber-500/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]/35 dark:border-amber-300/25 dark:bg-amber-300/10 dark:text-amber-100"
                   title={openDetailsLabel}
                 >
-                  <ExternalLink className="h-4 w-4" />
-                  {openDetailsLabel}
+                  <ExternalLink className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{openDetailsLabel}</span>
                 </Link>
               )}
 
-              {onToggleShare && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onToggleShare(!isShared)}
-                  title={
-                    isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")
+              {(onToggleShare || onDelete) && (
+                <div
+                  className={
+                    onToggleShare
+                      ? "grid min-w-0 grid-cols-[minmax(0,1fr)_auto] gap-2"
+                      : "flex justify-end"
                   }
-                  className="gap-2"
                 >
-                  <Share2 className="h-4 w-4" />
-                  {isShared ? t("myDreams.shareDisable") : t("myDreams.shareEnable")}
-                </Button>
-              )}
+                  {onToggleShare && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onToggleShare(!isShared)}
+                      title={
+                        isShared
+                          ? t("myDreams.shareDisable")
+                          : t("myDreams.shareEnable")
+                      }
+                      className="w-full min-w-0 gap-2 border-amber-500/35 bg-white/70 text-amber-800 dark:border-amber-300/25 dark:bg-white/[0.04] dark:text-amber-100"
+                    >
+                      <Share2 className="h-4 w-4 shrink-0" />
+                      <span className="truncate">
+                        {isShared
+                          ? t("myDreams.shareDisable")
+                          : t("myDreams.shareEnable")}
+                      </span>
+                    </Button>
+                  )}
 
-              {onDelete && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setConfirmOpen(true)}
-                  title={t("myDreams.delete")}
-                  className="text-rose-600 hover:bg-rose-500/10 dark:text-rose-300"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                  {onDelete && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setConfirmOpen(true)}
+                      title={t("myDreams.delete")}
+                      aria-label={t("myDreams.delete")}
+                      className="h-9 w-9 shrink-0 px-0 text-rose-600 hover:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-400/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </footer>

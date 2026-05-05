@@ -9,6 +9,8 @@ import connectToDb from "./src/db/dbService";
 const app = express();
 const server = http.createServer(app);
 
+app.set("trust proxy", 1);
+
 const configuredOrigins = [
   process.env.APP_URL,
   process.env.CLIENT_URL,
