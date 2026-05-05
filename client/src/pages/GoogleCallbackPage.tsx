@@ -16,6 +16,15 @@ export default function GoogleCallbackPage() {
   const initialStatus = params.get("status");
 
   useEffect(() => {
+    const loadVerifiedUser = async () => {
+      let verify = await AuthApi.verify().catch(() => null);
+      if (!verify?.user) {
+        await AuthApi.refresh().catch(() => null);
+        verify = await AuthApi.verify().catch(() => null);
+      }
+      return verify?.user ?? null;
+    };
+
     if (initialStatus === "error") {
       setStatus("error");
       setMessage(t("googleCallback.failed"));
@@ -24,12 +33,12 @@ export default function GoogleCallbackPage() {
     let cancelled = false;
     (async () => {
       try {
-        const verify = await AuthApi.verify();
+        const verifiedUser = await loadVerifiedUser();
         if (cancelled) return;
-        if (verify?.user) {
-          const id = (verify.user as any)._id || (verify.user as any).id;
+        if (verifiedUser) {
+          const id = (verifiedUser as any)._id || (verifiedUser as any).id;
           const full = id ? await AuthApi.getMe(id) : null;
-          const detailed = full?.user ?? verify.user;
+          const detailed = full?.user ?? verifiedUser;
           setUser({
             ...(detailed as any),
             _id: (detailed as any)?._id || id,

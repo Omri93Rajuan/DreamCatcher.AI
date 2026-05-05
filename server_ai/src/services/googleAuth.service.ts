@@ -1,14 +1,29 @@
 import { randomBytes } from "crypto";
+import { isIP } from "net";
 import jwt from "jsonwebtoken";
 import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
 
 const DEFAULT_APP_URL = (
-  process.env.APP_URL || "http://localhost:5173"
+  process.env.APP_URL || process.env.CLIENT_URL || "http://localhost:5173"
 ).replace(/\/+$/, "");
 const APP_URL = DEFAULT_APP_URL;
 const APP_URL_ORIGIN = new URL(APP_URL).origin;
 const DEFAULT_GOOGLE_REDIRECT = `${APP_URL}/auth/google/callback`;
+const CLIENT_REDIRECT_ORIGINS = new Set(
+  [APP_URL, process.env.CLIENT_URL, process.env.CORS_ORIGINS]
+    .flatMap((value) => (value || "").split(","))
+    .map((value) => value.trim().replace(/\/+$/, ""))
+    .filter(Boolean)
+    .map((value) => {
+      try {
+        return new URL(value).origin;
+      } catch {
+        return null;
+      }
+    })
+    .filter((value): value is string => !!value)
+);
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
@@ -88,7 +103,12 @@ export const sanitizeRedirectUrl = (
   if (!trimmed) return fallback;
   try {
     const parsed = new URL(trimmed, APP_URL);
-    if (parsed.origin !== APP_URL_ORIGIN) return fallback;
+    if (
+      parsed.origin !== APP_URL_ORIGIN &&
+      !CLIENT_REDIRECT_ORIGINS.has(parsed.origin)
+    ) {
+      return fallback;
+    }
     return parsed.toString();
   } catch {
     return fallback;
@@ -137,6 +157,50 @@ const toError = (message: string, status = 400) => {
   const err: any = new Error(message);
   err.status = status;
   return err;
+};
+
+const normalizeHost = (host: string) =>
+  host.trim().toLowerCase().replace(/^\[/, "").replace(/\]$/, "");
+
+export const isLocalhostHost = (host: string) => {
+  const normalized = normalizeHost(host);
+  return (
+    normalized === "localhost" ||
+    normalized === "127.0.0.1" ||
+    normalized === "::1"
+  );
+};
+
+export const validateGoogleRedirectUri = (
+  redirectUri: string,
+  options: { production?: boolean } = {}
+) => {
+  const production = options.production ?? process.env.NODE_ENV === "production";
+  let parsed: URL;
+  try {
+    parsed = new URL(redirectUri.trim());
+  } catch {
+    throw toError("Google redirect URI must be a valid absolute URL", 500);
+  }
+
+  const isLocal = isLocalhostHost(parsed.hostname);
+  if (parsed.hash) {
+    throw toError("Google redirect URI must not include a URL fragment", 500);
+  }
+  if (parsed.username || parsed.password) {
+    throw toError("Google redirect URI must not include credentials", 500);
+  }
+  if (production && isLocal) {
+    throw toError("Google redirect URI cannot use localhost in production", 500);
+  }
+  if (parsed.protocol !== "https:" && !(parsed.protocol === "http:" && isLocal)) {
+    throw toError("Google redirect URI must use HTTPS outside localhost", 500);
+  }
+  if (!isLocal && isIP(normalizeHost(parsed.hostname))) {
+    throw toError("Google redirect URI cannot use a raw IP address", 500);
+  }
+
+  return parsed.toString();
 };
 
 export const exchangeCodeForTokens = async (

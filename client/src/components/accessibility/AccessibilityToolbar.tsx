@@ -155,7 +155,7 @@ export default function AccessibilityToolbar() {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:bg-white/90 dark:text-slate-900"
+        className="flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-amber-400 dark:border dark:border-amber-300/25 dark:bg-slate-950/95 dark:text-amber-100"
         aria-expanded={open}
         aria-controls={panelId}
         style={{ fontSize: "14px" }}
@@ -168,7 +168,7 @@ export default function AccessibilityToolbar() {
           id={panelId}
           role="dialog"
           aria-label={t("accessibility.dialogLabel")}
-          className="w-[min(20rem,calc(100vw-2rem))] rounded-3xl border border-slate-200 bg-white/95 p-4 text-sm shadow-2xl backdrop-blur dark:border-white/20 dark:bg-slate-900/95 max-h-[min(80vh,500px)] overflow-y-auto sm:p-5"
+          className="max-h-[min(80vh,500px)] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-3xl border border-slate-200 bg-white/95 p-4 text-sm text-slate-900 shadow-2xl backdrop-blur dark:border-white/20 dark:bg-slate-950/95 dark:text-white sm:p-5"
           style={{ fontSize: "14px" }}
         >
           <div className="mb-4 flex items-center justify-between">
@@ -231,7 +231,7 @@ export default function AccessibilityToolbar() {
                     onClick={() => setColorProfile(id)}
                     className={`rounded-2xl border px-3 py-3 text-right transition ${
                       prefs.colorProfile === id
-                        ? "border-amber-400 bg-amber-50 text-slate-900 dark:bg-amber-400/15"
+                        ? "border-amber-400 bg-amber-50 text-slate-900 dark:border-amber-300/40 dark:bg-amber-300/15 dark:text-amber-50"
                         : "border-slate-200 bg-white/80 dark:border-white/15 dark:bg-white/5"
                     }`}
                     aria-pressed={prefs.colorProfile === id}
@@ -255,7 +255,7 @@ export default function AccessibilityToolbar() {
                   onClick={() => toggle(key)}
                   className={`flex flex-col items-start rounded-2xl border px-3 py-3 text-left transition ${
                     prefs[key]
-                      ? "border-amber-400 bg-amber-50 text-slate-900 dark:bg-amber-400/15"
+                      ? "border-amber-400 bg-amber-50 text-slate-900 dark:border-amber-300/40 dark:bg-amber-300/15 dark:text-amber-50"
                       : "border-slate-200 bg-white/80 text-slate-600 dark:border-white/15 dark:bg-white/5 dark:text-white/80"
                   }`}
                   aria-pressed={prefs[key]}
