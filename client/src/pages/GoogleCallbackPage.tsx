@@ -12,8 +12,10 @@ export default function GoogleCallbackPage() {
   const setUser = useAuthStore((s) => s.setUser);
   const [status, setStatus] = useState<"loading" | "error">("loading");
   const [message, setMessage] = useState(t("googleCallback.connecting"));
+  const [debugCode, setDebugCode] = useState<string | null>(null);
   const next = useMemo(() => params.get("next") || "/", [params]);
   const initialStatus = params.get("status");
+  const callbackReason = params.get("reason") || undefined;
   const code = params.get("code") || undefined;
   const stateToken = params.get("state") || undefined;
   const oauthError = params.get("error") || undefined;
@@ -46,6 +48,7 @@ export default function GoogleCallbackPage() {
     if (initialStatus === "error") {
       setStatus("error");
       setMessage(t("googleCallback.failed"));
+      setDebugCode(callbackReason || oauthError || null);
       return;
     }
     let cancelled = false;
@@ -70,10 +73,13 @@ export default function GoogleCallbackPage() {
         }
         setStatus("error");
         setMessage(t("googleCallback.verifyFailed"));
-      } catch {
+      } catch (err: any) {
         if (!cancelled) {
           setStatus("error");
           setMessage(t("googleCallback.genericError"));
+          setDebugCode(
+            err?.response?.data?.error?.code || oauthError || callbackReason || null
+          );
         }
       }
     })();
@@ -82,6 +88,7 @@ export default function GoogleCallbackPage() {
     };
   }, [
     code,
+    callbackReason,
     initialStatus,
     navigate,
     next,
@@ -104,6 +111,11 @@ export default function GoogleCallbackPage() {
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             {message}
           </h1>
+          {status === "error" && debugCode && (
+            <p className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 dark:bg-white/10 dark:text-white/60">
+              Google OAuth: {debugCode}
+            </p>
+          )}
 
           {status === "error" && (
             <button

@@ -95,6 +95,7 @@ function ensureGoogleConfig(req: Request) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET) {
     const err: any = new Error("Google OAuth is not configured correctly");
     err.status = 500;
+    err.code = "google_config_missing";
     throw err;
   }
   return getGoogleRedirectUri(req);
@@ -111,17 +112,47 @@ const buildGoogleRedirect = (
   base: string | undefined,
   status: "success" | "error",
   next?: string | null,
-  message?: string
+  message?: string,
+  reason?: string
 ) => {
   const target = sanitizeRedirectUrl(base);
   const url = new URL(target);
   url.searchParams.set("status", status);
   url.searchParams.set("next", sanitizeNextPath(next));
+  if (reason) {
+    url.searchParams.set("reason", reason.slice(0, 80));
+  }
   if (message) {
     url.searchParams.set("message", message.slice(0, 200));
   }
   return url.toString();
 };
+
+function createGoogleFlowError(
+  message: string,
+  code: string,
+  status = 400
+) {
+  const err: any = new Error(message);
+  err.status = status;
+  err.code = code;
+  return err;
+}
+
+function getGoogleErrorReason(error: any) {
+  const rawCode = typeof error?.code === "string" ? error.code : "";
+  if (/^[a-z0-9_.-]{2,80}$/i.test(rawCode)) return rawCode;
+  if (error?.name === "TokenExpiredError") return "state_expired";
+  if (error?.name === "JsonWebTokenError") return "invalid_state";
+  if (error?.name === "ValidationError") return "user_validation_failed";
+  if (error?.name === "MongoServerError") {
+    return error?.code === 11000 ? "duplicate_user" : "database_error";
+  }
+  if (error?.status === 404) return "google_account_not_registered";
+  if (error?.status === 401) return "unauthorized";
+  if (error?.status === 500) return "server_config_or_runtime_error";
+  return "unknown_google_oauth_error";
+}
 
 function getUrlOrigin(value?: string | null) {
   if (!value) return null;
@@ -276,15 +307,26 @@ async function completeGoogleAuthorization(
       decoded = decodeGoogleStateToken(stateToken);
     }
     if (oauthError) {
-      throw new Error(
-        oauthErrorDescription || `Google authorization failed: ${oauthError}`
+      throw createGoogleFlowError(
+        oauthErrorDescription || `Google authorization failed: ${oauthError}`,
+        oauthError
       );
     }
-    if (!code) throw new Error("Missing authorization code");
-    if (!stateToken) throw new Error("Missing state parameter");
+    if (!code) {
+      throw createGoogleFlowError(
+        "Missing authorization code",
+        "missing_authorization_code"
+      );
+    }
+    if (!stateToken) {
+      throw createGoogleFlowError("Missing state parameter", "missing_state");
+    }
     if (!decoded) decoded = decodeGoogleStateToken(stateToken);
     if (decoded.mode === "signup" && !decoded.termsAccepted) {
-      throw new Error("Terms must be accepted to continue with Google signup");
+      throw createGoogleFlowError(
+        "Terms must be accepted to continue with Google signup",
+        "terms_not_accepted"
+      );
     }
     const tokens = await exchangeCodeForTokens(
       code,
@@ -383,11 +425,13 @@ export const handleGoogleCallback = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("[GoogleOAuth] callback error:", error);
     const decoded = error?.decoded as GoogleStatePayload | null | undefined;
+    const reason = getGoogleErrorReason(error);
     const target = buildGoogleRedirect(
       decoded?.redirectTo,
       "error",
       decoded?.next,
-      GOOGLE_ERROR_MESSAGE
+      GOOGLE_ERROR_MESSAGE,
+      reason
     );
     return res.redirect(302, target);
   }
@@ -408,7 +452,14 @@ export const completeGoogleCallback = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error("[GoogleOAuth] complete error:", error);
-    return handleError(res, error.status || 400, GOOGLE_ERROR_MESSAGE);
+    const status = error.status || 400;
+    return res.status(status).json({
+      error: {
+        status,
+        message: GOOGLE_ERROR_MESSAGE,
+        code: getGoogleErrorReason(error),
+      },
+    });
   }
 };
 
