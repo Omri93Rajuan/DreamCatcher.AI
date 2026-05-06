@@ -9,7 +9,7 @@ export default function ArticlesGrid({
   onOpen,
 }: {
   items: Article[];
-  onOpen: (a: Article) => void;
+  onOpen?: (a: Article) => void;
 }) {
   const { t, i18n } = useTranslation();
 
@@ -26,7 +26,7 @@ export default function ArticlesGrid({
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {items.map((a) => (
-          <ArticleCardSplit key={a.id} a={a} onOpen={() => onOpen(a)} />
+          <ArticleCardSplit key={a.id} a={a} onOpen={() => onOpen?.(a)} />
         ))}
       </div>
     </section>

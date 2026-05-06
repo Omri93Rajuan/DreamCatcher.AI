@@ -144,6 +144,7 @@ export interface User {
 export type UpdateUserDTO = Partial<Omit<User, "_id" | "email" | "role" | "subscription" | "termsAccepted" | "termsAcceptedAt" | "termsVersion" | "termsIp" | "termsUserAgent" | "termsLocale">>;
 export type Article = {
     id: string;
+    slug?: string;
     title: string;
     author: string;
     content: string;
@@ -151,5 +152,7 @@ export type Article = {
     coverUrl?: string;
     authorAvatar?: string;
     publishedAt?: string;
+    modifiedAt?: string;
+    updatedAt?: string;
     tags?: string[];
 };

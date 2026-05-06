@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ComponentType, type ReactNode } from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, type RouteObject } from "react-router-dom";
 import Layout from "@/layout/layout";
 import { AdminRoute, ProtectedRoute } from "./protected";
 
@@ -11,6 +11,7 @@ const DreamDetailsPage = lazy(() => import("@/pages/DreamDetailsPage"));
 const AccountPage = lazy(() => import("@/pages/AccountPage"));
 const MyDreamsPage = lazy(() => import("@/pages/MyDreamsPage"));
 const ArticlesPage = lazy(() => import("@/pages/ArticlesPage"));
+const ArticlePage = lazy(() => import("@/pages/ArticlePage"));
 const ContactPage = lazy(() => import("@/pages/ContactPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
@@ -53,7 +54,7 @@ function adminRouteElement(Page: ComponentType) {
   );
 }
 
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   { path: "/", element: routeElement(HomePage) },
   { path: "/login", element: routeElement(LoginPage) },
   { path: "/register", element: routeElement(RegisterPage) },
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
   { path: "/account", element: routeElement(AccountPage, true) },
   { path: "/me/dreams", element: routeElement(MyDreamsPage, true) },
   { path: "/articles", element: routeElement(ArticlesPage) },
+  { path: "/articles/:slug", element: routeElement(ArticlePage) },
   { path: "/contact", element: routeElement(ContactPage) },
   { path: "/reset-password", element: routeElement(ResetPasswordPage) },
   { path: "/forgot-password", element: routeElement(ForgotPasswordPage) },
@@ -69,4 +71,8 @@ export const router = createBrowserRouter([
   { path: "/privacy", element: routeElement(PrivacyPage) },
   { path: "/admin", element: adminRouteElement(AdminPage) },
   { path: "*", element: routeElement(NotFoundPage) },
-]);
+];
+
+export function createAppRouter() {
+  return createBrowserRouter(routes);
+}

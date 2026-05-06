@@ -1,5 +1,6 @@
 ﻿"use client";
 import * as React from "react";
+import { Link } from "react-router-dom";
 import MetaRow from "./MetaRow";
 import CategoryTag from "./CategoryTag";
 import { resolveArticleCover } from "./coverImages";
@@ -7,13 +8,14 @@ import logo from "@/assets/logo.webp";
 import { Article } from "@/lib/api/types";
 import { clampText, stripHtml } from "@/lib/utils/articlesUtils";
 import { useTranslation } from "react-i18next";
+import { getArticlePath } from "@/lib/seo";
 
 export default function ArticleCard({
   a,
   onOpen,
 }: {
   a: Article;
-  onOpen: () => void;
+  onOpen?: () => void;
 }) {
   const { t } = useTranslation();
   const coverSrc = resolveArticleCover(a.coverUrl);
@@ -58,13 +60,14 @@ export default function ArticleCard({
           </div>
         ) : null}
 
-        <button
+        <Link
+          to={getArticlePath(a)}
           onClick={onOpen}
           className="mt-auto inline-flex items-center justify-center rounded-full border border-amber-600 px-4 py-2 text-sm font-semibold text-amber-700 transition hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-300/40 sm:w-auto dark:border-amber-300 dark:text-amber-200 dark:hover:bg-white/10"
           aria-label={t("articles.readMoreAria", { title: a.title })}
         >
           {t("articles.readMore")}
-        </button>
+        </Link>
       </div>
     </article>
   );
