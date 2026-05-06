@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
 const PREFS_KEY = "a11y-toolbar-prefs";
 
@@ -66,7 +66,10 @@ function applyPrefs(prefs: SavedPrefs) {
 }
 
 export default function AccessibilityPrefsBoot() {
-  useLayoutEffect(() => {
+  const useIsomorphicLayoutEffect =
+    typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+  useIsomorphicLayoutEffect(() => {
     if (typeof window === "undefined") return;
     applyPrefs(readPrefs());
   }, []);

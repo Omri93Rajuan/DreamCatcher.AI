@@ -1,5 +1,8 @@
 import { RouterProvider as RRProvider } from "react-router-dom";
-import { router } from "@/routes";
+import { useState } from "react";
+import { createAppRouter } from "@/routes";
+
 export function RouterProvider() {
+    const [router] = useState(() => createAppRouter());
     return <RRProvider router={router}/>;
 }

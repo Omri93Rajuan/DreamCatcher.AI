@@ -3,6 +3,18 @@ export function stripHtml(s: string) {
         return "";
     return s.replace(/<[^>]+>/g, "");
 }
+export function stripMarkdown(s: string) {
+    if (!s)
+        return "";
+    return stripHtml(s)
+        .replace(/!\[[^\]]*]\([^)]+\)/g, "")
+        .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+        .replace(/^#{1,6}\s+/gm, "")
+        .replace(/^\s*[-*+]\s+/gm, "")
+        .replace(/[*_`>~]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+}
 export function clampText(s: string, n: number) {
     const t = stripHtml(s).trim().replace(/\s+/g, " ");
     return t.length > n ? t.slice(0, n - 1) + "…" : t;

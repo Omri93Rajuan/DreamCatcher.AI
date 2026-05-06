@@ -8,6 +8,8 @@ import { useTranslation } from "react-i18next";
 import { useInViewOnce } from "@/hooks/useInViewOnce";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import StatusCard from "@/components/ui/StatusCard";
+import { usePageSeo } from "@/hooks/usePageSeo";
+import { getHomeSeo } from "@/lib/seo";
 
 const PopularDreams = lazy(() => import("@/components/dreams/PopularDreams"));
 const DreamsPaginated = lazy(() => import("@/components/dreams/DreamsPaginated"));
@@ -21,6 +23,8 @@ const SectionFallback = () => (
 
 export default function HomePage() {
   const { t, i18n } = useTranslation();
+  const homeSeo = useMemo(() => getHomeSeo(), []);
+  usePageSeo(homeSeo);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);

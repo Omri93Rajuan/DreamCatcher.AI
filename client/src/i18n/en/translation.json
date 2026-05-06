@@ -506,7 +506,9 @@
     "count": "{{count}} articles",
     "backToList": "Back to list",
     "backAria": "Back to articles",
-    "readingTime": "~{{minutes}} min read"
+    "readingTime": "~{{minutes}} min read",
+    "related": "Related articles",
+    "archive": "All articles"
   },
   "contact": {
     "title": "Contact us, let your dream arrive",
