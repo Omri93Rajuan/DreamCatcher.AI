@@ -10,6 +10,7 @@ import logo from "@/assets/logo.webp";
 import { Article } from "@/lib/api/types";
 import { useTranslation } from "react-i18next";
 import { getArticleDescription, getArticlePath } from "@/lib/seo";
+import { getArticleSeoEnhancement } from "@/lib/articleSeoEnhancements";
 
 export default function ArticleView({
   article,
@@ -23,6 +24,7 @@ export default function ArticleView({
   const { t, i18n } = useTranslation();
   const readingMins = calcReadingTime(article.content);
   const coverSrc = resolveArticleCover(article.coverUrl);
+  const seoEnhancement = getArticleSeoEnhancement(article.id);
   return (
     <>
     <article className="rounded-3xl border border-black/10 bg-white/80 shadow-[0_8px_24px_-16px_rgba(0,0,0,.12)] dark:border-white/10 dark:bg-white/[0.06]" dir={i18n.dir()}>
@@ -74,6 +76,50 @@ export default function ArticleView({
       </div>
 
       <ArticleBody content={article.content} />
+
+      {seoEnhancement ? (
+        <div className="px-4 pb-10 sm:px-6">
+          <div className="mx-auto max-w-3xl space-y-8 rounded-3xl border border-black/10 bg-white/70 p-5 dark:border-white/10 dark:bg-white/[0.04] sm:p-6">
+            {seoEnhancement.searchPhrases.length ? (
+              <section aria-label={t("articles.relatedSearches", { defaultValue: "Related searches" })}>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl">
+                  {t("articles.relatedSearches", { defaultValue: "Related searches" })}
+                </h2>
+                <ul className="mt-4 flex flex-wrap gap-2">
+                  {seoEnhancement.searchPhrases.map((phrase) => (
+                    <li
+                      key={phrase}
+                      className="rounded-full border border-amber-500/30 bg-amber-50 px-3 py-1.5 text-sm font-semibold text-amber-800 dark:border-amber-300/30 dark:bg-amber-300/10 dark:text-amber-100"
+                    >
+                      {phrase}
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+
+            {seoEnhancement.faqs.length ? (
+              <section aria-label={t("articles.faqTitle", { defaultValue: "Frequently asked questions" })}>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl">
+                  {t("articles.faqTitle", { defaultValue: "Frequently asked questions" })}
+                </h2>
+                <div className="mt-4 space-y-4">
+                  {seoEnhancement.faqs.map((faq) => (
+                    <div key={faq.question} className="border-t border-black/10 pt-4 first:border-t-0 first:pt-0 dark:border-white/10">
+                      <h3 className="text-base font-extrabold leading-7 text-slate-900 dark:text-white">
+                        {faq.question}
+                      </h3>
+                      <p className="mt-2 text-sm leading-7 text-slate-700 dark:text-white/75 sm:text-base">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </article>
     {relatedArticles.length ? (
       <aside
