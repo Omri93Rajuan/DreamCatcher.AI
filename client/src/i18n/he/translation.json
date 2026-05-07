@@ -508,7 +508,9 @@
     "backAria": "חזרה לרשימת המאמרים",
     "readingTime": "~{{minutes}} דקות קריאה",
     "related": "\u05de\u05d0\u05de\u05e8\u05d9\u05dd \u05e7\u05e9\u05d5\u05e8\u05d9\u05dd",
-    "archive": "\u05db\u05dc \u05d4\u05de\u05d0\u05de\u05e8\u05d9\u05dd"
+    "archive": "\u05db\u05dc \u05d4\u05de\u05d0\u05de\u05e8\u05d9\u05dd",
+    "relatedSearches": "\u05d7\u05d9\u05e4\u05d5\u05e9\u05d9\u05dd \u05e7\u05e9\u05d5\u05e8\u05d9\u05dd",
+    "faqTitle": "\u05e9\u05d0\u05dc\u05d5\u05ea \u05e0\u05e4\u05d5\u05e6\u05d5\u05ea"
   },
   "contact": {
     "title": "צור קשר, תן לחלום שלך להגיע",

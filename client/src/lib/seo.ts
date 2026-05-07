@@ -3,6 +3,7 @@ import { resolveArticleCover } from "@/components/articles/coverImages";
 import logoUrl from "@/assets/logo.webp";
 import type { Article } from "@/lib/api/types";
 import { stripMarkdown } from "@/lib/utils/articlesUtils";
+import { getArticleSeoEnhancement } from "@/lib/articleSeoEnhancements";
 
 export const SITE_URL = "https://dreamaicatcher.com";
 export const SITE_NAME = "DreamCatcher.AI";
@@ -95,22 +96,26 @@ export function getArticlesSeo(): SeoDescriptor {
 }
 
 export function getArticleDescription(article: Article) {
+  const enhancement = getArticleSeoEnhancement(article.id);
+  if (enhancement?.metaDescription) return enhancement.metaDescription;
   return cleanDescription(article.excerpt || article.content);
 }
 
 export function getArticleSeo(article: Article): SeoDescriptor {
+  const enhancement = getArticleSeoEnhancement(article.id);
   const canonical = getArticleCanonical(article);
   const description = getArticleDescription(article);
   const image = getArticleImageUrl(article);
   const modifiedAt = article.modifiedAt || article.updatedAt;
+  const title = enhancement?.metaTitle || article.title;
 
   return {
-    title: `${article.title} | ${SITE_NAME}`,
+    title: `${title} | ${SITE_NAME}`,
     description,
     canonical,
     robots: "index, follow",
     openGraph: {
-      "og:title": article.title,
+      "og:title": title,
       "og:description": description,
       "og:image": image,
       "og:type": "article",
@@ -161,12 +166,17 @@ function createArticleJsonLd(
   canonical: string,
 ) {
   const modifiedAt = article.modifiedAt || article.updatedAt;
-
-  return {
-    "@context": "https://schema.org",
+  const enhancement = getArticleSeoEnhancement(article.id);
+  const articleSchema = {
     "@type": "Article",
     headline: article.title,
     description,
+    keywords: [
+      ...(article.tags || []),
+      ...(enhancement
+        ? [enhancement.focusKeyword, ...enhancement.searchPhrases]
+        : []),
+    ],
     image: [image],
     datePublished: article.publishedAt,
     ...(modifiedAt ? { dateModified: modifiedAt } : {}),
@@ -186,6 +196,31 @@ function createArticleJsonLd(
       "@type": "WebPage",
       "@id": canonical,
     },
+  };
+
+  if (!enhancement?.faqs?.length) {
+    return {
+      "@context": "https://schema.org",
+      ...articleSchema,
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      articleSchema,
+      {
+        "@type": "FAQPage",
+        mainEntity: enhancement.faqs.map((faq) => ({
+          "@type": "Question",
+          name: faq.question,
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: faq.answer,
+          },
+        })),
+      },
+    ],
   };
 }
 
