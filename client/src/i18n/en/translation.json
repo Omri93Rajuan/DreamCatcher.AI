@@ -1,6 +1,6 @@
 {
   "layout": {
-    "brandTagline": "Dreamers, awake, interpret - together.",
+    "brandTagline": "Jewish dream interpretation in Hebrew.",
     "nav": {
       "home": "Home",
       "articles": "Articles",
@@ -16,7 +16,7 @@
       "languageToggle": "Change language"
     },
     "footer": {
-      "tagline": "Dreamers, awake, interpret - together.",
+      "tagline": "Jewish dream interpretation in Hebrew.",
       "allRights": "All rights reserved."
     },
     "cookies": {
@@ -81,23 +81,23 @@
     "fallbackName": "User"
   },
   "home": {
-    "heroTitle": "Discover what your dreams mean",
-    "heroSubtitle": "Interpret your dreams with advanced AI",
+    "heroTitle": "Jewish Dream Interpretation",
+    "heroSubtitle": "Interpret dreams in Hebrew with AI guided by Jewish tradition, symbols, emotions, and practical reflection.",
     "statsError": "Failed to load statistics: {{message}}",
     "allDreams": "All dreams"
   },
   "interpret": {
-    "placeholder": "Describe your dream... (paste works too)",
-    "cta": "Interpret my dream",
-    "thinking": "Thinking...",
-    "heading": "Dream insight",
+    "placeholder": "Describe your dream and receive a Jewish-tradition interpretation... (paste works too)",
+    "cta": "Interpret Jewishly",
+    "thinking": "Interpreting through Jewish tradition...",
+    "heading": "Jewish dream interpretation",
     "share": "Share with everyone",
     "shared": "Shared successfully!",
     "openMine": "Open my dreams",
     "sharedNotice": "The dream is now public for everyone to see.",
-    "toastLogin": "Please log in to interpret a dream",
+    "toastLogin": "Please log in to interpret a dream through Jewish tradition",
     "titlePlaceholder": "Title (optional)",
-    "submitting": "Interpreting and saving..."
+    "submitting": "Interpreting through Jewish tradition and saving..."
   },
   "stats": {
     "aria": "Key metrics",
@@ -136,7 +136,7 @@
       },
       {
         "title": "3. Personal responsibility",
-        "body": "DreamCatcher.AI does not replace professional advice. Every decision made following an interpretation is solely the user’s responsibility."
+        "body": "DreamCatcher.AI offers personal reflection inspired by Jewish tradition and does not replace professional, medical, mental health, or rabbinic advice. Every decision made following an interpretation is solely the user’s responsibility."
       },
       {
         "title": "4. Terms updates",
@@ -163,10 +163,10 @@
   "registerPage": {
     "badge": "Over 25,000 dreamers on DreamCatcher.AI",
     "title": "Create a new account and get emotional support through your dreams",
-    "subtitle": "DreamCatcher.AI combines daily journaling, AI, and calming content to help you understand the messages hidden in your dreams and turn them into growth.",
+    "subtitle": "DreamCatcher.AI combines dream journaling, AI, and a Jewish lens to help you understand symbols, emotions, and personal messages in dreams.",
     "benefits": [
-      "Smart dream interpretation with AI that speaks your language.",
-      "Personal dream journal that detects emotional patterns and returns practical insights.",
+      "Jewish dream interpretation with AI that speaks Hebrew.",
+      "Personal dream journal that detects emotional and spiritual patterns and returns practical insights.",
       "Short calming tools, meditations, and breathing for gentle sleep."
     ],
     "formTitle": "Short, focused signup",
@@ -216,7 +216,7 @@
   "myDreams": {
     "title": "My dreams",
     "eyebrow": "Personal workspace",
-    "subtitle": "All your dreams, interpretations, and journal insights in one organized place.",
+    "subtitle": "All your dreams, Jewish-tradition interpretations, and journal insights in one organized place.",
     "totalLabel": "Total dreams",
     "currentPage": "Current page",
     "syncLabel": "Status",
@@ -488,10 +488,10 @@
     "moreTags": "And {{count}} more tags",
     "card": {
       "dream": "The dream",
-      "ai": "AI interpretation",
+      "ai": "Jewish interpretation",
       "readMore": "Read more \u2190",
       "fullDream": "Full dream",
-      "fullAi": "Full AI interpretation",
+      "fullAi": "Full Jewish interpretation",
       "change": "Change vs previous period",
       "score": "Score"
     },
@@ -557,7 +557,7 @@
       "switchSignup": "Sign up"
     },
     "gate": {
-      "headline": "Want to contribute and interpret dreams? Sign up free",
+      "headline": "Want to share and explore Jewish dream interpretation? Sign up free",
       "tabSignup": "Sign up",
       "tabLogin": "Log in",
       "footnote": "You can close anytime. Background is blocked while signing up."

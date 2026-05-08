@@ -24,7 +24,7 @@ function stripExistingSeo(html) {
     .replace(/\s*<meta\s+name=["']keywords["'][^>]*\/?>/gi, "")
     .replace(/\s*<meta\s+name=["']robots["'][^>]*\/?>/gi, "")
     .replace(/\s*<meta\s+name=["']author["'][^>]*\/?>/gi, "")
-    .replace(/\s*<meta\s+name=["']twitter:card["'][^>]*\/?>/gi, "")
+    .replace(/\s*<meta\s+name=["']twitter:[^"']+["'][^>]*\/?>/gi, "")
     .replace(/\s*<link\s+rel=["']canonical["'][^>]*\/?>/gi, "")
     .replace(/\s*<meta\s+property=["'](?:og:[^"']+|article:[^"']+)["'][^>]*\/?>/gi, "")
     .replace(/\s*<script\s+type=["']application\/ld\+json["'][\s\S]*?<\/script>/gi, "");

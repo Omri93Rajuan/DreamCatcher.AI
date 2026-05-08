@@ -7,13 +7,25 @@ import { getArticleSeoEnhancement } from "@/lib/articleSeoEnhancements";
 
 export const SITE_URL = "https://dreamaicatcher.com";
 export const SITE_NAME = "DreamCatcher.AI";
+const JEWISH_DREAM_KEYWORDS = [
+  "פירוש חלומות לפי היהדות",
+  "פתרון חלומות לפי היהדות",
+  "פירוש חלומות ביהדות",
+  "חלום לפי היהדות",
+  "פענוח חלומות",
+  "משמעות חלומות",
+  "חלומות ביהדות",
+  "בינה מלאכותית לחלומות",
+];
 
 export type SeoDescriptor = {
   title: string;
   description: string;
   canonical: string;
+  keywords?: string[];
   robots?: string;
   openGraph?: Record<string, string | undefined>;
+  twitter?: Record<string, string | undefined>;
   jsonLd?: unknown;
 };
 
@@ -29,6 +41,12 @@ function absoluteUrl(pathOrUrl: string) {
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
   return new URL(pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`, SITE_URL)
     .href;
+}
+
+function uniqueStrings(values: string[]) {
+  return Array.from(
+    new Set(values.map((value) => value.trim()).filter(Boolean)),
+  );
 }
 
 export function getArticleSlug(article: Article) {
@@ -55,42 +73,66 @@ export function getArticleImageUrl(article?: Article) {
 
 export function getHomeSeo(): SeoDescriptor {
   const canonical = absoluteUrl("/");
+  const image = absoluteUrl(logoUrl);
+  const title = `פירוש חלומות לפי היהדות עם AI | ${SITE_NAME}`;
   const description =
-    "Decode dreams with AI-assisted interpretation, symbols, emotions, and personal insights from DreamCatcher.AI.";
+    "DreamCatcher.AI מציע פירוש חלומות לפי היהדות בעברית, עם AI שמזהה סמלים, רגשות ותובנות אישיות בהשראת המסורת היהודית.";
 
   return {
-    title: "Dream AI Catcher - AI Dream Interpretation",
+    title,
     description,
     canonical,
+    keywords: JEWISH_DREAM_KEYWORDS,
     robots: "index, follow",
     openGraph: {
-      "og:title": "Dream AI Catcher - AI Dream Interpretation",
+      "og:title": title,
       "og:description": description,
       "og:type": "website",
       "og:url": canonical,
       "og:site_name": SITE_NAME,
-      "og:image": absoluteUrl(logoUrl),
+      "og:locale": "he_IL",
+      "og:image": image,
+      "og:image:alt": "DreamCatcher.AI - פירוש חלומות לפי היהדות",
     },
+    twitter: {
+      "twitter:title": title,
+      "twitter:description": description,
+      "twitter:image": image,
+    },
+    jsonLd: createHomeJsonLd(canonical, description, image),
   };
 }
 
 export function getArticlesSeo(): SeoDescriptor {
   const canonical = absoluteUrl("/articles");
+  const image = absoluteUrl(logoUrl);
+  const title = `מאמרים על פירוש חלומות לפי היהדות | ${SITE_NAME}`;
   const description =
-    "Read DreamCatcher.AI articles about recurring dream symbols, spiritual meaning, sleep science, and practical reflection.";
+    "מאמרים על פירוש חלומות לפי היהדות, סמלים חוזרים, קבלה, חז\"ל, מדע השינה ותובנות מעשיות להתבוננות אחרי החלום.";
 
   return {
-    title: `Dream Articles | ${SITE_NAME}`,
+    title,
     description,
     canonical,
+    keywords: [
+      ...JEWISH_DREAM_KEYWORDS,
+      "מאמרים על חלומות",
+      "סמלים בחלומות לפי היהדות",
+    ],
     robots: "index, follow",
     openGraph: {
-      "og:title": `Dream Articles | ${SITE_NAME}`,
+      "og:title": title,
       "og:description": description,
       "og:type": "website",
       "og:url": canonical,
       "og:site_name": SITE_NAME,
-      "og:image": absoluteUrl(logoUrl),
+      "og:locale": "he_IL",
+      "og:image": image,
+    },
+    twitter: {
+      "twitter:title": title,
+      "twitter:description": description,
+      "twitter:image": image,
     },
   };
 }
@@ -113,6 +155,14 @@ export function getArticleSeo(article: Article): SeoDescriptor {
     title: `${title} | ${SITE_NAME}`,
     description,
     canonical,
+    keywords: [
+      ...(enhancement
+        ? [enhancement.focusKeyword, ...enhancement.searchPhrases]
+        : []),
+      ...(article.tags || []),
+      "פירוש חלומות לפי היהדות",
+      "חלומות ביהדות",
+    ],
     robots: "index, follow",
     openGraph: {
       "og:title": title,
@@ -121,8 +171,14 @@ export function getArticleSeo(article: Article): SeoDescriptor {
       "og:type": "article",
       "og:url": canonical,
       "og:site_name": SITE_NAME,
+      "og:locale": "he_IL",
       "article:published_time": article.publishedAt,
       "article:modified_time": modifiedAt,
+    },
+    twitter: {
+      "twitter:title": title,
+      "twitter:description": description,
+      "twitter:image": image,
     },
     jsonLd: createArticleJsonLd(article, description, image, canonical),
   };
@@ -224,6 +280,56 @@ function createArticleJsonLd(
   };
 }
 
+function createHomeJsonLd(canonical: string, description: string, image: string) {
+  const organizationId = `${SITE_URL}/#organization`;
+  const websiteId = `${SITE_URL}/#website`;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: SITE_NAME,
+        alternateName: "פירוש חלומות לפי היהדות",
+        url: SITE_URL,
+        logo: {
+          "@type": "ImageObject",
+          url: absoluteUrl(logoUrl),
+        },
+      },
+      {
+        "@type": "WebSite",
+        "@id": websiteId,
+        name: SITE_NAME,
+        alternateName: "פירוש חלומות לפי היהדות",
+        url: SITE_URL,
+        description,
+        inLanguage: ["he-IL", "en"],
+        publisher: {
+          "@id": organizationId,
+        },
+      },
+      {
+        "@type": "WebApplication",
+        name: SITE_NAME,
+        alternateName: "פירוש חלומות לפי היהדות",
+        url: canonical,
+        image,
+        applicationCategory: "LifestyleApplication",
+        operatingSystem: "Web",
+        inLanguage: "he-IL",
+        description,
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "ILS",
+        },
+      },
+    ],
+  };
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -240,6 +346,13 @@ export function renderSeoHead(seo: SeoDescriptor) {
   const tags = [
     `<title>${escapeHtml(seo.title)}</title>`,
     `<meta name="description" content="${escapeHtml(seo.description)}" />`,
+    ...(seo.keywords?.length
+      ? [
+          `<meta name="keywords" content="${escapeHtml(
+            uniqueStrings(seo.keywords).join(", "),
+          )}" />`,
+        ]
+      : []),
     `<meta name="robots" content="${escapeHtml(seo.robots || "index, follow")}" />`,
     `<link rel="canonical" href="${escapeHtml(seo.canonical)}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
@@ -249,6 +362,13 @@ export function renderSeoHead(seo: SeoDescriptor) {
     if (!content) continue;
     tags.push(
       `<meta property="${escapeHtml(property)}" content="${escapeHtml(content)}" />`,
+    );
+  }
+
+  for (const [name, content] of Object.entries(seo.twitter || {})) {
+    if (!content) continue;
+    tags.push(
+      `<meta name="${escapeHtml(name)}" content="${escapeHtml(content)}" />`,
     );
   }
 
