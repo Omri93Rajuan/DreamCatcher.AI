@@ -63,10 +63,14 @@ function sitemapXml(entries) {
       const date = lastmod
         ? new Date(lastmod).toISOString().slice(0, 10)
         : today;
+      const priority = route === "/" ? "1.0" : route === "/articles" ? "0.9" : "0.8";
+      const changefreq = route === "/" || route === "/articles" ? "weekly" : "monthly";
       return [
         "  <url>",
         `    <loc>${escapeXml(absoluteUrl(route))}</loc>`,
         `    <lastmod>${escapeXml(date)}</lastmod>`,
+        `    <changefreq>${changefreq}</changefreq>`,
+        `    <priority>${priority}</priority>`,
         "  </url>",
       ].join("\n");
     })
@@ -106,7 +110,21 @@ await writeFile(
 
 await writeFile(
   path.join(distDir, "robots.txt"),
-  ["User-agent: *", "Allow: /", "", "Sitemap: https://dreamaicatcher.com/sitemap.xml", ""].join("\n"),
+  [
+    "User-agent: *",
+    "Allow: /",
+    "Disallow: /admin",
+    "Disallow: /account",
+    "Disallow: /me/",
+    "Disallow: /login",
+    "Disallow: /register",
+    "Disallow: /reset-password",
+    "Disallow: /forgot-password",
+    "Disallow: /auth/",
+    "",
+    "Sitemap: https://dreamaicatcher.com/sitemap.xml",
+    "",
+  ].join("\n"),
   "utf8",
 );
 

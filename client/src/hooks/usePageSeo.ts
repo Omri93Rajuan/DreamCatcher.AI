@@ -71,6 +71,15 @@ export function usePageSeo(seo: SeoDescriptor) {
     }
     upsertCanonical(seo.canonical);
 
+    for (const [name, content] of Object.entries(seo.meta || {})) {
+      if (!content) continue;
+      upsertMeta(`meta[name="${name}"]`, {
+        name,
+        content,
+        "data-page-seo": "name",
+      });
+    }
+
     for (const [property, content] of Object.entries(seo.openGraph || {})) {
       if (!content) continue;
       upsertMeta(`meta[property="${property}"]`, {

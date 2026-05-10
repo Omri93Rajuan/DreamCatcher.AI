@@ -8,17 +8,22 @@
 
     <meta
       name="description"
-      content="DreamCatcher.AI מציע פירוש חלומות לפי היהדות בעברית, עם AI שמזהה סמלים, רגשות ותובנות אישיות בהשראת המסורת היהודית."
+      content="פירוש חלומות לפי היהדות בעברית לישראלים ויהודים: כתבו חלום וקבלו משמעות, סמלים, רגשות ותובנות בהשראת חז&quot;ל, קבלה ומסורת ישראל."
     />
 
     <meta
       name="keywords"
-      content="פירוש חלומות לפי היהדות, פתרון חלומות לפי היהדות, פירוש חלומות ביהדות, פענוח חלומות, חלומות, חלום לפי היהדות, משמעות חלומות, בינה מלאכותית, AI"
+      content="פירוש חלומות לפי היהדות, פתרון חלומות לפי היהדות, פירוש חלומות ביהדות, פירוש חלומות לפי חז&quot;ל, פירוש חלומות לפי הקבלה, פתרון חלומות בעברית, חלום לפי היהדות, משמעות חלומות, בינה מלאכותית, AI"
     />
 
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="author" content="DreamCatcher.AI" />
     <meta name="application-name" content="DreamCatcher.AI" />
+    <meta name="language" content="he-IL" />
+    <meta name="geo.region" content="IL" />
+    <meta name="geo.placename" content="Israel" />
+    <meta name="audience" content="ישראלים יהודים שמחפשים פירוש חלומות לפי היהדות" />
     <meta name="theme-color" content="#c9a23a" />
 
     <link rel="canonical" href="https://dreamaicatcher.com/" />
@@ -27,12 +32,13 @@
     <meta property="og:title" content="פירוש חלומות לפי היהדות עם AI | DreamCatcher.AI" />
     <meta
       property="og:description"
-      content="פענחו חלומות בעברית בזווית יהודית: סמלים, רגשות ותובנות מעשיות בהשראת המסורת היהודית."
+      content="פירוש חלומות בעברית לפי היהדות, חז&quot;ל, קבלה ומסורת ישראל."
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://dreamaicatcher.com/" />
     <meta property="og:site_name" content="DreamCatcher.AI" />
     <meta property="og:locale" content="he_IL" />
+    <meta property="og:locale:alternate" content="en_US" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="פירוש חלומות לפי היהדות עם AI | DreamCatcher.AI" />
@@ -43,14 +49,36 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "DreamCatcher.AI",
-        "alternateName": "פירוש חלומות לפי היהדות",
-        "url": "https://dreamaicatcher.com/",
-        "applicationCategory": "LifestyleApplication",
-        "operatingSystem": "Web",
-        "inLanguage": "he-IL",
-        "description": "פירוש חלומות לפי היהדות בעברית, עם בינה מלאכותית ותובנות אישיות."
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://dreamaicatcher.com/#organization",
+            "name": "DreamCatcher.AI",
+            "alternateName": ["פירוש חלומות לפי היהדות", "DreamCatcher AI"],
+            "url": "https://dreamaicatcher.com/"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://dreamaicatcher.com/#website",
+            "name": "DreamCatcher.AI",
+            "alternateName": "פירוש חלומות לפי היהדות",
+            "url": "https://dreamaicatcher.com/",
+            "inLanguage": ["he-IL", "en"],
+            "publisher": {
+              "@id": "https://dreamaicatcher.com/#organization"
+            }
+          },
+          {
+            "@type": "WebApplication",
+            "name": "DreamCatcher.AI",
+            "alternateName": "פירוש חלומות לפי היהדות",
+            "url": "https://dreamaicatcher.com/",
+            "applicationCategory": "LifestyleApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "he-IL",
+            "description": "פירוש חלומות לפי היהדות בעברית לישראלים ויהודים, עם בינה מלאכותית ותובנות אישיות."
+          }
+        ]
       }
     </script>
   </head>
