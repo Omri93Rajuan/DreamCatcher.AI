@@ -1,4 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+export const API_TIMEOUTS = {
+    default: 15000,
+    short: 5000,
+    analytics: 3000,
+    ai: 70000,
+} as const;
 declare module "axios" {
     export interface AxiosRequestConfig<D = any> {
         skipRefresh?: boolean;
@@ -12,6 +18,7 @@ declare module "axios" {
 export const api = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
     withCredentials: true,
+    timeout: API_TIMEOUTS.default,
     headers: { "Content-Type": "application/json" },
 });
 let isRefreshing = false;

@@ -1,4 +1,4 @@
-import { api } from "./apiClient";
+import { api, API_TIMEOUTS } from "./apiClient";
 import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
 type ApiRecord = Record<string, unknown>;
 const asRecord = (value: unknown): ApiRecord =>
@@ -162,7 +162,9 @@ export const DreamsApi = {
             isShared: payload.isShared ?? false,
             model: payload.model,
         };
-        const r = await api.post("/dreams/interpret", body);
+        const r = await api.post("/dreams/interpret", body, {
+            timeout: API_TIMEOUTS.ai,
+        });
         const d = r.data || {};
         const dreamRaw = d.dream ?? d.data?.dream ?? d;
         const dream = adapt(dreamRaw);
