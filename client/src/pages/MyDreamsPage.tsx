@@ -265,14 +265,14 @@ function Header({
     <header className="mb-7 rounded-xl border border-black/10 bg-white/75 px-5 py-5 shadow-sm dark:border-white/10 dark:bg-white/[0.06]">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/65">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 dark:border-white/10 dark:bg-white/[0.06] dark:text-white/70">
             <BookOpen className="h-4 w-4 text-amber-600 dark:text-amber-300" />
             {t("myDreams.eyebrow")}
           </div>
           <h1 className="text-3xl font-extrabold leading-tight text-slate-950 dark:text-white md:text-4xl">
             {t("layout.nav.myDreams")}
           </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-white/65 md:text-base">
+          <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-white/70 md:text-base">
             {t("myDreams.subtitle")}
           </p>
         </div>
@@ -298,7 +298,7 @@ function Header({
 
       <div className="mt-5 flex flex-col gap-3 border-t border-black/10 pt-4 dark:border-white/10 md:flex-row md:items-center md:justify-between">
         <div className="relative w-full md:max-w-xl">
-          <Search className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-500 dark:text-white/55" />
+          <Search className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-slate-500 dark:text-white/60" />
           <Input
             ref={inputRef}
             dir={i18n.dir()}
@@ -326,7 +326,7 @@ function Header({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           {search && (
-            <span className="text-xs font-medium text-slate-500 dark:text-white/55">
+            <span className="text-xs font-medium text-slate-500 dark:text-white/60">
               {t("myDreams.searchActive", { query: search })}
             </span>
           )}
@@ -356,7 +356,7 @@ function MetricPill({
   value: string;
 }) {
   return (
-    <div className="min-w-28 rounded-lg border border-black/10 bg-white/65 px-3 py-2 dark:border-white/10 dark:bg-white/[0.05]">
+    <div className="min-w-28 rounded-lg border border-black/10 bg-white/70 px-3 py-2 dark:border-white/10 dark:bg-white/[0.05]">
       <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-slate-500 dark:text-white/50">
         <Icon className="h-3.5 w-3.5 text-amber-600 dark:text-amber-300" />
         {label}

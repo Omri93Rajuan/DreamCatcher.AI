@@ -83,7 +83,7 @@ export default function DreamFlipCardMini({
       className="h-full min-w-0"
       dir={i18n.dir()}
     >
-      <Card className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-black/10 bg-white/88 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-white/[0.06]">
+      <Card className="flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-black/10 bg-white/90 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-white/[0.06]">
         <CardContent className="flex min-w-0 flex-1 flex-col p-0">
           <header className="border-b border-black/10 px-3 py-4 dark:border-white/10 sm:px-4">
             <div className="mb-3 flex items-start justify-between gap-3">
@@ -92,7 +92,7 @@ export default function DreamFlipCardMini({
                   {title}
                 </h3>
                 {createdAt && (
-                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/55">
+                  <div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/60">
                     <Calendar className="h-4 w-4 shrink-0" />
                     <span className="truncate">
                       {format(createdAt, "d MMMM yyyy", { locale })}
@@ -128,7 +128,7 @@ export default function DreamFlipCardMini({
                   "inline-flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 font-semibold transition",
                   isDreamView
                     ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
-                    : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
+                    : "text-slate-500 hover:text-slate-800 dark:text-white/60 dark:hover:text-white",
                 ].join(" ")}
               >
                 <FileText className="h-4 w-4 shrink-0" />
@@ -141,7 +141,7 @@ export default function DreamFlipCardMini({
                   "inline-flex h-9 min-w-0 items-center justify-center gap-2 rounded-md px-2 font-semibold transition",
                   !isDreamView
                     ? "bg-white text-slate-950 shadow-sm dark:bg-white/15 dark:text-white"
-                    : "text-slate-500 hover:text-slate-800 dark:text-white/55 dark:hover:text-white",
+                    : "text-slate-500 hover:text-slate-800 dark:text-white/60 dark:hover:text-white",
                 ].join(" ")}
               >
                 <Sparkles className="h-4 w-4 shrink-0" />
@@ -154,7 +154,7 @@ export default function DreamFlipCardMini({
             className="flex min-w-0 flex-1 flex-col px-3 py-4 sm:px-4"
             style={{ minHeight: bodyHeight }}
           >
-            <p className="line-clamp-7 whitespace-pre-line text-sm leading-7 text-slate-700 dark:text-white/72">
+            <p className="line-clamp-7 whitespace-pre-line text-sm leading-7 text-slate-700 dark:text-white/80">
               {truncated || "-"}
             </p>
 
