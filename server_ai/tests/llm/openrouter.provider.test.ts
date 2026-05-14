@@ -43,6 +43,16 @@ describe("OpenRouterProvider", () => {
     expect(res.emotions).toEqual(["סקרנות"]);
     expect(res.categories).toEqual(["travel"]);
     expect(res.categoryScores).toEqual({ travel: 0.7 });
+
+    const requestBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    const prompt = requestBody.messages
+      .map((message: any) => message.content)
+      .join("\n");
+    expect(requestBody.temperature).toBe(0.4);
+    expect(requestBody.max_tokens).toBe(900);
+    expect(prompt).toContain("Jewish tradition");
+    expect(prompt).toContain("מבט יהודי");
+    expect(prompt).toContain("JSON בלבד");
   });
 
   it("falls back to heuristic parsing when JSON is malformed", async () => {

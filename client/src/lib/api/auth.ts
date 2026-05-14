@@ -1,5 +1,8 @@
-import { api } from "./apiClient";
+import { api, API_TIMEOUTS } from "./apiClient";
 import type { User } from "./types";
+type GetMeOptions = {
+    background?: boolean;
+};
 export type LoginDto = {
     email: string;
     password: string;
@@ -38,13 +41,21 @@ export const AuthApi = {
         .post("/auth/refresh", null, { withCredentials: true })
         .then((r) => r.data),
     verify: () => api
-        .get("/auth/verify", { withCredentials: true })
+        .get("/auth/verify", {
+            withCredentials: true,
+            skipRefresh: true,
+            timeout: API_TIMEOUTS.short,
+        })
         .then((r) => r.data as {
         valid: boolean;
         user?: User;
     }),
-    getMe: (id: string) => api
-        .get(`/auth/user/${id}`, { withCredentials: true })
+    getMe: (id: string, options?: GetMeOptions) => api
+        .get(`/auth/user/${id}`, {
+            withCredentials: true,
+            skipRefresh: options?.background,
+            timeout: options?.background ? API_TIMEOUTS.short : undefined,
+        })
         .then((r) => r.data as {
         user?: User;
     })

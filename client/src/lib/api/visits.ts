@@ -1,6 +1,11 @@
-import { api } from "./apiClient";
+import { api, API_TIMEOUTS } from "./apiClient";
 
 export const VisitsApi = {
   record: (payload: { sessionId: string; path: string }) =>
-    api.post("/visits", payload).then((r) => r.data),
+    api
+      .post("/visits", payload, {
+        skipRefresh: true,
+        timeout: API_TIMEOUTS.analytics,
+      })
+      .then((r) => r.data),
 };
