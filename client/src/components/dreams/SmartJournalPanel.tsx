@@ -70,7 +70,7 @@ function Metric({
 }) {
   return (
     <div className="rounded-xl border border-black/10 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-white/[0.06]">
-      <div className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/55">
+      <div className="mb-2 flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-white/60">
         <Icon className="h-4 w-4 text-amber-600 dark:text-amber-300" />
         {label}
       </div>
@@ -88,7 +88,7 @@ function ThemeRow({ item, maxCount }: { item: JournalCategoryInsight; maxCount: 
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3 text-sm">
         <span className="font-semibold text-slate-800 dark:text-white/90">{label}</span>
-        <span className="text-slate-500 dark:text-white/55">
+        <span className="text-slate-500 dark:text-white/60">
           {t("journal.themeCount", { count: item.count })}
         </span>
       </div>
@@ -250,7 +250,7 @@ export default function SmartJournalPanel({ enabled }: { enabled: boolean }) {
                   <ThemeRow key={item.category} item={item} maxCount={topCount} />
                 ))
               ) : (
-                <div className="text-sm leading-6 text-slate-600 dark:text-white/65">
+                <div className="text-sm leading-6 text-slate-600 dark:text-white/70">
                   {t("journal.noThemes")}
                 </div>
               )}
