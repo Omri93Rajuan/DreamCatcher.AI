@@ -37,8 +37,11 @@ export type OpenRouterProviderConfig = {
   maxAttemptsPerModel?: number;
   baseDelayMs?: number;
   timeoutMs?: number;
+  maxTokens?: number;
 };
 type DreamCategory = (typeof DREAM_CATEGORIES)[number];
+const DEFAULT_TIMEOUT_MS = 60000;
+const DEFAULT_MAX_TOKENS = 900;
 const apiUrl =
   process.env.OPENROUTER_API_URL ||
   "https://openrouter.ai/api/v1/chat/completions";
@@ -53,6 +56,7 @@ export class OpenRouterProvider implements LLMProvider {
   private readonly maxAttemptsPerModel: number;
   private readonly baseDelayMs: number;
   private readonly timeoutMs: number;
+  private readonly maxTokens: number;
   constructor(cfg: OpenRouterProviderConfig) {
     if (!cfg.apiKey) throw new Error("Missing OPENROUTER_API_KEY");
     this.apiKey = cfg.apiKey;
@@ -69,7 +73,12 @@ export class OpenRouterProvider implements LLMProvider {
       : [];
     this.maxAttemptsPerModel = cfg.maxAttemptsPerModel ?? 4;
     this.baseDelayMs = cfg.baseDelayMs ?? 1200;
-    this.timeoutMs = cfg.timeoutMs ?? 45000;
+    this.timeoutMs =
+      cfg.timeoutMs ??
+      parsePositiveInt(process.env.OPENROUTER_TIMEOUT_MS, DEFAULT_TIMEOUT_MS);
+    this.maxTokens =
+      cfg.maxTokens ??
+      parsePositiveInt(process.env.OPENROUTER_MAX_TOKENS, DEFAULT_MAX_TOKENS);
   }
   async interpretDream(
     userInput: string,
@@ -144,24 +153,25 @@ export class OpenRouterProvider implements LLMProvider {
       },
       body: JSON.stringify({
         model,
+        temperature: 0.4,
+        max_tokens: this.maxTokens,
         messages: [
           {
             role: "system",
             content: [
-              "You are DreamCatcher.AI, a careful Hebrew dream interpretation assistant focused on dream interpretation through Jewish tradition.",
-              "Interpret dreams through a Jewish lens: Tanakh, Chazal, mussar, prayer, teshuvah, Jewish values, and gentle spiritual symbolism.",
-              "Use accessible Hebrew and make the interpretation feel explicitly connected to Judaism when it is natural.",
-              "Use Jewish sources as inspiration only. Do not invent citations, quote exact sources unless you are certain, or present yourself as a rabbi.",
+              "You are DreamCatcher.AI, a careful Hebrew dream interpretation assistant.",
+              "Interpret through Jewish tradition when relevant: Tanakh, Chazal, mussar, prayer, teshuvah, Jewish values, and gentle spiritual symbolism.",
+              "Use Jewish sources as inspiration only. Do not invent citations, present yourself as a rabbi, or give psak halacha.",
               "Return STRICT JSON with keys:",
-              ' - "title": string (Hebrew, up to 6 words, Jewish/spiritual framing when natural)',
-              ' - "interpretation": string (Hebrew, 2-4 short paragraphs, warm, practical, and grounded in a Jewish perspective)',
-              ' - "insights": array of 3 concise Hebrew strings with practical reflections, such as cheshbon nefesh, prayer, gratitude, repair, or boundaries when relevant',
-              ' - "keySymbols": array of 2-5 objects: {"symbol": string, "meaning": string}; meanings should include Jewish/spiritual symbolism when relevant',
+              ' - "title": string (Hebrew, up to 6 words)',
+              ' - "interpretation": string (Hebrew, 2-3 short paragraphs, warm, practical, with a Jewish lens when natural)',
+              ' - "insights": array of 3 concise Hebrew strings',
+              ' - "keySymbols": array of 2-4 objects: {"symbol": string, "meaning": string}',
               ' - "emotions": array of 2-6 short Hebrew emotion labels',
               ` - "categories": array of strings; each must be one of ${categoryList}`,
               ' - "categoryScores": object mapping category->confidence float in [0,1] (optional)',
-              "Avoid diagnosis, certainty, fortune-telling, halachic rulings, rabbinic authority, segulot as guaranteed outcomes, or medical/legal/mental-health advice.",
-              "If the dream is frightening, predictive, religiously sensitive, or involves death, remind the user gently that this is reflective interpretation, not prophecy or psak halacha.",
+              "Avoid diagnosis, certainty, fortune-telling, segulot as guaranteed outcomes, or medical/legal/mental-health advice.",
+              "For frightening, predictive, religiously sensitive, or death-related dreams, say gently this is reflection, not prophecy or psak.",
               "Do not include any extra text or markdown. JSON only.",
             ].join("\n"),
           },
@@ -169,9 +179,9 @@ export class OpenRouterProvider implements LLMProvider {
             role: "user",
             content: [
               `חלמתי: "${userInput}".`,
-              "החזר JSON בלבד עם השדות: title, interpretation, insights, keySymbols, emotions, categories ו-categoryScores.",
-              "הקפד שכל התוכן למשתמש יהיה בעברית טבעית, אישי אך לא נחרץ, ובגובה העיניים.",
-              "שלב בפרשנות מבט יהודי ברור: ערכים, תיקון, תפילה, חשבון נפש, חסד, גבולות או סמלים מן המסורת, לפי מה שמתאים לחלום.",
+              "ענה בעברית טבעית, אישית אך לא נחרצת.",
+              "שלב מבט יהודי ברור רק כשמתאים לחלום: ערכים, תיקון, תפילה, חשבון נפש, חסד, גבולות או סמלי מסורת.",
+              "החזר JSON בלבד עם title, interpretation, insights, keySymbols, emotions, categories ו-categoryScores.",
             ].join("\n"),
           },
         ],
@@ -292,4 +302,8 @@ function uniqueStrings(arr: string[]) {
 function parseLLMPayload(input: unknown): ParsedLLMPayload | null {
   const parsed = parsedPayloadSchema.safeParse(input);
   return parsed.success ? parsed.data : null;
+}
+function parsePositiveInt(value: string | undefined, fallback: number) {
+  const parsed = Number.parseInt(String(value ?? ""), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
