@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback, } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Search, CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { Send, Search, CheckCircle2, Loader2, Sparkles, Info } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -118,17 +118,40 @@ export default function InterpretForm() {
         setInterpretError(null);
         setJustShared(false);
         try {
-        const { dream: saved } = await DreamsApi.interpret({
-            text,
-            titleOverride: undefined,
-            isShared: publishPublicly,
-        });
-        setDream(saved ?? null);
+            const submit = (isShared: boolean) => DreamsApi.interpret({
+                text,
+                titleOverride: undefined,
+                isShared,
+            });
+            let { dream: saved } = await submit(publishPublicly);
+            setDream(saved ?? null);
         }
         catch (e: any) {
-            if (e?.response?.status === 401)
-                setAuthOpen(true);
-            setInterpretError(getFriendlyErrorMessage(e, t, "interpret"));
+            if (e?.response?.status === 401 && !publishPublicly) {
+                try {
+                    const { dream: saved } = await DreamsApi.interpret({
+                        text,
+                        titleOverride: undefined,
+                        isShared: true,
+                    });
+                    setPublishPublicly(true);
+                    setDream(saved ?? null);
+                    return;
+                }
+                catch (retryError: any) {
+                    setInterpretError(
+                        retryError?.response?.status === 401
+                            ? t("errors.context.interpret")
+                            : getFriendlyErrorMessage(retryError, t, "interpret")
+                    );
+                    return;
+                }
+            }
+            setInterpretError(
+                e?.response?.status === 401 && publishPublicly
+                    ? t("errors.context.interpret")
+                    : getFriendlyErrorMessage(e, t, "interpret")
+            );
         }
         finally {
             setIsInterpreting(false);
@@ -173,9 +196,8 @@ export default function InterpretForm() {
         </div>
 
         <label className={[
-            "flex items-start gap-3 rounded-lg border px-4 py-3 text-sm",
-            "bg-white/85 text-slate-700 border-black/10",
-            "dark:bg-white/[0.04] dark:text-white/80 dark:border-white/15",
+            "justify-self-end flex max-w-xl items-start gap-2 text-xs leading-5",
+            "text-slate-600 dark:text-white/60",
         ].join(" ")}>
           <input type="checkbox" checked={publishPublicly} onChange={(event) => {
             const next = event.target.checked;
@@ -185,9 +207,10 @@ export default function InterpretForm() {
                 return;
             }
             setPublishPublicly(next);
-          }} className="mt-1 h-4 w-4 accent-[var(--brand,#c9a23a)]"/>
-          <span className="grid gap-1">
-            <span className="font-bold text-slate-900 dark:text-white">
+          }} className="mt-1 h-3.5 w-3.5 shrink-0 accent-[var(--brand,#c9a23a)]"/>
+          <span className="grid gap-0.5 text-right">
+            <span className="inline-flex items-center justify-end gap-1 font-semibold text-slate-800 dark:text-white/80">
+              <Info className="h-3.5 w-3.5" aria-hidden />
               {t("interpret.publicDefault")}
             </span>
             <span>
