@@ -96,7 +96,7 @@ export type SmartJournalInsights = {
 };
 export interface Dream {
     _id: string;
-    userId?: string | null;
+    userId: string;
     title: string;
     userInput: string;
     aiResponse: string;

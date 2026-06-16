@@ -150,7 +150,7 @@ function buildFilter(input: {
 }
 
 export const saveDream = async (
-  userId: string | null | undefined,
+  userId: string,
   title: string,
   userInput: string,
   aiResponse: string,
@@ -180,7 +180,7 @@ export const saveDream = async (
 };
 
 export const createDreamFromInterpretation = async (
-  userId: string | null | undefined,
+  userId: string,
   userInput: string,
   interpretation: string,
   titleOverride?: string,
@@ -193,12 +193,12 @@ export const createDreamFromInterpretation = async (
     emotions?: string[];
   }
 ) => {
+  if (!userId) throw new Error("userId is required");
   if (!userInput) throw new Error("userInput is required");
   if (!interpretation) throw new Error("interpretation is required");
 
   const title = (titleOverride && titleOverride.trim()) || DEFAULT_TITLE;
   const isShared = typeof opts?.isShared === "boolean" ? opts.isShared : false;
-  if (!userId && !isShared) throw new Error("userId is required for private dreams");
 
   return saveDream(
     userId,
@@ -342,11 +342,7 @@ export const getDreamStats = async (query: GetDreamStatsQuery) => {
           },
           { $count: "n" },
         ],
-        uniqueUsers: [
-          { $match: { userId: { $ne: null } } },
-          { $group: { _id: "$userId" } },
-          { $count: "n" },
-        ],
+        uniqueUsers: [{ $group: { _id: "$userId" } }, { $count: "n" }],
       },
     },
     {

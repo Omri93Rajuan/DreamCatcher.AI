@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback, } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Send, Search, CheckCircle2, Loader2, Sparkles, Info } from "lucide-react";
+import { Send, Search, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { DreamsApi } from "@/lib/api/dreams";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -83,13 +83,9 @@ export default function InterpretForm() {
     const [dream, setDream] = useState<Dream | null>(null);
     const [interpretError, setInterpretError] = useState<string | null>(null);
     const [justShared, setJustShared] = useState(false);
-    const { isAuthenticated } = useAuthStore();
-    const [publishPublicly, setPublishPublicly] = useState(!isAuthenticated);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const { isAuthenticated } = useAuthStore();
     const navigate = useNavigate();
-    useEffect(() => {
-        setPublishPublicly(!isAuthenticated);
-    }, [isAuthenticated]);
     const { streamedText, isStreaming } = useWordStreamer({
         fullText: dream?.aiResponse ?? "",
         baseMs: 40,
@@ -108,7 +104,7 @@ export default function InterpretForm() {
     const handleInterpret = async () => {
         if (!text.trim())
             return;
-        if (!isAuthenticated && !publishPublicly) {
+        if (!isAuthenticated) {
             void loadAuthGateDialog();
             setAuthOpen(true);
             return;
@@ -118,40 +114,17 @@ export default function InterpretForm() {
         setInterpretError(null);
         setJustShared(false);
         try {
-            const submit = (isShared: boolean) => DreamsApi.interpret({
-                text,
-                titleOverride: undefined,
-                isShared,
-            });
-            let { dream: saved } = await submit(publishPublicly);
-            setDream(saved ?? null);
+        const { dream: saved } = await DreamsApi.interpret({
+            text,
+            titleOverride: undefined,
+            isShared: false,
+        });
+        setDream(saved ?? null);
         }
         catch (e: any) {
-            if (e?.response?.status === 401 && !publishPublicly) {
-                try {
-                    const { dream: saved } = await DreamsApi.interpret({
-                        text,
-                        titleOverride: undefined,
-                        isShared: true,
-                    });
-                    setPublishPublicly(true);
-                    setDream(saved ?? null);
-                    return;
-                }
-                catch (retryError: any) {
-                    setInterpretError(
-                        retryError?.response?.status === 401
-                            ? t("errors.context.interpret")
-                            : getFriendlyErrorMessage(retryError, t, "interpret")
-                    );
-                    return;
-                }
-            }
-            setInterpretError(
-                e?.response?.status === 401 && publishPublicly
-                    ? t("errors.context.interpret")
-                    : getFriendlyErrorMessage(e, t, "interpret")
-            );
+            if (e?.response?.status === 401)
+                setAuthOpen(true);
+            setInterpretError(getFriendlyErrorMessage(e, t, "interpret"));
         }
         finally {
             setIsInterpreting(false);
@@ -194,33 +167,6 @@ export default function InterpretForm() {
             "transition-colors duration-200",
         ].join(" ")}/>
         </div>
-
-        <label className={[
-            "justify-self-end flex max-w-xl items-start gap-2 text-xs leading-5",
-            "text-slate-600 dark:text-white/60",
-        ].join(" ")}>
-          <input type="checkbox" checked={publishPublicly} onChange={(event) => {
-            const next = event.target.checked;
-            if (!isAuthenticated && !next) {
-                void loadAuthGateDialog();
-                setAuthOpen(true);
-                return;
-            }
-            setPublishPublicly(next);
-          }} className="mt-1 h-3.5 w-3.5 shrink-0 accent-[var(--brand,#c9a23a)]"/>
-          <span className="grid gap-0.5 text-right">
-            <span className="inline-flex items-center justify-end gap-1 font-semibold text-slate-800 dark:text-white/80">
-              <Info className="h-3.5 w-3.5" aria-hidden />
-              {t("interpret.publicDefault")}
-            </span>
-            <span>
-              {t("interpret.publicWarning")}
-            </span>
-            {!isAuthenticated && (<span className="text-xs text-slate-500 dark:text-white/55">
-              {t("interpret.privateRequiresSignup")}
-            </span>)}
-          </span>
-        </label>
 
         
         <Button onClick={handleInterpret} disabled={!text.trim() || isInterpreting} className={[
@@ -283,19 +229,19 @@ export default function InterpretForm() {
                     {openDetailsLabel}
                   </Button>)}
 
-                {!dream.isShared && isAuthenticated ? (<Button onClick={shareWithEveryone} className={[
+                {!dream.isShared ? (<Button onClick={shareWithEveryone} className={[
                         "px-4 py-2 rounded-lg",
                         "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
                     ].join(" ")}>
                     {t("interpret.share")}
                   </Button>) : (<div className="inline-flex items-center gap-2 text-emerald-600 dark:text-emerald-300 text-sm">
                     <CheckCircle2 className="w-5 h-5"/>
-                    {dream.isShared ? t("interpret.shared") : t("interpret.privateSaved")}
+                    {t("interpret.shared")}
                   </div>)}
 
-                {isAuthenticated && (<button onClick={openMyDreams} className="text-sm underline underline-offset-4 text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white">
+                <button onClick={openMyDreams} className="text-sm underline underline-offset-4 text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white">
                   {t("interpret.openMine")}
-                </button>)}
+                </button>
 
                 {justShared && (<div className="text-emerald-700 dark:text-emerald-300 text-xs">
                     {t("interpret.sharedNotice")}

@@ -40,7 +40,7 @@ const adapt = (rawInput: unknown): Dream => {
     const raw = asRecord(rawInput);
     return {
         _id: String(raw._id ?? raw.id ?? ""),
-        userId: raw.userId == null ? null : String(raw.userId),
+        userId: String(raw.userId ?? ""),
         title: String(raw.title ?? ""),
         userInput: String(raw.userInput ?? raw.text ?? ""),
         aiResponse: String(raw.aiResponse ?? raw.interpretation ?? ""),
