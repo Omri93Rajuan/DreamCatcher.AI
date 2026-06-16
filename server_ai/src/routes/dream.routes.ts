@@ -16,7 +16,7 @@ import {
 const router = Router();
 router.post(
   "/interpret",
-  authenticate,
+  authenticateLite,
   validate(interpretDreamRequestSchema),
   dreamController.interpretDream
 );

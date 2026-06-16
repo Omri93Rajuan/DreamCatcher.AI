@@ -6,7 +6,8 @@ const DreamSchema = new Schema<IDream>(
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
+      default: null,
     },
     title: { type: String, required: true },
     userInput: { type: String, required: true },

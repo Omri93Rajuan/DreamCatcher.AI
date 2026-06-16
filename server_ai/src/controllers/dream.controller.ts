@@ -252,10 +252,6 @@ export const interpretDream: RequestHandler = async (
 ): Promise<void> => {
   try {
     const { userId } = getAuth(req as AuthRequest);
-    if (!userId) {
-      res.status(401).json({ success: false, error: "auth_required" });
-      return;
-    }
 
     const {
       text,
@@ -276,6 +272,11 @@ export const interpretDream: RequestHandler = async (
     ).trim();
     if (!rawText) {
       res.status(400).json({ success: false, error: "Missing text" });
+      return;
+    }
+    const publishPublicly = !!isShared;
+    if (!userId && !publishPublicly) {
+      res.status(401).json({ success: false, error: "auth_required" });
       return;
     }
 
@@ -299,7 +300,7 @@ export const interpretDream: RequestHandler = async (
       interpretation,
       (titleOverride && String(titleOverride).trim()) || title,
       {
-        isShared: !!isShared,
+        isShared: publishPublicly,
         categories,
         categoryScores,
         insights,

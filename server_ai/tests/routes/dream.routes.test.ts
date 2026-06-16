@@ -108,7 +108,35 @@ describe("dream routes", () => {
     ]);
     expect(res.body.dream.emotions).toEqual(["hope"]);
   });
-});
 
+  it("allows anonymous visitors to interpret and publish a public dream", async () => {
+    setLLMProvider({
+      interpretDream: async () => ({
+        title: "public guest dream",
+        interpretation: "guest interpretation",
+        insights: [],
+        keySymbols: [],
+        emotions: [],
+        categories: [],
+      }),
+    } as any);
+    const app = createTestApp();
+    const res = await request(app)
+      .post("/api/dreams/interpret")
+      .send({ text: "hello", isShared: true });
+    expect(res.status).toBe(201);
+    expect(res.body.dream.isShared).toBe(true);
+    expect(res.body.dream.userId ?? null).toBeNull();
+  });
+
+  it("requires login when an anonymous visitor asks for a private interpretation", async () => {
+    const app = createTestApp();
+    const res = await request(app)
+      .post("/api/dreams/interpret")
+      .send({ text: "hello", isShared: false });
+    expect(res.status).toBe(401);
+    expect(res.body.error).toBe("auth_required");
+  });
+});
 
 

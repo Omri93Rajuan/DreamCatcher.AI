@@ -2,7 +2,7 @@ import { Document, Types } from "mongoose";
 import { DreamCategory } from "./categories.interface";
 import type { DreamSymbolInsight } from "./dreamAnalysis.interface";
 export interface IDream extends Document {
-  userId: Types.ObjectId;
+  userId?: Types.ObjectId | null;
   title: string;
   userInput: string;
   aiResponse: string;
