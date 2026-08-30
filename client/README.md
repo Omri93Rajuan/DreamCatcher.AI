@@ -85,3 +85,4 @@ src/
 ✅ This client is **production-ready**, **RTL-first**, and designed for a confident **DreamCatcher.AI** rollout.
 
 <!-- Cloudflare Pages rebuild trigger -->
+<!-- Cloudflare Pages rebuild trigger 2 -->
