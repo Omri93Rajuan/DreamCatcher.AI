@@ -1,11 +1,22 @@
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logoMark from "@/assets/logo.webp";
+import { AdminApi } from "@/lib/api/admin";
 
-export default function Footer() {
+export default function Footer({ isAdmin = false }: { isAdmin?: boolean }) {
   const { t, i18n } = useTranslation();
   const linkedInUrl = "https://www.linkedin.com/in/omri-rajuan";
+  const overviewQuery = useQuery({
+    queryKey: ["admin-overview", 30],
+    queryFn: () => AdminApi.getOverview(30),
+    enabled: isAdmin,
+    staleTime: 60_000,
+    retry: 1,
+  });
+  const isHebrew = i18n.language?.startsWith("he");
+  const totalVisits = overviewQuery.data?.totals.visits;
 
   return (
     <footer className="border-t border-amber-200/40 bg-white/90 text-center shadow-[0_-4px_20px_rgba(0,0,0,0.04)] backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
@@ -72,6 +83,21 @@ export default function Footer() {
           </a>
         </nav>
       </div>
+      {isAdmin && (
+        <div className="mx-auto mb-5 w-fit rounded-full border border-amber-300/60 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-900 shadow-sm dark:border-amber-300/20 dark:bg-amber-300/10 dark:text-amber-100">
+          {overviewQuery.isLoading
+            ? isHebrew
+              ? "טוען נתוני כניסות…"
+              : "Loading visit count…"
+            : typeof totalVisits === "number"
+              ? `${isHebrew ? "סה״כ כניסות לאתר" : "Total site visits"}: ${new Intl.NumberFormat(
+                  isHebrew ? "he-IL" : "en-US",
+                ).format(totalVisits)}`
+              : isHebrew
+                ? "נתוני הכניסות אינם זמינים כרגע"
+                : "Visit data is currently unavailable"}
+        </div>
+      )}
       <p className="pb-6 text-xs text-slate-400 dark:text-white/50">
         Ac {new Date().getFullYear()} DreamCatcher.AI.{" "}
         {t("layout.footer.allRights")}

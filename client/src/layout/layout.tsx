@@ -160,7 +160,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <main className="relative min-w-0 flex-1 overflow-x-clip">{children}</main>
 
-      <Footer />
+      <Footer isAdmin={user?.role === "admin"} />
       <CookieConsent />
     </div>
   );
