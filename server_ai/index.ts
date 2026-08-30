@@ -7,7 +7,7 @@ import http from "http";
 import router from "./router";
 import connectToDb from "./src/db/dbService";
 const app = express();
-const server = http.createServer(app);
+export const server = http.createServer(app);
 
 app.set("trust proxy", 1);
 
