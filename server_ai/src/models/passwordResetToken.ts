@@ -22,7 +22,7 @@ const PasswordResetQuotaSchema = new Schema<PasswordResetQuotaDoc>(
   { timestamps: true }
 );
 const PasswordResetQuota =
-  (mongoose.models
+  (mongoose.connection.models
     .PasswordResetQuota as mongoose.Model<PasswordResetQuotaDoc>) ||
   mongoose.model<PasswordResetQuotaDoc>(
     "PasswordResetQuota",

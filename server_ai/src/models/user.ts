@@ -91,6 +91,6 @@ userSchema.index(
 );
 
 export default (
-  (mongoose.models.User as mongoose.Model<IUserDoc>) ||
+  (mongoose.connection.models.User as mongoose.Model<IUserDoc>) ||
   mongoose.model<IUserDoc>("User", userSchema)
 ) as any;
