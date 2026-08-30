@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
 import { IDream } from "../types/dream.interface";
 const DreamSchema = new Schema<IDream>(
@@ -40,4 +40,4 @@ const DreamSchema = new Schema<IDream>(
 );
 DreamSchema.index({ userId: 1, isShared: 1, categories: 1, createdAt: -1 });
 DreamSchema.index({ isShared: 1, categories: 1, createdAt: -1 });
-export const Dream = mongoose.model<IDream>("Dream", DreamSchema);
+export const Dream = model<IDream>("Dream", DreamSchema);

@@ -22,13 +22,13 @@ router.get(
 );
 router.get("/dreams", validate(adminDreamsRequestSchema), adminController.getDreams);
 router.delete(
-  "/dreams/:id",
+  "/dreams/:id([0-9a-fA-F]{24})",
   validate(adminDeleteDreamRequestSchema),
   adminController.removeDream
 );
 router.get("/users", validate(adminUsersRequestSchema), adminController.getUsers);
 router.patch(
-  "/users/:id/role",
+  "/users/:id([0-9a-fA-F]{24})/role",
   validate(adminUpdateUserRoleRequestSchema),
   adminController.updateUserRole
 );

@@ -1,4 +1,4 @@
-import mongoose, { HydratedDocument, Schema } from "mongoose";
+import { HydratedDocument, Schema, model, models } from "mongoose";
 import {
   IUser,
   IUserDoc,
@@ -90,7 +90,4 @@ userSchema.index(
   }
 );
 
-export default (
-  (mongoose.connection.models.User as mongoose.Model<IUserDoc>) ||
-  mongoose.model<IUserDoc>("User", userSchema)
-) as any;
+export default (models.User as any) || model<IUserDoc>("User", userSchema);

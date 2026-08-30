@@ -24,14 +24,7 @@ export const validate =
     const data: any = parsed.data;
     if (data?.body !== undefined) req.body = data.body;
     if (data?.params !== undefined) req.params = data.params;
-    if (data?.query !== undefined) {
-      Object.defineProperty(req, "query", {
-        value: data.query,
-        writable: true,
-        configurable: true,
-        enumerable: true,
-      });
-    }
+    if (data?.query !== undefined) req.query = data.query;
 
     return next();
   };

@@ -6,6 +6,6 @@ import { proxyImageSchema } from "../validation/images.zod";
 const router = Router();
 
 // GET /api/images/<key> (supports nested keys via wildcard)
-router.get("/*key", validate(proxyImageSchema), proxyImage);
+router.get("/*", validate(proxyImageSchema), proxyImage);
 
 export default router;
