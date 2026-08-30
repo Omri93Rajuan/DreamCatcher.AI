@@ -8,7 +8,11 @@ const allowedPrefix =
     : "avatars/";
 
 export async function proxyImage(req: Request, res: Response) {
-  const key = (req.params[0] || "").replace(/^\/+/, "");
+  const rawKey = req.params.key;
+  const key = (Array.isArray(rawKey) ? rawKey.join("/") : rawKey || "").replace(
+    /^\/+/,
+    ""
+  );
   if (!key) {
     return res.status(400).json({ error: { message: "Missing image key" } });
   }

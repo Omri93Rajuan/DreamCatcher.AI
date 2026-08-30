@@ -45,19 +45,19 @@ router.get(
   dreamController.getSmartJournalInsights
 );
 router.get(
-  "/:id([0-9a-fA-F]{24})",
+  "/:id",
   authenticateLite,
   validate(getDreamRequestSchema),
   dreamController.getDreamById
 );
 router.put(
-  "/:id([0-9a-fA-F]{24})",
+  "/:id",
   authenticate,
   validate(updateDreamRequestSchema),
   dreamController.updateDream
 );
 router.delete(
-  "/:id([0-9a-fA-F]{24})",
+  "/:id",
   authenticate,
   validate(deleteDreamRequestSchema),
   dreamController.deleteDream
