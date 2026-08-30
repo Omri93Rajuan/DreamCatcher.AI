@@ -6,13 +6,17 @@ interface TokenPayload {
   role?: string;
   isAdmin?: boolean;
 }
-const SECRET_KEY = process.env.JWT_ACCESS_SECRET;
 
-if (!SECRET_KEY) {
-  throw new Error("JWT_ACCESS_SECRET is not configured");
-}
+const getSecretKey = (): string => {
+  const secret = process.env.JWT_ACCESS_SECRET;
+  if (!secret) {
+    throw new Error("JWT_ACCESS_SECRET is not configured");
+  }
+  return secret;
+};
+
 const generateAuthToken = (user: { _id: any; role: UserRole }): string => {
-  return jwt.sign({ id: user._id, role: user.role }, SECRET_KEY, {
+  return jwt.sign({ id: user._id, role: user.role }, getSecretKey(), {
     expiresIn: "1h",
   });
 };
@@ -29,7 +33,7 @@ const verifyUser = (req: Request, res: Response, next: NextFunction): void => {
     return;
   }
   try {
-    const decoded = jwt.verify(token, SECRET_KEY, {
+    const decoded = jwt.verify(token, getSecretKey(), {
       algorithms: ["HS256"],
     }) as TokenPayload;
     (req as any).user = decoded;
