@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as dreamController from "../controllers/dream.controller";
 import authenticate from "../middlewares/authenticate";
 import authenticateLite from "../middlewares/authenticateLite";
+import { aiIpLimiter, aiUserLimiter } from "../middlewares/rateLimiters";
 import { validate } from "../middlewares/validate";
 import {
   createDreamRequestSchema,
@@ -17,12 +18,16 @@ const router = Router();
 router.post(
   "/interpret",
   authenticate,
+  aiIpLimiter,
+  aiUserLimiter,
   validate(interpretDreamRequestSchema),
   dreamController.interpretDream
 );
 router.post(
   "/",
   authenticate,
+  aiIpLimiter,
+  aiUserLimiter,
   validate(createDreamRequestSchema),
   dreamController.createDream
 );

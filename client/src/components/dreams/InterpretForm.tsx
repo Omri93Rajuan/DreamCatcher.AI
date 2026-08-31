@@ -10,6 +10,7 @@ import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import { INPUT_LIMITS } from "@/constants/inputLimits";
+import { countWords } from "@/lib/utils/countWords";
 const loadAuthGateDialog = () => import("@/components/auth/AuthGateDialog");
 const AuthGateDialog = React.lazy(loadAuthGateDialog);
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
@@ -94,6 +95,8 @@ export default function InterpretForm() {
         containerRef,
     });
     const isThinking = isInterpreting || isStreaming;
+    const wordCount = countWords(text);
+    const isOverWordLimit = wordCount > INPUT_LIMITS.dreamWords;
     const warmAuthGate = () => {
         if (!isAuthenticated)
             void loadAuthGateDialog();
@@ -103,7 +106,7 @@ export default function InterpretForm() {
         warmAuthGate();
     };
     const handleInterpret = async () => {
-        if (!text.trim())
+        if (!text.trim() || isOverWordLimit)
             return;
         if (!isAuthenticated) {
             void loadAuthGateDialog();
@@ -169,12 +172,22 @@ export default function InterpretForm() {
             "transition-colors duration-200",
         ].join(" ")}/>
           <div className="mt-1 text-end text-xs text-slate-500 dark:text-white/50">
-            {text.length.toLocaleString()}/{INPUT_LIMITS.dreamText.toLocaleString()}
+            {t("interpret.wordCounter", {
+              count: wordCount.toLocaleString(),
+              max: INPUT_LIMITS.dreamWords.toLocaleString(),
+            })}
           </div>
+          {isOverWordLimit && (<p className="mt-1 text-sm text-rose-600 dark:text-rose-300" role="alert" dir={i18n.dir()}>
+            {t("interpret.wordLimitError", { max: INPUT_LIMITS.dreamWords })}
+          </p>)}
         </div>
 
+        <p className="text-xs leading-5 text-slate-500 dark:text-white/55" dir={i18n.dir()}>
+          {t("interpret.aiProcessingDisclosure")}
+        </p>
+
         
-        <Button onClick={handleInterpret} disabled={!text.trim() || isInterpreting} className={[
+        <Button onClick={handleInterpret} disabled={!text.trim() || isOverWordLimit || isInterpreting} className={[
             "w-full font-bold py-3 rounded-lg",
             "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",
         ].join(" ")}>

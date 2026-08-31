@@ -10,6 +10,7 @@ import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import SharePromptDialog from "@/components/dreams/SharePromptDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { INPUT_LIMITS } from "@/constants/inputLimits";
+import { countWords } from "@/lib/utils/countWords";
 
 type Props = {
   onInterpreted?: (payload: {
@@ -28,6 +29,8 @@ export default function InterpretForm({ onInterpreted }: Props) {
   const [shareOpen, setShareOpen] = useState(false);
   const [lastDream, setLastDream] = useState<Dream | null>(null);
   const { user } = useAuthStore();
+  const wordCount = countWords(newDream);
+  const isOverWordLimit = wordCount > INPUT_LIMITS.dreamWords;
 
   const requireAuth = () => {
     if (!user) {
@@ -38,7 +41,7 @@ export default function InterpretForm({ onInterpreted }: Props) {
   };
 
   const handleInterpret = async () => {
-    if (!newDream.trim()) return;
+    if (!newDream.trim() || isOverWordLimit) return;
     if (!requireAuth()) return;
     setIsInterpreting(true);
     try {
@@ -83,10 +86,24 @@ export default function InterpretForm({ onInterpreted }: Props) {
             disabled={isInterpreting}
             maxLength={INPUT_LIMITS.dreamText}
           />
+          <div className="mt-1 text-end text-xs text-slate-500 dark:text-white/50">
+            {t("interpret.wordCounter", {
+              count: wordCount.toLocaleString(),
+              max: INPUT_LIMITS.dreamWords.toLocaleString(),
+            })}
+          </div>
+          {isOverWordLimit && (
+            <p className="mt-1 text-sm text-rose-600 dark:text-rose-300" role="alert">
+              {t("interpret.wordLimitError", { max: INPUT_LIMITS.dreamWords })}
+            </p>
+          )}
         </div>
+        <p className="text-xs leading-5 text-slate-500 dark:text-white/55">
+          {t("interpret.aiProcessingDisclosure")}
+        </p>
         <Button
           onClick={handleInterpret}
-          disabled={!newDream.trim() || isInterpreting}
+          disabled={!newDream.trim() || isOverWordLimit || isInterpreting}
           className="w-full bg-gradient-to-r from-purple-600 to-amber-600 hover:from-purple-700 hover:to-amber-700 text-white font-bold py-3 rounded-xl glow-effect disabled:opacity-50"
         >
           {isInterpreting ? (

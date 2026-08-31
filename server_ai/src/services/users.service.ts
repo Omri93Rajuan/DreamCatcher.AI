@@ -1,5 +1,10 @@
+import mongoose, { type ClientSession, Types } from "mongoose";
 import { hashPassword } from "../helpers/bcrypt";
 import User from "../models/user";
+import { Dream } from "../models/dream";
+import { DreamActivity } from "../models/dreamActivity";
+import { SiteVisit } from "../models/siteVisit";
+import PasswordResetQuota from "../models/passwordResetToken";
 import {
   CreateUserDTO,
   IUser,
@@ -157,11 +162,67 @@ export const adminUpdateUser = async (
 };
 export const deleteUser = async (userId: string) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(userId);
-    if (!deletedUser) throw new Error("User not found");
-    await deleteUserAvatar(userId, (deletedUser as any).image);
+    if (!Types.ObjectId.isValid(userId)) throw new Error("User not found");
+    const existingUser = await User.findById(userId).select("_id image");
+    if (!existingUser) throw new Error("User not found");
+
+    // Object storage cannot join the MongoDB transaction. Delete it first and
+    // abort the account deletion if cleanup fails so success is never overstated.
+    await deleteUserAvatar(userId, (existingUser as any).image, { strict: true });
+
+    try {
+      await mongoose.connection.transaction(async (session) => {
+        await deleteUserData(userId, session);
+      });
+    } catch (error: any) {
+      if (!isTransactionUnsupported(error)) throw error;
+      // Local/test standalone MongoDB does not support transactions. Keep the
+      // user deletion last and unshare first so a partial failure is retryable
+      // and can never leave a shared dream publicly visible.
+      await deleteUserData(userId);
+    }
+
     return { message: "User deleted successfully" };
   } catch (error: any) {
     return handleBadRequest("MongoDB", error);
   }
 };
+
+async function deleteUserData(userId: string, session?: ClientSession) {
+  const ownerId = new Types.ObjectId(userId);
+  const dreams = await Dream.find({ userId: ownerId })
+    .select("_id")
+    .session(session || null)
+    .lean();
+  const dreamIds = dreams.map((dream) => dream._id);
+  const opts = session ? { session } : undefined;
+
+  await Dream.updateMany(
+    { userId: ownerId },
+    { $set: { isShared: false, sharedAt: null } },
+    opts
+  );
+  await DreamActivity.deleteMany(
+    {
+      $or: [
+        { userId: ownerId },
+        ...(dreamIds.length ? [{ dreamId: { $in: dreamIds } }] : []),
+      ],
+    },
+    opts
+  );
+  await Dream.deleteMany({ userId: ownerId }, opts);
+  await SiteVisit.deleteMany({ userId: ownerId }, opts);
+  await PasswordResetQuota.deleteMany({ userId: ownerId }, opts);
+  const deleted = await User.deleteOne({ _id: ownerId }, opts);
+  if (deleted.deletedCount !== 1) throw new Error("User not found");
+}
+
+function isTransactionUnsupported(error: any) {
+  const message = String(error?.message || "");
+  return (
+    error?.code === 20 ||
+    message.includes("Transaction numbers are only allowed") ||
+    message.includes("does not support transactions")
+  );
+}

@@ -97,6 +97,33 @@ describe("dream routes", () => {
     expect(list.status).toBe(400);
   });
 
+  it("accepts 60-word dreams and rejects longer dreams", async () => {
+    const user = await User.create({
+      firstName: "Alex",
+      lastName: "Baker",
+      email: "word-limit@example.com",
+      password: "secret123",
+    });
+    setLLMProvider({
+      interpretDream: async () => ({ title: "t", interpretation: "i" }),
+    } as any);
+    const app = createTestApp();
+    const cookie = [`auth_token=${signToken(user._id.toString())}`];
+
+    const accepted = await request(app)
+      .post("/api/dreams/interpret")
+      .set("Cookie", cookie)
+      .send({ text: Array.from({ length: 60 }, (_, index) => `word${index}`).join(" ") });
+    expect(accepted.status).toBe(201);
+
+    const rejected = await request(app)
+      .post("/api/dreams/interpret")
+      .set("Cookie", cookie)
+      .send({ text: Array.from({ length: 61 }, (_, index) => `מילה${index}`).join(" ") });
+    expect(rejected.status).toBe(400);
+    expect(rejected.body.issues[0].message).toContain("60 words or fewer");
+  });
+
   it("lists only shared dreams for anonymous viewer", async () => {
     const user = await User.create({
       firstName: "Alex",
@@ -161,6 +188,36 @@ describe("dream routes", () => {
     expect(res.body.dream.emotions).toEqual(["hope"]);
     expect(receivedOptions).toEqual({ locale: "en" });
   });
+
+  it("rate-limits excessive interpretation requests per user", async () => {
+    const user = await User.create({
+      firstName: "Alex",
+      lastName: "Baker",
+      email: "rate@example.com",
+      password: "secret123",
+    });
+    setLLMProvider({
+      interpretDream: async () => ({
+        title: "t",
+        interpretation: "i",
+      }),
+    } as any);
+    process.env.RATE_LIMIT_ENABLE_IN_TESTS = "true";
+    try {
+      const app = createTestApp();
+      let res: request.Response | undefined;
+      for (let attempt = 0; attempt < 21; attempt += 1) {
+        res = await request(app)
+          .post("/api/dreams/interpret")
+          .set("Cookie", [`auth_token=${signToken(user._id.toString())}`])
+          .send({ text: `dream ${attempt}`, locale: "en" });
+        if (attempt === 0) expect(res.status).toBe(201);
+      }
+      expect(res?.status).toBe(429);
+      expect(res?.headers["retry-after"]).toBeDefined();
+      expect(res?.body.error).toBe("rate_limited");
+    } finally {
+      delete process.env.RATE_LIMIT_ENABLE_IN_TESTS;
+    }
+  });
 });
-
-

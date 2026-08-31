@@ -109,11 +109,13 @@ describe("dream.service (db)", () => {
       sharedAt: new Date(),
     });
     const stats = await getDreamStats({});
-    expect(stats.totalAll).toBe(3);
+    expect(stats.totalAll).toBe(2);
     expect(stats.totalPublic).toBe(2);
-    expect(stats.uniqueUsers).toBe(2);
+    expect(stats.newSince).toBe(2);
+    expect(stats.uniqueUsers).toBe(0);
+    expect(stats.uniqueUsersSuppressed).toBe(true);
+    expect(stats.privacySafe).toBe(true);
   });
 });
-
 
 

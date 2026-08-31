@@ -1,6 +1,12 @@
 import express, { IRouter } from "express";
 import * as authController from "../controllers/auth.controller";
 import authenticate from "../middlewares/authenticate";
+import {
+  loginLimiter,
+  passwordResetLimiter,
+  refreshLimiter,
+  registerLimiter,
+} from "../middlewares/rateLimiters";
 import { validate } from "../middlewares/validate";
 import {
   consumeResetTokenSchema,
@@ -20,10 +26,11 @@ import {
 const router: IRouter = express.Router();
 router.post(
   "/register",
+  registerLimiter,
   validate(registerRequestSchema),
   authController.registerUser
 );
-router.post("/login", validate(loginRequestSchema), authController.loginUser);
+router.post("/login", loginLimiter, validate(loginRequestSchema), authController.loginUser);
 router.post(
   "/logout",
   validate(logoutRequestSchema),
@@ -31,6 +38,7 @@ router.post(
 );
 router.post(
   "/refresh",
+  refreshLimiter,
   validate(refreshTokenSchema),
   authController.refreshToken
 );
@@ -53,16 +61,19 @@ router.post(
 router.get("/me", authenticate, authController.getCurrentUser);
 router.post(
   "/password/request-reset",
+  passwordResetLimiter,
   validate(requestPasswordResetSchema),
   authController.requestPasswordReset
 );
 router.get(
   "/password/consume",
+  passwordResetLimiter,
   validate(consumeResetTokenSchema),
   authController.consumeResetToken
 );
 router.post(
   "/password/reset-with-cookie",
+  passwordResetLimiter,
   validate(resetPasswordWithCookieSchema),
   authController.resetPasswordWithCookie
 );

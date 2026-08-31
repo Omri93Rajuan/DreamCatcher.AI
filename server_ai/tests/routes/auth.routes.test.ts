@@ -131,6 +131,24 @@ describe("auth routes", () => {
     const setCookie = Array.isArray(raw) ? raw : [raw];
     expect(setCookie.join(";")).toContain("auth_token=");
   });
-});
 
+  it("rate-limits repeated login attempts and returns Retry-After", async () => {
+    process.env.RATE_LIMIT_ENABLE_IN_TESTS = "true";
+    try {
+      const app = createTestApp();
+      let res: request.Response | undefined;
+      for (let attempt = 0; attempt < 11; attempt += 1) {
+        res = await request(app).post("/api/auth/login").send({
+          email: "missing@example.com",
+          password: "wrong-password",
+        });
+      }
+      expect(res?.status).toBe(429);
+      expect(res?.headers["retry-after"]).toBeDefined();
+      expect(res?.body.error).toBe("rate_limited");
+    } finally {
+      delete process.env.RATE_LIMIT_ENABLE_IN_TESTS;
+    }
+  });
+});
 

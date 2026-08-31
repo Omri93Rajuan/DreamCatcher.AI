@@ -298,6 +298,8 @@ export const DreamsApi = {
             newSince: Number(payload.newSince ?? 0),
             publishedSince: Number(payload.publishedSince ?? 0),
             uniqueUsers: Number(payload.uniqueUsers ?? 0),
+            uniqueUsersSuppressed: Boolean(payload.uniqueUsersSuppressed),
+            privacySafe: Boolean(payload.privacySafe),
             windowDays: Number(payload.windowDays ?? 7),
             sinceISO: payload.sinceISO,
         };

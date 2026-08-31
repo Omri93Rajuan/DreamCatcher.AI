@@ -116,6 +116,8 @@ export type GlobalDreamStats = {
     newSince: number;
     publishedSince: number;
     uniqueUsers: number;
+    uniqueUsersSuppressed?: boolean;
+    privacySafe?: boolean;
     windowDays: number;
     sinceISO?: string;
 };

@@ -133,7 +133,8 @@ export function normalizeStoredImageUrl(url?: string | null) {
 
 export async function deleteUserAvatar(
   userId: string,
-  imageUrl?: string | null
+  imageUrl?: string | null,
+  options?: { strict?: boolean }
 ) {
   const key = extractAvatarKeyFromUrl(imageUrl);
   if (!key || !key.startsWith("avatars/")) return;
@@ -146,8 +147,15 @@ export async function deleteUserAvatar(
       })
     );
   } catch (err) {
-    // We don't fail the request if cleanup fails; log for observability.
     console.warn("[upload] Failed to delete old avatar", { key, err });
+    if (options?.strict) {
+      const cleanupError: any = new Error(
+        "Account avatar could not be deleted from object storage"
+      );
+      cleanupError.status = 502;
+      cleanupError.cause = err;
+      throw cleanupError;
+    }
   }
 }
 

@@ -313,12 +313,13 @@ export const getDreams = async (query: GetDreamsQuery) => {
 export const getDreamStats = async (query: GetDreamStatsQuery) => {
   const windowDays = Math.max(1, query.windowDays ?? 7);
   const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+  const MIN_PUBLIC_CONTRIBUTORS = 3;
 
   const pipeline = [
+    { $match: { isShared: true } },
     {
       $facet: {
-        totalAll: [{ $count: "n" }],
-        totalPublic: [{ $match: { isShared: true } }, { $count: "n" }],
+        totalPublic: [{ $count: "n" }],
         newSince: [{ $match: { createdAt: { $gte: since } } }, { $count: "n" }],
         publishedSince: [
           {
@@ -327,7 +328,6 @@ export const getDreamStats = async (query: GetDreamStatsQuery) => {
                 { sharedAt: { $gte: since } },
                 {
                   sharedAt: { $exists: false },
-                  isShared: true,
                   createdAt: { $gte: since },
                 },
               ],
@@ -335,30 +335,42 @@ export const getDreamStats = async (query: GetDreamStatsQuery) => {
           },
           { $count: "n" },
         ],
-        uniqueUsers: [{ $group: { _id: "$userId" } }, { $count: "n" }],
+        uniqueContributors: [
+          { $group: { _id: "$userId" } },
+          { $count: "n" },
+        ],
       },
     },
     {
       $project: {
-        totalAll: { $ifNull: [{ $arrayElemAt: ["$totalAll.n", 0] }, 0] },
         totalPublic: { $ifNull: [{ $arrayElemAt: ["$totalPublic.n", 0] }, 0] },
         newSince: { $ifNull: [{ $arrayElemAt: ["$newSince.n", 0] }, 0] },
         publishedSince: {
           $ifNull: [{ $arrayElemAt: ["$publishedSince.n", 0] }, 0],
         },
-        uniqueUsers: { $ifNull: [{ $arrayElemAt: ["$uniqueUsers.n", 0] }, 0] },
+        uniqueContributors: {
+          $ifNull: [{ $arrayElemAt: ["$uniqueContributors.n", 0] }, 0],
+        },
       },
     },
   ];
 
   const [doc] = await Dream.aggregate(pipeline).allowDiskUse(true);
 
+  const totalPublic = doc?.totalPublic ?? 0;
+  const contributorCount = doc?.uniqueContributors ?? 0;
+  const contributorsSuppressed = contributorCount < MIN_PUBLIC_CONTRIBUTORS;
+
   return {
-    totalAll: doc?.totalAll ?? 0,
-    totalPublic: doc?.totalPublic ?? 0,
+    // Keep legacy field names for the existing client, but every value is now
+    // derived exclusively from intentionally shared dreams.
+    totalAll: totalPublic,
+    totalPublic,
     newSince: doc?.newSince ?? 0,
     publishedSince: doc?.publishedSince ?? 0,
-    uniqueUsers: doc?.uniqueUsers ?? 0,
+    uniqueUsers: contributorsSuppressed ? 0 : contributorCount,
+    uniqueUsersSuppressed: contributorsSuppressed,
+    privacySafe: true,
     windowDays,
     sinceISO: since.toISOString(),
   };

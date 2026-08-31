@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { countWords } from "../utils/countWords";
 
 const zodMongoObjectId = z
   .string()
@@ -6,6 +7,7 @@ const zodMongoObjectId = z
 
 export const DREAM_INPUT_LIMITS = {
   text: 10000,
+  words: 60,
   title: 120,
   search: 120,
   pageLimit: 50,
@@ -23,7 +25,10 @@ const dreamTextSchema = z
   .max(
     DREAM_INPUT_LIMITS.text,
     `Dream text must be ${DREAM_INPUT_LIMITS.text} characters or fewer`
-  );
+  )
+  .refine((value) => countWords(value) <= DREAM_INPUT_LIMITS.words, {
+    message: `Dream text must be ${DREAM_INPUT_LIMITS.words} words or fewer`,
+  });
 const titleSchema = z
   .string()
   .trim()

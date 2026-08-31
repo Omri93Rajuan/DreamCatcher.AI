@@ -97,12 +97,15 @@
     "sharedNotice": "The dream is now public for everyone to see.",
     "toastLogin": "Please log in to interpret a dream through Jewish tradition",
     "titlePlaceholder": "Title (optional)",
-    "submitting": "Interpreting through Jewish tradition and saving..."
+    "submitting": "Interpreting through Jewish tradition and saving...",
+    "wordCounter": "{{count}} / {{max}} words",
+    "wordLimitError": "Your dream can contain up to {{max}} words. Please shorten it before submitting.",
+    "aiProcessingDisclosure": "Your dream text will be sent to our third-party AI provider, OpenRouter, to generate the interpretation."
   },
   "stats": {
     "aria": "Key metrics",
-    "total": "Total dreams",
-    "newSince": "New in {{days}} days",
+    "total": "Shared dreams",
+    "newSince": "New shared in {{days}} days",
     "publishedSince": "Published in {{days}} days",
     "period": {
       "week": "Week",
@@ -304,19 +307,27 @@
   "privacy": {
     "badge": "Privacy policy",
     "title": "How we protect your data",
-    "intro": "Privacy matters to us. You decide what to share about your dreams, and we will not share anything beyond what you approve.",
+    "intro": "Dreams can contain deeply personal information. This policy explains what DreamCatcher stores, when information is sent to our AI provider, and what you control.",
     "sections": [
       {
-        "title": "1. Data we collect",
-        "body": "We collect only what’s needed to run the platform: username, email, dreams you choose to share, and anonymous usage data to improve performance. Data is stored securely and encrypted."
+        "title": "1. Account and dream data",
+        "body": "We store your account details, the private and shared dreams you submit, and the interpretations, symbols, emotions, and categories generated for them. Dreams are private by default. If you choose to share a dream, its text and interpretation become visible in the public community feed."
       },
       {
-        "title": "2. Choice, sharing, and removal",
-        "body": "You can choose not to share private dreams, delete interpretations, or cancel your account at any time. Requests to access, correct, or delete data are handled within a reasonable time."
+        "title": "2. AI processing through OpenRouter",
+        "body": "To interpret a dream, we send the dream text and the requested response language to OpenRouter, a third-party AI provider. We do not include your name, email, account ID, password, or sharing setting in the AI prompt. OpenRouter and the selected model provider process that content to return the interpretation. Avoid including identifying information that is not needed for the interpretation."
       },
       {
-        "title": "3. Storage and security",
-        "body": "Alongside internal access limits, we only provide information that aligns with the law. Even after closing an account we keep only essential data for security and compliance."
+        "title": "3. Analytics and consent",
+        "body": "Optional visit analytics runs only after you accept analytics in the consent notice. It uses hashed session, IP-address, and browser identifiers, the visited path, and—when signed in—your account ID. Declining analytics prevents new visit records from being sent. Visit records expire after 365 days. Dream reaction and view records expire after 90 days."
+      },
+      {
+        "title": "4. Deletion and retention",
+        "body": "You can delete individual dreams or permanently delete your account. Account deletion removes your account, private and shared dreams, reactions and views linked to you or your dreams, account-linked visit records, password-reset quota data, and your uploaded avatar. Shared dreams are made private before fallback cleanup begins so they cannot remain public after a partial database failure."
+      },
+      {
+        "title": "5. Security",
+        "body": "Authentication cookies are HTTP-only and production traffic should use HTTPS. Passwords are stored as one-way bcrypt hashes. The application does not claim field-level encryption for dream text; storage-provider encryption at rest depends on the configured hosting services."
       }
     ],
     "ctaTerms": "Read the terms of use",
