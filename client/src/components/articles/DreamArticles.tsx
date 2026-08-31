@@ -18,17 +18,25 @@ export default function DreamArticles({ articles, initialSelectedId = null, onSe
     const PAGE_SIZE = 6;
     const [selectedId, setSelectedId] = React.useState<string | null>(initialSelectedId);
     const [page, setPage] = React.useState(1);
-    const selected = React.useMemo(() => articles.find((a) => a.id === selectedId) || null, [articles, selectedId]);
-    const totalPages = React.useMemo(() => Math.max(1, Math.ceil(articles.length / PAGE_SIZE)), [articles.length]);
+    const sortedArticles = React.useMemo(
+        () => [...articles].sort((a, b) => {
+            const bTime = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+            const aTime = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+            return bTime - aTime;
+        }),
+        [articles]
+    );
+    const selected = React.useMemo(() => sortedArticles.find((a) => a.id === selectedId) || null, [sortedArticles, selectedId]);
+    const totalPages = React.useMemo(() => Math.max(1, Math.ceil(sortedArticles.length / PAGE_SIZE)), [sortedArticles.length]);
     React.useEffect(() => {
         if (!initialSelectedId)
             return;
-        const index = articles.findIndex((a) => a.id === initialSelectedId);
+        const index = sortedArticles.findIndex((a) => a.id === initialSelectedId);
         if (index >= 0) {
             const initialPage = Math.floor(index / PAGE_SIZE) + 1;
             setPage(initialPage);
         }
-    }, [articles, initialSelectedId]);
+    }, [sortedArticles, initialSelectedId]);
     React.useEffect(() => {
         if (page > totalPages) {
             setPage(totalPages);
@@ -36,8 +44,8 @@ export default function DreamArticles({ articles, initialSelectedId = null, onSe
     }, [page, totalPages]);
     const pagedArticles = React.useMemo(() => {
         const start = (page - 1) * PAGE_SIZE;
-        return articles.slice(start, start + PAGE_SIZE);
-    }, [articles, page]);
+        return sortedArticles.slice(start, start + PAGE_SIZE);
+    }, [sortedArticles, page]);
     const handleOpen = (a: Article) => {
         setSelectedId(a.id);
         onSelectArticle?.(a);
@@ -63,7 +71,7 @@ export default function DreamArticles({ articles, initialSelectedId = null, onSe
               {t("articles.archive", { defaultValue: "All articles" })}
             </h2>
             <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {articles.map((article) => (
+              {sortedArticles.map((article) => (
                 <li key={article.id}>
                   <Link
                     to={getArticlePath(article)}
