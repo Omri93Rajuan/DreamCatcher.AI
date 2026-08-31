@@ -182,11 +182,6 @@ export default function InterpretForm() {
           </p>)}
         </div>
 
-        <p className="text-xs leading-5 text-slate-500 dark:text-white/55" dir={i18n.dir()}>
-          {t("interpret.aiProcessingDisclosure")}
-        </p>
-
-        
         <Button onClick={handleInterpret} disabled={!text.trim() || isOverWordLimit || isInterpreting} className={[
             "w-full font-bold py-3 rounded-lg",
             "bg-[var(--brand,#c9a23a)] text-[color:var(--brand-fg,#1b1b1b)] hover:brightness-105",

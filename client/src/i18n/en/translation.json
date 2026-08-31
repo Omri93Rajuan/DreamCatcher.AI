@@ -99,8 +99,7 @@
     "titlePlaceholder": "Title (optional)",
     "submitting": "Interpreting through Jewish tradition and saving...",
     "wordCounter": "{{count}} / {{max}} words",
-    "wordLimitError": "Your dream can contain up to {{max}} words. Please shorten it before submitting.",
-    "aiProcessingDisclosure": "Your dream text will be sent to our third-party AI provider, OpenRouter, to generate the interpretation."
+    "wordLimitError": "Your dream can contain up to {{max}} words. Please shorten it before submitting."
   },
   "stats": {
     "aria": "Key metrics",

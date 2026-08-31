@@ -98,9 +98,6 @@ export default function InterpretForm({ onInterpreted }: Props) {
             </p>
           )}
         </div>
-        <p className="text-xs leading-5 text-slate-500 dark:text-white/55">
-          {t("interpret.aiProcessingDisclosure")}
-        </p>
         <Button
           onClick={handleInterpret}
           disabled={!newDream.trim() || isOverWordLimit || isInterpreting}
