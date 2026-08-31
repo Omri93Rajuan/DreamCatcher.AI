@@ -2,14 +2,17 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function NotFound404Bold() {
+  const { t, i18n } = useTranslation();
+
   return (
     <div
-      dir="rtl"
-      className="min-h-screen grid place-items-center text-center
+      dir={i18n.dir()}
+      className="relative isolate min-h-screen grid place-items-center overflow-hidden text-center
                  bg-gradient-to-b from-amber-100 to-amber-50
-                 dark:from-zinc-950 dark:to-zinc-900 px-8"
+                 dark:from-[#050505] dark:via-[#0b0a08] dark:to-black px-8"
     >
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -21,19 +24,19 @@ export default function NotFound404Bold() {
           className="text-[10rem] sm:text-[14rem] font-extrabold leading-none
                      bg-clip-text text-transparent
                      bg-gradient-to-r from-amber-500 via-yellow-400 to-sky-600
-                     dark:from-zinc-50 dark:via-zinc-200 dark:to-zinc-50"
+                     dark:from-amber-500 dark:via-yellow-200 dark:to-amber-600"
           animate={{ scale: [1, 1.03, 1] }}
           transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
         >
           404
         </motion.h1>
 
-        <p className="text-2xl sm:text-3xl font-semibold text-amber-900/90 dark:text-zinc-200">
-          x"x�xzxx" xcx-xTxxcx� xox? x�xzx�x?
+        <p className="text-2xl sm:text-3xl font-semibold text-amber-900/90 dark:text-amber-50">
+          {t("notFoundPage.title")}
         </p>
 
-        <p className="text-lg sm:text-xl text-amber-900/75 dark:text-zinc-400">
-          xTx&gt;xxo xox"xTxx� xcx"xxTxcxx" xcx`xx", x�xzx-x, x?x x?xxoxT x"xx? x`x&gt;xoxo xox? x?xzxx" xox"xTxx� x&gt;x?xY�?�
+        <p className="text-lg sm:text-xl text-amber-900/75 dark:text-zinc-300">
+          {t("notFoundPage.description")}
         </p>
 
         <div className="pt-6">
@@ -43,19 +46,20 @@ export default function NotFound404Bold() {
                        bg-amber-400 text-[#2a1600]
                        hover:shadow-[0_8px_30px_rgba(251,191,36,.35)]
                        hover:scale-105 active:scale-95 transition-all
-                       dark:bg-zinc-200 dark:text-black"
+                       dark:bg-amber-400 dark:text-[#1b1200]
+                       dark:hover:shadow-[0_8px_35px_rgba(251,191,36,.28)]"
           >
-            x-x-x"x" xox"x� x"x`xTx�
+            {t("notFoundPage.backHome")}
           </Link>
         </div>
       </motion.div>
 
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 opacity-40 dark:opacity-25"
+        className="pointer-events-none absolute inset-0 -z-10 opacity-40 dark:opacity-100"
         style={{
           background:
-            "radial-gradient(circle at center, rgba(251,191,36,.35) 0%, transparent 70%)",
+            "radial-gradient(circle at center, rgba(251,191,36,.18) 0%, transparent 62%)",
         }}
       />
     </div>

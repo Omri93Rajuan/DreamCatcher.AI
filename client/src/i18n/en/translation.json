@@ -86,6 +86,11 @@
     "statsError": "Failed to load statistics: {{message}}",
     "allDreams": "All dreams"
   },
+  "notFoundPage": {
+    "title": "Oops, this page got lost in a dream",
+    "description": "We couldn't find the page you requested. Its address may have changed or the page may have been removed.",
+    "backHome": "Back to the home page"
+  },
   "interpret": {
     "placeholder": "Describe your dream and receive a Jewish-tradition interpretation... (paste works too)",
     "cta": "Interpret Jewishly",
