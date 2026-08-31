@@ -11,6 +11,11 @@ import water from "@/assets/article_images/water.webp";
 import dead from "@/assets/article_images/dead.webp";
 import deadman from "@/assets/article_images/deadman.webp";
 import test from "@/assets/article_images/test.webp";
+import alicopter from "@/assets/article_images/alicopter.webp";
+import bibi from "@/assets/article_images/bibi.webp";
+import mouse from "@/assets/article_images/mouse.webp";
+import rav from "@/assets/article_images/rav.webp";
+import war from "@/assets/article_images/war.webp";
 
 const COVER_MAP: Record<string, string> = {
   "article_images/run.webp": run,
@@ -26,6 +31,11 @@ const COVER_MAP: Record<string, string> = {
   "article_images/dead.webp": dead,
   "article_images/deadman.webp": deadman,
   "article_images/test.webp": test,
+  "article_images/alicopter.webp": alicopter,
+  "article_images/bibi.webp": bibi,
+  "article_images/mouse.webp": mouse,
+  "article_images/rav.webp": rav,
+  "article_images/war.webp": war,
 };
 
 export function resolveArticleCover(src?: string): string {
