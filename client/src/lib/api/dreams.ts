@@ -1,5 +1,5 @@
 import { api, API_TIMEOUTS } from "./apiClient";
-import type { Dream, CreateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
+import type { Dream, CreateDreamDto, UpdateDreamDto, DreamsPage, InterpretDto, InterpretResponse, GlobalDreamStats, SmartJournalInsights, } from "./types";
 type ApiRecord = Record<string, unknown>;
 const asRecord = (value: unknown): ApiRecord =>
     value && typeof value === "object" && !Array.isArray(value)
@@ -160,7 +160,7 @@ export const DreamsApi = {
                 (payload as any).dream_text,
             titleOverride: payload.titleOverride,
             isShared: payload.isShared ?? false,
-            model: payload.model,
+            locale: payload.locale,
         };
         const r = await api.post("/dreams/interpret", body, {
             timeout: API_TIMEOUTS.ai,
@@ -215,7 +215,7 @@ export const DreamsApi = {
         const raw = r.data?.dream ?? r.data;
         return adapt(raw);
     },
-    update: async (id: string, payload: Partial<CreateDreamDto>): Promise<Dream> => {
+    update: async (id: string, payload: UpdateDreamDto): Promise<Dream> => {
         const r = await api.put(`/dreams/${id}`, payload);
         return adapt(r.data?.dream ?? r.data);
     },

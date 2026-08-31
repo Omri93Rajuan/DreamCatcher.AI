@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Logo from "@/assets/logo.webp";
 import { useTranslation } from "react-i18next";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
+import { INPUT_LIMITS } from "@/constants/inputLimits";
 const loadAuthGateDialog = () => import("@/components/auth/AuthGateDialog");
 const AuthGateDialog = React.lazy(loadAuthGateDialog);
 function useWordStreamer({ fullText, baseMs = 40, wordsPerTick = 1, containerRef, }: {
@@ -118,6 +119,7 @@ export default function InterpretForm() {
             text,
             titleOverride: undefined,
             isShared: false,
+            locale: i18n.language?.startsWith("en") ? "en" : "he",
         });
         setDream(saved ?? null);
         }
@@ -155,7 +157,7 @@ export default function InterpretForm() {
         <div className="relative">
           
           <Search className="absolute right-4 top-3 w-5 h-5 text-slate-400 dark:text-white/50"/>
-          <Textarea dir={i18n.dir()} value={text} onChange={handleTextChange} onFocus={warmAuthGate} placeholder={t("interpret.placeholder")} disabled={isInterpreting} className={[
+          <Textarea dir={i18n.dir()} value={text} onChange={handleTextChange} onFocus={warmAuthGate} placeholder={t("interpret.placeholder")} disabled={isInterpreting} maxLength={INPUT_LIMITS.dreamText} className={[
             "pr-10 font-he min-h-[140px]",
             "bg-white text-black placeholder:text-slate-500",
             "border border-black/10",
@@ -166,6 +168,9 @@ export default function InterpretForm() {
             "dark:focus-visible:ring-2 dark:focus-visible:ring-[var(--brand)]/35",
             "transition-colors duration-200",
         ].join(" ")}/>
+          <div className="mt-1 text-end text-xs text-slate-500 dark:text-white/50">
+            {text.length.toLocaleString()}/{INPUT_LIMITS.dreamText.toLocaleString()}
+          </div>
         </div>
 
         

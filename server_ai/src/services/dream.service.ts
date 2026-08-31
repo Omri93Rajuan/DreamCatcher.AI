@@ -66,14 +66,7 @@ export interface SmartJournalInsights {
 
 export type UpdateDreamPatch = Partial<{
   title: string;
-  userInput: string;
-  aiResponse: string;
-  insights: string[];
-  keySymbols: DreamSymbolInsight[];
-  emotions: string[];
   isShared: boolean;
-  categories: DreamCategory[];
-  categoryScores: Record<string, number>;
   sharedAt: Date | null;
 }>;
 

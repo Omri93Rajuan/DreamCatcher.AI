@@ -4,68 +4,75 @@ const zodMongoObjectId = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, "Invalid MongoDB ObjectId");
 
+export const DREAM_INPUT_LIMITS = {
+  text: 10000,
+  title: 120,
+  search: 120,
+  pageLimit: 50,
+} as const;
+
 const categoriesSchema = z
   .union([z.array(z.string().min(1)), z.string().min(1)])
   .optional();
 
-const categoryScoresSchema = z
-  .record(z.string().min(1), z.number().min(0).max(1))
-  .optional();
+const localeSchema = z.enum(["he", "en"]);
+const dreamTextSchema = z
+  .string()
+  .trim()
+  .min(1, "Dream text is required")
+  .max(
+    DREAM_INPUT_LIMITS.text,
+    `Dream text must be ${DREAM_INPUT_LIMITS.text} characters or fewer`
+  );
+const titleSchema = z
+  .string()
+  .trim()
+  .min(1, "Title is required")
+  .max(
+    DREAM_INPUT_LIMITS.title,
+    `Title must be ${DREAM_INPUT_LIMITS.title} characters or fewer`
+  );
 
-const analysisListSchema = z.array(z.string().min(1).max(260)).max(8).optional();
-
-const keySymbolsSchema = z
-  .array(
-    z.object({
-      symbol: z.string().min(1).max(100),
-      meaning: z.string().max(300).optional(),
-    })
-  )
-  .max(5)
-  .optional();
-
-const dreamBodySchema = z.object({
-  title: z.string().min(1, "Title is required").optional(),
-  userInput: z.string().min(1, "User input (dream text) is required"),
-  aiResponse: z.string().min(1, "AI response is required").optional(),
-  isShared: z.coerce.boolean().optional(),
-  model: z.string().optional(),
-  categories: categoriesSchema,
-  categoryScores: categoryScoresSchema,
-  insights: analysisListSchema,
-  keySymbols: keySymbolsSchema,
-  symbols: keySymbolsSchema,
-  emotions: analysisListSchema,
-});
+const createDreamBodySchema = z
+  .object({
+    title: titleSchema.optional(),
+    userInput: dreamTextSchema,
+    isShared: z.boolean().optional(),
+    locale: localeSchema.optional(),
+  })
+  .strict();
 
 export const createDreamRequestSchema = z.object({
-  body: dreamBodySchema,
+  body: createDreamBodySchema,
 });
 
 export const updateDreamRequestSchema = z.object({
   params: z.object({
     id: zodMongoObjectId,
   }),
-  body: dreamBodySchema.partial(),
+  body: z
+    .object({
+      title: titleSchema.optional(),
+      isShared: z.boolean().optional(),
+    })
+    .strict()
+    .refine((value) => Object.keys(value).length > 0, {
+      message: "At least one editable field is required",
+    }),
 });
 
 export const interpretDreamRequestSchema = z.object({
   body: z
     .object({
-      text: z.string().trim().optional(),
-      userInput: z.string().trim().optional(),
-      prompt: z.string().trim().optional(),
-      dream_text: z.string().trim().optional(),
-      isShared: z.coerce.boolean().optional(),
-      model: z.string().optional(),
-      titleOverride: z.string().optional(),
-      categories: categoriesSchema,
-      categoryScores: categoryScoresSchema,
-      insights: analysisListSchema,
-      keySymbols: keySymbolsSchema,
-      symbols: keySymbolsSchema,
-      emotions: analysisListSchema,
+      text: dreamTextSchema.optional(),
+      userInput: dreamTextSchema.optional(),
+      prompt: dreamTextSchema.optional(),
+      dream_text: dreamTextSchema.optional(),
+      isShared: z.boolean().optional(),
+      titleOverride: titleSchema.optional(),
+      locale: localeSchema.optional(),
     })
+    .strict()
     .refine(
       (val) =>
         !!(
@@ -95,11 +102,11 @@ export const listDreamsRequestSchema = z.object({
     .object({
       userId: zodMongoObjectId.optional(),
       viewerId: zodMongoObjectId.optional(),
-      search: z.string().optional(),
-      sortBy: z.string().optional(),
+      search: z.string().trim().max(DREAM_INPUT_LIMITS.search).optional(),
+      sortBy: z.enum(["createdAt", "updatedAt", "title"]).optional(),
       order: z.enum(["asc", "desc"]).optional(),
       page: z.coerce.number().int().positive().optional(),
-      limit: z.coerce.number().int().positive().optional(),
+      limit: z.coerce.number().int().positive().max(DREAM_INPUT_LIMITS.pageLimit).optional(),
       categories: categoriesSchema,
       category: z.string().optional(),
     })

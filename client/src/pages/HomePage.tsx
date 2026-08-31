@@ -10,6 +10,7 @@ import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import StatusCard from "@/components/ui/StatusCard";
 import { usePageSeo } from "@/hooks/usePageSeo";
 import { getHomeSeo } from "@/lib/seo";
+import { INPUT_LIMITS } from "@/constants/inputLimits";
 
 const PopularDreams = lazy(() => import("@/components/dreams/PopularDreams"));
 const DreamsPaginated = lazy(() => import("@/components/dreams/DreamsPaginated"));
@@ -136,7 +137,7 @@ export default function HomePage() {
         )}
       </section>
 
-      <SearchInput value={searchInput} onChange={setSearchInput} />
+      <SearchInput value={searchInput} onChange={(value) => setSearchInput(value.slice(0, INPUT_LIMITS.dreamSearch))} />
 
       <section className="max-w-6xl mx-auto px-4">
         <Suspense fallback={<SectionFallback />}>

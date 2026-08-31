@@ -68,6 +68,30 @@ describe("OpenRouterProvider", () => {
     expect(res.interpretation).toBe("I");
   });
 
+  it("uses validated English locale instructions while keeping server model selection", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        choices: [
+          { message: { content: JSON.stringify({ interpretation: "Meaning" }) } },
+        ],
+      }),
+    });
+    const provider = new OpenRouterProvider({
+      apiKey: "k",
+      models: ["server-model"],
+    });
+    await provider.interpretDream("I was flying", { locale: "en" });
+
+    const requestBody = JSON.parse(String(fetchMock.mock.calls[0][1]?.body));
+    const prompt = requestBody.messages
+      .map((message: any) => message.content)
+      .join("\n");
+    expect(requestBody.model).toBe("server-model");
+    expect(prompt).toContain("Answer in natural, personal but non-definitive English");
+    expect(prompt).not.toContain("ענה בעברית");
+  });
+
   it("throws when no models are configured", async () => {
     delete process.env.OPENROUTER_MODEL;
     delete process.env.OPENROUTER_MODELS;
@@ -77,6 +101,5 @@ describe("OpenRouterProvider", () => {
     );
   });
 });
-
 
 

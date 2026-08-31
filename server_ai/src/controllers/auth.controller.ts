@@ -30,6 +30,7 @@ import {
   verifyAndConsumeResetToken,
 } from "../services/password.service";
 import { handleError } from "../utils/ErrorHandle";
+import type { AuthRequest } from "../types/auth.interface";
 
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
 const REFRESH_SECRET =
@@ -270,21 +271,24 @@ function issueAuthTokens(
   return { accessToken, refreshToken };
 }
 
-function toPublicUser(user: any) {
-  const publicUser =
+function toSelfUser(user: any) {
+  const source =
     typeof user?.toJSON === "function"
       ? user.toJSON()
       : typeof user?.toObject === "function"
         ? user.toObject()
         : { ...(user || {}) };
-  delete publicUser.password;
-  if (publicUser._id) publicUser._id = publicUser._id.toString();
-  if (!publicUser.name) {
-    publicUser.name = `${publicUser.firstName ?? ""} ${
-      publicUser.lastName ?? ""
-    }`.trim();
-  }
-  return publicUser;
+  return {
+    _id: String(source._id),
+    firstName: String(source.firstName || ""),
+    lastName: String(source.lastName || ""),
+    name:
+      source.name || `${source.firstName || ""} ${source.lastName || ""}`.trim(),
+    email: String(source.email || ""),
+    image: source.image || null,
+    role: source.role,
+    subscription: source.subscription,
+  };
 }
 
 type GoogleCompletionInput = {
@@ -358,7 +362,7 @@ async function completeGoogleAuthorization(
       },
       decoded.redirectTo
     );
-    return { decoded, user: toPublicUser(user) };
+    return { decoded, user: toSelfUser(user) };
   } catch (error: any) {
     error.decoded = decoded;
     throw error;
@@ -488,7 +492,7 @@ export const registerUser = async (
       role: user.role,
       email: user.email,
     });
-    res.status(201).json({ user });
+    res.status(201).json({ user: toSelfUser(user) });
   } catch (error: any) {
     const message =
       error?.status === 409 ? "Email already registered" : "Registration failed";
@@ -507,7 +511,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       role: user.role,
       email: user.email,
     });
-    res.status(200).json({ user });
+    res.status(200).json({ user: toSelfUser(user) });
   } catch (error: any) {
     const status = error?.status || 401;
     handleError(
@@ -576,19 +580,22 @@ export const verifyToken = (req: Request, res: Response): void => {
     handleError(res, 500, "Could not verify session");
   }
 };
-export const getUserById = async (
-  req: Request,
+export const getCurrentUser = async (
+  req: AuthRequest,
   res: Response
 ): Promise<void> => {
   try {
-    const foundUser = await getMe(req.params.id);
+    const userId = req.user?._id;
+    if (!userId) return handleError(res, 401, "Unauthorized");
+    const foundUser = await getMe(userId);
     if (!foundUser)
       return void res.status(404).json({ message: "User not found" });
-    res.status(200).json({ user: foundUser });
+    res.status(200).json({ user: toSelfUser(foundUser) });
   } catch (error: any) {
     handleError(res, error.status || 500, "Could not load user");
   }
 };
+
 export async function requestPasswordReset(req: Request, res: Response) {
   const { email } = req.body || {};
   if (!email)

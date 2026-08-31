@@ -12,6 +12,7 @@ import { convertFileToWebp, toStoredImageUrl } from "@/lib/images";
 import { useTranslation } from "react-i18next";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import { BUILT_IN_AVATARS } from "@/constants/avatars";
+import { UsersApi } from "@/lib/api/users";
 
 type Props = {
   onSuccess?: () => void;
@@ -123,53 +124,12 @@ export default function SignupForm({ onSuccess }: Props) {
     setSubmitting(true);
     setErrors({});
 
-    let imageUrl = selectedAvatar;
-
-    // אם המשתמש בחר קובץ, נעלה אותו עכשיו (לפני שליחת ההרשמה)
-    if (avatarFile) {
-      const fingerprint = `${avatarFile.name}-${avatarFile.size}-${avatarFile.lastModified}`;
-      if (avatarUploadCache && avatarUploadCache.fingerprint === fingerprint) {
-        imageUrl = avatarUploadCache.url;
-      } else {
-        setUploadingAvatar(true);
-        try {
-          const presign = await UploadsApi.getAvatarUploadUrl({
-            contentType: avatarFile.type,
-            contentLength: avatarFile.size,
-          });
-          if (avatarFile.size > presign.maxBytes) {
-            throw new Error(t("signup.errors.fileTooLarge"));
-          }
-          const putRes = await fetch(presign.uploadUrl, {
-            method: "PUT",
-            headers: { "Content-Type": avatarFile.type },
-            body: avatarFile,
-          });
-          if (!putRes.ok) {
-            throw new Error(`Upload failed (${putRes.status})`);
-          }
-          imageUrl =
-            toStoredImageUrl(presign.proxyUrl || presign.publicUrl) ||
-            presign.proxyUrl ||
-            presign.publicUrl;
-          setAvatarUploadCache({ fingerprint, url: imageUrl });
-        } catch (err: any) {
-          toast.error(getFriendlyErrorMessage(err, t, "signupAvatar"));
-          setSubmitting(false);
-          setUploadingAvatar(false);
-          return;
-        } finally {
-          setUploadingAvatar(false);
-        }
-      }
-    }
-
     const payload: RegisterDto = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       email: form.email.trim().toLowerCase(),
       password: form.password,
-      image: imageUrl,
+      image: avatarFile ? BUILT_IN_AVATARS[0] : selectedAvatar,
       termsAgreed: true,
       termsVersion: TERMS_VERSION,
       termsUserAgent:
@@ -191,6 +151,41 @@ export default function SignupForm({ onSuccess }: Props) {
       }
       if (user) {
         setUser(user);
+        if (avatarFile) {
+          setUploadingAvatar(true);
+          try {
+            const fingerprint = `${avatarFile.name}-${avatarFile.size}-${avatarFile.lastModified}`;
+            let imageUrl = avatarUploadCache?.fingerprint === fingerprint
+              ? avatarUploadCache.url
+              : "";
+            if (!imageUrl) {
+              const presign = await UploadsApi.getAvatarUploadUrl({
+                contentType: avatarFile.type,
+                contentLength: avatarFile.size,
+              });
+              if (avatarFile.size > presign.maxBytes) {
+                throw new Error(t("signup.errors.fileTooLarge"));
+              }
+              const putRes = await fetch(presign.uploadUrl, {
+                method: "PUT",
+                headers: { "Content-Type": avatarFile.type },
+                body: avatarFile,
+              });
+              if (!putRes.ok) throw new Error(`Upload failed (${putRes.status})`);
+              imageUrl =
+                toStoredImageUrl(presign.proxyUrl || presign.publicUrl) ||
+                presign.proxyUrl ||
+                presign.publicUrl;
+              setAvatarUploadCache({ fingerprint, url: imageUrl });
+            }
+            user = await UsersApi.update(user._id, { image: imageUrl });
+            setUser(user);
+          } catch (err: any) {
+            toast.error(getFriendlyErrorMessage(err, t, "signupAvatar"));
+          } finally {
+            setUploadingAvatar(false);
+          }
+        }
         onSuccess?.();
         return;
       }

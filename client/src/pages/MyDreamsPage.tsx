@@ -24,6 +24,7 @@ import { DreamsApi, DreamsListResult } from "@/lib/api/dreams";
 import { getFriendlyErrorMessage } from "@/lib/api/errors";
 import type { Dream } from "@/lib/api/types";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { INPUT_LIMITS } from "@/constants/inputLimits";
 
 export default function MyDreams() {
   const { t, i18n } = useTranslation();
@@ -304,6 +305,7 @@ function Header({
             dir={i18n.dir()}
             placeholder={t("myDreams.searchPlaceholder")}
             value={q}
+            maxLength={INPUT_LIMITS.dreamSearch}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") onSearch();

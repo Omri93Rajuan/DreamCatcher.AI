@@ -9,6 +9,7 @@ import type { Dream } from "@/lib/api/types";
 import AuthGateDialog from "@/components/auth/AuthGateDialog";
 import SharePromptDialog from "@/components/dreams/SharePromptDialog";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { INPUT_LIMITS } from "@/constants/inputLimits";
 
 type Props = {
   onInterpreted?: (payload: {
@@ -46,6 +47,7 @@ export default function InterpretForm({ onInterpreted }: Props) {
         save: true,
         titleOverride: title || undefined,
         isShared: false,
+        locale: i18n.language?.startsWith("en") ? "en" : "he",
       });
       const dream = resp.dream!;
       setLastDream(dream);
@@ -69,6 +71,7 @@ export default function InterpretForm({ onInterpreted }: Props) {
           placeholder={t("interpret.titlePlaceholder")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          maxLength={INPUT_LIMITS.dreamTitle}
         />
         <div className="relative">
           <Search className="absolute right-4 top-3 w-5 h-5 text-purple-400" />
@@ -78,6 +81,7 @@ export default function InterpretForm({ onInterpreted }: Props) {
             placeholder={t("interpret.placeholder")}
             className="pr-10"
             disabled={isInterpreting}
+            maxLength={INPUT_LIMITS.dreamText}
           />
         </div>
         <Button

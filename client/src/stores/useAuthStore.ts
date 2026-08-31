@@ -29,14 +29,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         }
         set({ user: null, isAuthenticated: false });
     },
-    refreshMe: async (id?: string) => {
+    refreshMe: async (_id?: string) => {
         try {
-            const curr = get().user;
-            const fallbackId = (curr as any)?.id;
-            const userId = id ?? curr?._id ?? fallbackId;
-            if (!userId)
-                return;
-            const res = await AuthApi.getMe(userId);
+            const res = await AuthApi.getMe();
             if (res?.user)
                 set({ user: res.user, isAuthenticated: true });
         }

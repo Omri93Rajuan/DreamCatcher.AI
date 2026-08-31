@@ -2,11 +2,6 @@ import type { RequestHandler, Response } from "express";
 import * as DreamService from "../services/dream.service";
 import type { AuthRequest } from "../types/auth.interface";
 import { DREAM_CATEGORIES } from "../types/categories.interface";
-import {
-  DREAM_ANALYSIS_LIMITS,
-  normalizeKeySymbols,
-  normalizeStringList,
-} from "../utils/dreamAnalysis";
 
 type DreamCategory = (typeof DREAM_CATEGORIES)[number];
 
@@ -125,22 +120,6 @@ function normalizeCategories(input: unknown): DreamCategory[] {
   return out as DreamCategory[];
 }
 
-function normalizeCategoryScores(
-  input: unknown
-): Record<DreamCategory, number> | undefined {
-  if (!input || typeof input !== "object") return undefined;
-  const result: Record<string, number> = {};
-  for (const [k, v] of Object.entries(input as Record<string, unknown>)) {
-    if (!allowedSet.has(k)) continue;
-    const n = Number(v);
-    const clamped = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 0;
-    result[k] = clamped;
-  }
-  return Object.keys(result).length
-    ? (result as Record<DreamCategory, number>)
-    : undefined;
-}
-
 export const getAllDreams: RequestHandler = async (req, res): Promise<void> => {
   try {
     const { userId } = getAuth(req as AuthRequest);
@@ -189,16 +168,9 @@ export const createDream: RequestHandler = async (req, res): Promise<void> => {
     const { userId } = getAuth(req as AuthRequest);
     const {
       userInput,
-      aiResponse,
       title,
       isShared,
-      model,
-      categories,
-      categoryScores,
-      insights,
-      keySymbols,
-      symbols,
-      emotions,
+      locale,
     } = req.body ?? {};
 
     if (!userId) {
@@ -210,36 +182,10 @@ export const createDream: RequestHandler = async (req, res): Promise<void> => {
       return;
     }
 
-    const safeCategories = normalizeCategories(categories);
-    const safeScores = normalizeCategoryScores(categoryScores);
-    const safeInsights = normalizeStringList(
-      insights,
-      DREAM_ANALYSIS_LIMITS.insights
-    );
-    const safeSymbols = normalizeKeySymbols(keySymbols ?? symbols);
-    const safeEmotions = normalizeStringList(
-      emotions,
-      DREAM_ANALYSIS_LIMITS.emotions
-    );
-    const saved = aiResponse
-      ? await DreamService.createDreamFromInterpretation(
-          userId,
-          userInput,
-          String(aiResponse),
-          title,
-          {
-            isShared: !!isShared,
-            categories: safeCategories,
-            categoryScores: safeScores,
-            insights: safeInsights,
-            keySymbols: safeSymbols,
-            emotions: safeEmotions,
-          }
-        )
-      : await DreamService.createDreamWithAI(userId, userInput, title, {
-          ...(model ? { modelOverride: model } : {}),
-          isShared: !!isShared,
-        });
+    const saved = await DreamService.createDreamWithAI(userId, userInput, title, {
+      locale: locale ?? "he",
+      isShared: !!isShared,
+    });
     res.status(201).json({ success: true, dream: saved });
   } catch (err: any) {
     sendInterpretError(res, err, "create");
@@ -263,8 +209,8 @@ export const interpretDream: RequestHandler = async (
       prompt,
       dream_text,
       isShared,
-      model,
       titleOverride,
+      locale,
     } = req.body ?? {};
 
     const rawText: string = (
@@ -289,9 +235,7 @@ export const interpretDream: RequestHandler = async (
       emotions = [],
       categories = [],
       categoryScores,
-    } = await llm.interpretDream(rawText, {
-      ...(model ? { modelOverride: model } : {}),
-    });
+    } = await llm.interpretDream(rawText, { locale: locale ?? "he" });
 
     const saved = await DreamService.createDreamFromInterpretation(
       userId,
@@ -330,43 +274,12 @@ export const updateDream: RequestHandler = async (req, res): Promise<void> => {
     }
     const {
       title,
-      userInput,
-      aiResponse,
       isShared,
-      categories,
-      categoryScores,
-      insights,
-      keySymbols,
-      symbols,
-      emotions,
     } = req.body ?? {};
 
     const patch: DreamService.UpdateDreamPatch = {};
     if (typeof title === "string") patch.title = title;
-    if (typeof userInput === "string") patch.userInput = userInput;
-    if (typeof aiResponse === "string") patch.aiResponse = aiResponse;
-    if (insights !== undefined) {
-      patch.insights = normalizeStringList(
-        insights,
-        DREAM_ANALYSIS_LIMITS.insights
-      );
-    }
-    if (keySymbols !== undefined || symbols !== undefined) {
-      patch.keySymbols = normalizeKeySymbols(keySymbols ?? symbols);
-    }
-    if (emotions !== undefined) {
-      patch.emotions = normalizeStringList(
-        emotions,
-        DREAM_ANALYSIS_LIMITS.emotions
-      );
-    }
     if (typeof isShared === "boolean") patch.isShared = isShared;
-    if (categories !== undefined) {
-      patch.categories = normalizeCategories(categories);
-    }
-    if (categoryScores !== undefined) {
-      patch.categoryScores = normalizeCategoryScores(categoryScores);
-    }
     const updated = await DreamService.updateDream(req.params.id, patch);
     res.json({ success: true, dream: updated });
   } catch (err: any) {

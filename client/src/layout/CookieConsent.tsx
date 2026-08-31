@@ -2,8 +2,15 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-const CONSENT_KEY = "dc_cookie_consent";
-type ConsentState = "granted" | "denied";
+export const CONSENT_KEY = "dc_cookie_consent";
+export const CONSENT_CHANGE_EVENT = "dreamcatcher:consent-change";
+export type ConsentState = "granted" | "denied";
+
+export function getStoredConsent(): ConsentState | null {
+  if (typeof window === "undefined") return null;
+  const saved = window.localStorage.getItem(CONSENT_KEY);
+  return saved === "granted" || saved === "denied" ? saved : null;
+}
 
 export default function CookieConsent() {
   const { t, i18n } = useTranslation();
@@ -11,16 +18,16 @@ export default function CookieConsent() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem(CONSENT_KEY) as ConsentState | null;
-    if (saved === "granted" || saved === "denied") {
-      setChoice(saved);
-    }
+    setChoice(getStoredConsent());
   }, []);
 
   const handleChoice = (value: ConsentState) => {
     setChoice(value);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(CONSENT_KEY, value);
+      window.dispatchEvent(
+        new CustomEvent<ConsentState>(CONSENT_CHANGE_EVENT, { detail: value })
+      );
     }
   };
 

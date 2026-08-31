@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { INPUT_LIMITS } from "@/constants/inputLimits";
 
 type Props = {
   value: string;
@@ -53,6 +54,7 @@ export default function SearchInputBalancedGlow({
             type="search"
             placeholder={t("search.placeholder")}
             value={value}
+            maxLength={INPUT_LIMITS.dreamSearch}
             onChange={(e) => onChange(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}

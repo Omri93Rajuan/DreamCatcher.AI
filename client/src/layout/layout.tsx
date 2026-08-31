@@ -6,7 +6,11 @@ import { AuthApi } from "@/lib/api/auth";
 import { VisitsApi } from "@/lib/api/visits";
 import Header from "./Header";
 import Footer from "./Footer";
-import CookieConsent from "./CookieConsent";
+import CookieConsent, {
+  CONSENT_CHANGE_EVENT,
+  getStoredConsent,
+  type ConsentState,
+} from "./CookieConsent";
 
 const VISIT_SESSION_KEY = "dreamcatcher:visit-session-id";
 const VISIT_RECORDED_KEY = "dreamcatcher:visit-recorded";
@@ -75,6 +79,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((s) => s.setUser);
   const clearUser = useAuthStore((s) => s.logout);
   const [checkedAuth, setCheckedAuth] = useState(false);
+  const [analyticsConsent, setAnalyticsConsent] = useState<ConsentState | null>(
+    () => getStoredConsent()
+  );
+
+  useEffect(() => {
+    const onConsentChange = (event: Event) => {
+      setAnalyticsConsent((event as CustomEvent<ConsentState>).detail);
+    };
+    window.addEventListener(CONSENT_CHANGE_EVENT, onConsentChange);
+    return () => window.removeEventListener(CONSENT_CHANGE_EVENT, onConsentChange);
+  }, []);
 
   useEffect(() => {
     if (checkedAuth) return;
@@ -86,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           if (!cancelled && res?.user) {
             const id = (res.user as any)._id || (res.user as any).id;
             if (id) {
-              const full = await AuthApi.getMe(id, { background: true });
+              const full = await AuthApi.getMe({ background: true });
               if (!cancelled && full?.user) {
                 setUser(full.user);
                 return;
@@ -109,6 +124,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (analyticsConsent !== "granted") return;
     return runAfterPageSettles(() => {
       try {
         if (window.sessionStorage.getItem(VISIT_RECORDED_KEY)) return;
@@ -124,13 +140,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         /* ignore analytics failures */
       }
     });
-  }, []);
+  }, [analyticsConsent]);
 
   useEffect(() => {
     (async () => {
       try {
         if (user && !user.firstName) {
-          const res = await AuthApi.getMe((user as any)._id);
+          const res = await AuthApi.getMe();
           if (res?.user) setUser(res.user);
         }
       } catch (e) {

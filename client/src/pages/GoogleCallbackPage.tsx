@@ -62,7 +62,7 @@ export default function GoogleCallbackPage() {
         if (cancelled) return;
         if (verifiedUser) {
           const id = (verifiedUser as any)._id || (verifiedUser as any).id;
-          const full = id ? await AuthApi.getMe(id) : null;
+          const full = id ? await AuthApi.getMe() : null;
           const detailed = full?.user ?? verifiedUser;
           setUser({
             ...(detailed as any),

@@ -50,8 +50,8 @@ export const AuthApi = {
         valid: boolean;
         user?: User;
     }),
-    getMe: (id: string, options?: GetMeOptions) => api
-        .get(`/auth/user/${id}`, {
+    getMe: (options?: GetMeOptions) => api
+        .get("/auth/me", {
             withCredentials: true,
             skipRefresh: options?.background,
             timeout: options?.background ? API_TIMEOUTS.short : undefined,

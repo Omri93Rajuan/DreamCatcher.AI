@@ -1,5 +1,6 @@
 import express, { IRouter } from "express";
 import * as authController from "../controllers/auth.controller";
+import authenticate from "../middlewares/authenticate";
 import { validate } from "../middlewares/validate";
 import {
   consumeResetTokenSchema,
@@ -10,7 +11,6 @@ import {
   verifyTokenSchema,
 } from "../validation/auth.zod";
 import {
-  getUserRequestSchema,
   loginRequestSchema,
   logoutRequestSchema,
   registerRequestSchema,
@@ -50,11 +50,7 @@ router.post(
   validate(googleCompleteSchema),
   authController.completeGoogleCallback
 );
-router.get(
-  "/user/:id",
-  validate(getUserRequestSchema),
-  authController.getUserById
-);
+router.get("/me", authenticate, authController.getCurrentUser);
 router.post(
   "/password/request-reset",
   validate(requestPasswordResetSchema),

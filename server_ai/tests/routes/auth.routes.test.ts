@@ -83,6 +83,46 @@ describe("auth routes", () => {
     expect(res.body.valid).toBe(true);
   });
 
+  it("requires authentication for the self endpoint and returns an allowlisted DTO", async () => {
+    const user = await User.create({
+      firstName: "Alex",
+      lastName: "Baker",
+      email: "ab@example.com",
+      password: hashPassword("secret123"),
+      googleId: "google-secret",
+      termsAccepted: true,
+      termsIp: "192.0.2.1",
+      termsUserAgent: "sensitive-agent",
+    });
+    const app = createTestApp();
+
+    expect((await request(app).get("/api/auth/me")).status).toBe(401);
+    expect(
+      (await request(app).get(`/api/auth/user/${user._id.toString()}`)).status
+    ).toBe(404);
+
+    const token = jwt.sign(
+      { _id: user._id.toString(), role: "user" },
+      process.env.JWT_ACCESS_SECRET as string
+    );
+    const res = await request(app)
+      .get("/api/auth/me")
+      .set("Cookie", [`auth_token=${token}`]);
+    expect(res.status).toBe(200);
+    expect(res.body.user).toEqual(
+      expect.objectContaining({
+        _id: user._id.toString(),
+        firstName: "Alex",
+        lastName: "Baker",
+        email: "ab@example.com",
+      })
+    );
+    expect(res.body.user).not.toHaveProperty("googleId");
+    expect(res.body.user).not.toHaveProperty("termsIp");
+    expect(res.body.user).not.toHaveProperty("termsUserAgent");
+    expect(res.body.user).not.toHaveProperty("passwordChangedAt");
+  });
+
   it("logs out and clears cookies", async () => {
     const app = createTestApp();
     const res = await request(app).post("/api/auth/logout").send({});
@@ -92,6 +132,5 @@ describe("auth routes", () => {
     expect(setCookie.join(";")).toContain("auth_token=");
   });
 });
-
 
 

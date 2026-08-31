@@ -22,14 +22,14 @@ export type SeriesPoint = {
     score: number;
 };
 export type CreateDreamDto = {
-    title: string;
+    title?: string;
     userInput: string;
-    aiResponse: string;
-    insights?: string[];
-    keySymbols?: DreamSymbolInsight[];
-    emotions?: string[];
     isShared?: boolean;
-    sharedAt?: string | null;
+    locale?: "he" | "en";
+};
+export type UpdateDreamDto = {
+    title?: string;
+    isShared?: boolean;
 };
 export interface DreamsPage {
     dreams: Dream[];
@@ -47,8 +47,8 @@ export type InterpretDto = {
     dream_text?: string;
     save?: boolean;
     isShared?: boolean;
-    model?: string;
     titleOverride?: string;
+    locale?: "he" | "en";
 };
 export type InterpretResponse = {
     title: string | null;

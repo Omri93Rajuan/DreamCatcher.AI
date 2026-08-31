@@ -11,7 +11,7 @@ export type LLMResult = {
   categoryScores?: Record<DreamCategory, number>;
 };
 export interface LLMOptions {
-  modelOverride?: string;
+  locale?: "he" | "en";
 }
 export interface LLMProvider {
   interpretDream(userInput: string, options?: LLMOptions): Promise<LLMResult>;

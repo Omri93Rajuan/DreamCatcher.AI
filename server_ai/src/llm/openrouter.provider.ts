@@ -87,19 +87,22 @@ export class OpenRouterProvider implements LLMProvider {
     const controller = new AbortController();
     const to = setTimeout(() => controller.abort(), this.timeoutMs);
     to.unref?.();
-    const models = options?.modelOverride
-      ? [options.modelOverride, ...this.models]
-      : this.models;
+    const models = this.models;
     if (!models.length) {
       throw new Error(
-        "No models configured. Set OPENROUTER_MODEL or OPENROUTER_MODELS, or pass modelOverride."
+        "No models configured. Set OPENROUTER_MODEL or OPENROUTER_MODELS."
       );
     }
     try {
       for (const model of models) {
         for (let attempt = 1; attempt <= this.maxAttemptsPerModel; attempt++) {
           try {
-            return await this.callOnce(model, userInput, controller.signal);
+            return await this.callOnce(
+              model,
+              userInput,
+              options?.locale ?? "he",
+              controller.signal
+            );
           } catch (e: any) {
             const status = e?.status;
             const retryable = status === 429 || (status >= 500 && status < 600);
@@ -140,6 +143,7 @@ export class OpenRouterProvider implements LLMProvider {
   private async callOnce(
     model: string,
     userInput: string,
+    locale: "he" | "en",
     signal: AbortSignal
   ): Promise<LLMResult> {
     const categoryList = JSON.stringify(DREAM_CATEGORIES);
@@ -159,15 +163,15 @@ export class OpenRouterProvider implements LLMProvider {
           {
             role: "system",
             content: [
-              "You are DreamCatcher.AI, a careful Hebrew dream interpretation assistant.",
+              `You are DreamCatcher.AI, a careful ${locale === "en" ? "English" : "Hebrew"} dream interpretation assistant.`,
               "Interpret through Jewish tradition when relevant: Tanakh, Chazal, mussar, prayer, teshuvah, Jewish values, and gentle spiritual symbolism.",
               "Use Jewish sources as inspiration only. Do not invent citations, present yourself as a rabbi, or give psak halacha.",
               "Return STRICT JSON with keys:",
-              ' - "title": string (Hebrew, up to 6 words)',
-              ' - "interpretation": string (Hebrew, 2-3 short paragraphs, warm, practical, with a Jewish lens when natural)',
-              ' - "insights": array of 3 concise Hebrew strings',
+              ` - "title": string (${locale === "en" ? "English" : "Hebrew"}, up to 6 words)`,
+              ` - "interpretation": string (${locale === "en" ? "English" : "Hebrew"}, 2-3 short paragraphs, warm, practical, with a Jewish lens when natural)`,
+              ` - "insights": array of 3 concise ${locale === "en" ? "English" : "Hebrew"} strings`,
               ' - "keySymbols": array of 2-4 objects: {"symbol": string, "meaning": string}',
-              ' - "emotions": array of 2-6 short Hebrew emotion labels',
+              ` - "emotions": array of 2-6 short ${locale === "en" ? "English" : "Hebrew"} emotion labels`,
               ` - "categories": array of strings; each must be one of ${categoryList}`,
               ' - "categoryScores": object mapping category->confidence float in [0,1] (optional)',
               "Avoid diagnosis, certainty, fortune-telling, segulot as guaranteed outcomes, or medical/legal/mental-health advice.",
@@ -177,12 +181,20 @@ export class OpenRouterProvider implements LLMProvider {
           },
           {
             role: "user",
-            content: [
-              `חלמתי: "${userInput}".`,
-              "ענה בעברית טבעית, אישית אך לא נחרצת.",
-              "שלב מבט יהודי ברור רק כשמתאים לחלום: ערכים, תיקון, תפילה, חשבון נפש, חסד, גבולות או סמלי מסורת.",
-              "החזר JSON בלבד עם title, interpretation, insights, keySymbols, emotions, categories ו-categoryScores.",
-            ].join("\n"),
+            content:
+              locale === "en"
+                ? [
+                    `I dreamed: "${userInput}".`,
+                    "Answer in natural, personal but non-definitive English.",
+                    "Use a clear Jewish lens only when it fits the dream: values, reflection, prayer, self-examination, kindness, boundaries, or traditional symbols.",
+                    "Return JSON only with title, interpretation, insights, keySymbols, emotions, categories, and categoryScores.",
+                  ].join("\n")
+                : [
+                    `חלמתי: "${userInput}".`,
+                    "ענה בעברית טבעית, אישית אך לא נחרצת.",
+                    "שלב מבט יהודי ברור רק כשמתאים לחלום: ערכים, תיקון, תפילה, חשבון נפש, חסד, גבולות או סמלי מסורת.",
+                    "החזר JSON בלבד עם title, interpretation, insights, keySymbols, emotions, categories ו-categoryScores.",
+                  ].join("\n"),
           },
         ],
       }),
